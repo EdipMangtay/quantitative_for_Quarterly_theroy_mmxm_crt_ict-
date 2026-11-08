@@ -1,0 +1,23 @@
+{
+  "generated_at_utc": "2026-11-08 11:29:56.360208+00:00",
+  "period_start": "2021-11-07 23:00:00+00:00",
+  "period_end": "2026-11-06 21:59:00+00:00",
+  "total_aligned_m1_bars": 1677731,
+  "dukascopy_us100_m1_bars": 1551025,
+  "dukascopy_us100_30s_bars": 3101218,
+  "dukascopy_us500_m1_bars": 1531363,
+  "dukascopy_us500_30s_bars": 2961820,
+  "oanda_us100_m1_bars": 1766842,
+  "oanda_us500_m1_bars": 1726771,
+  "oanda_us30_m1_bars": 1754874,
+  "micro_quarter_30s_verification": {
+    "window": "2025-11-01 .. 2026-05-24",
+    "n_30s_bars": 371504,
+    "n_1m_bars": 187551,
+    "n_micro_ssmt_30s_exact": 8576,
+    "n_micro_ssmt_1m_approx": 7632,
+    "jaccard_concordance": 0.8262535211267605
+  },
+  "audit_sample_count": 800,
+  "runtime_seconds": 102.13
+}

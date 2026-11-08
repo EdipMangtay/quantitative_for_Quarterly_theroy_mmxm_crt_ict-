@@ -1,0 +1,8 @@
+data/raw/
+data/store/
+data/hf_cache/
+.venv/
+__pycache__/
+*.pyc
+logs/
+.DS_Store
