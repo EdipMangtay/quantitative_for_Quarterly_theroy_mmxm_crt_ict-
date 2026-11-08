@@ -648,7 +648,8 @@ def run_v3_pipeline(force_recompute: bool = False) -> dict[str, Any]:
     f_mmxm_b = all_cands["f_mmxm"].to_numpy(bool)
 
     j_exec_cfg = np.where(f_crt_b, j_close_arr, j_reclaim_arr)
-    j_exec_cfg = np.where(f_cisd_b, np.maximum(j_exec_cfg, np.minimum(j_cisd_best, j_close_arr + 15)), j_exec_cfg)
+    # Master Prompt V3.3 Section 9: Strict causal confirmation timing without artificial clamping
+    j_exec_cfg = np.where(f_cisd_b, np.maximum(j_exec_cfg, j_cisd_best), j_exec_cfg)
     j_exec_cfg = np.where(f_mmxm_b & (j_mmxm_k >= 0), np.maximum(j_exec_cfg, j_mmxm_k), j_exec_cfg)
 
     # Execute every candidate at its exact configuration-specific trigger bar `j_exec_cfg` (P0.4 & P0.5)!
@@ -833,14 +834,22 @@ def run_v3_pipeline(force_recompute: bool = False) -> dict[str, Any]:
         active_tags = [name for bit, name in zip(bits, factor_names) if bit == 1]
         clabel = "+".join(active_tags) if active_tags else "00_ALL_OFF_BASELINE (Pure_Liquidity_Trigger)"
 
-        mask_64 = (
-            (all_cands["f_crt"] == bool(b_crt))
-            & (all_cands["f_macro_ssmt"] == bool(b_mac))
-            & (all_cands["f_micro_ssmt"] == bool(b_mic))
-            & (all_cands["f_std_smt"] == bool(b_std))
-            & (all_cands["f_cisd"] == bool(b_cisd))
-            & (all_cands["f_mmxm"] == bool(b_mmxm))
-        )
+        # Master Prompt V3.3 Section 8: Strict REQUIRED vs DISABLED Semantics
+        # b_i == 1: Factor is REQUIRED before entry (all_cands[factor] == True)
+        # b_i == 0: Factor is DISABLED (ignored as entry requirement, not required to be absent!)
+        mask_64 = pd.Series(True, index=all_cands.index)
+        if b_crt:
+            mask_64 &= all_cands["f_crt"]
+        if b_mac:
+            mask_64 &= all_cands["f_macro_ssmt"]
+        if b_mic:
+            mask_64 &= all_cands["f_micro_ssmt"]
+        if b_std:
+            mask_64 &= all_cands["f_std_smt"]
+        if b_cisd:
+            mask_64 &= all_cands["f_cisd"]
+        if b_mmxm:
+            mask_64 &= all_cands["f_mmxm"]
 
         for scope_name, smask in scopes:
             sub_scope = all_cands[mask_64 & smask]
@@ -863,6 +872,7 @@ def run_v3_pipeline(force_recompute: bool = False) -> dict[str, Any]:
                     "n_active_factors": int(sum(bits)),
                     "scope": scope_name,
                     "direction": dir_lbl,
+                    "filter_semantics": "REQUIRED_DISABLED",
                     "f_crt": bool(b_crt),
                     "f_macro_ssmt": bool(b_mac),
                     "f_micro_ssmt": bool(b_mic),
@@ -880,6 +890,7 @@ def run_v3_pipeline(force_recompute: bool = False) -> dict[str, Any]:
                         "config_universe": "64_BINARY_CORE",
                         "config_label": clabel,
                         "direction": dir_lbl,
+                        "filter_semantics": "REQUIRED_DISABLED",
                         "f_crt": bool(b_crt),
                         "f_macro_ssmt": bool(b_mac),
                         "f_micro_ssmt": bool(b_mic),
