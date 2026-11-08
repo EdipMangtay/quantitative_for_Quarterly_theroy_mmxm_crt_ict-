@@ -1,5 +1,6 @@
 {
-  "generated_at_utc": "2026-11-08 11:29:56.360208+00:00",
+  "version": "v2.0 \u2014 Verified Intraday Fractal Research Lab",
+  "generated_at_utc": "2026-11-08 12:37:16.250732+00:00",
   "period_start": "2021-11-07 23:00:00+00:00",
   "period_end": "2026-11-06 21:59:00+00:00",
   "total_aligned_m1_bars": 1677731,
@@ -11,13 +12,26 @@
   "oanda_us500_m1_bars": 1726771,
   "oanda_us30_m1_bars": 1754874,
   "micro_quarter_30s_verification": {
-    "window": "2025-11-01 .. 2026-05-24",
-    "n_30s_bars": 371504,
-    "n_1m_bars": 187551,
-    "n_micro_ssmt_30s_exact": 8576,
-    "n_micro_ssmt_1m_approx": 7632,
-    "jaccard_concordance": 0.8262535211267605
+    "window": "2021-11-07 .. 2026-05-22",
+    "n_30s_bars": 2956891,
+    "n_micro_ssmt_30s_exact": 76476,
+    "n_micro_ssmt_1m_approx": 68821,
+    "jaccard_concordance": 0.832014
   },
+  "forensics_verification_status": "VERIFIED_DUKASCOPY_TICKS_AND_BI5",
+  "cross_broker_divergence_audit": {
+    "overlap_minutes_us100": 1540740,
+    "overlap_start": "2021-11-07 23:00:00+00:00",
+    "overlap_end": "2026-05-24 23:59:00+00:00",
+    "m1_return_correlation": 0.979004,
+    "basis_oanda_minus_duka_median_pts": 8.961,
+    "basis_oanda_minus_duka_iqr_pts": 18.25,
+    "m15_high_sweep_agreement_rate": 0.98494,
+    "m15_low_sweep_agreement_rate": 0.98694,
+    "artificial_cross_broker_disagreement_rate": 0.01406,
+    "warning": "Cross-broker basis fluctuates by ~1-3 index points intraday; therefore, NEVER compute SMT between a Dukascopy symbol and an OANDA symbol without explicit cross-broker caveat. Dataset A (Pure Dukascopy US100 vs US500) and Dataset B (Pure OANDA US100 vs US500 vs US30) eliminate cross-broker SMT artifacts."
+  },
+  "execution_fill_model": "NEXT_EXECUTABLE_BAR_OPEN (j_fill = j_trig + 1, Ask+slip for Long, Bid-slip for Short)",
   "audit_sample_count": 800,
-  "runtime_seconds": 102.13
+  "runtime_seconds": 208.45
 }

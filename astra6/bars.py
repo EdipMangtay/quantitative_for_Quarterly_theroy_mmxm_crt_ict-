@@ -29,14 +29,26 @@ from .data.download import RAW, trading_days
 ROOT = Path(__file__).resolve().parents[1]
 STORE = ROOT / "data" / "store"
 NY = "America/New_York"
+LDN = "Europe/London"
+IST = "Europe/Istanbul"
 
 # TF name -> minutes
 TF_MIN = {"M1": 1, "M2": 2, "M3": 3, "M5": 5, "M10": 10, "M15": 15, "M30": 30, "M45": 45,
           "H1": 60, "M90": 90, "H4": 240, "H6": 360, "D1": 1440}
 
-# origin (NY wall-clock minute offset within the day) per anchor
+# origin (NY wall-clock minute offset within the day) per candle anchor
 ANCHOR_ORIGIN_MIN = {"cal": 0, "ny930": 9 * 60 + 30, "ldn800": None}
-CYCLE_ORIGIN = 18 * 60  # 18:00 NY trading day start (for H4/H6/M90/D1/22.5M)
+CYCLE_ORIGIN = 18 * 60  # 18:00 NY trading day start (default ny1800 QT anchor)
+
+# Quarterly Theory cycle anchors (Phase 3.2):
+#   - ny1800 : 18:00 America/New_York trading-day anchor (18*3600 = 64800s)
+#   - ny0930 : 09:30 America/New_York cash-open anchor   ((9*60+30)*60 = 34200s)
+#   - ldn0800: 08:00 Europe/London cash-open anchor      (8*3600 = 28800s in London wall clock)
+QT_ANCHORS = {
+    "ny1800": (NY, 18 * 3600.0),
+    "ny0930": (NY, (9 * 60 + 30) * 60.0),
+    "ldn0800": (LDN, 8 * 3600.0),
+}
 
 
 # ---------------------------------------------------------------------------
@@ -103,25 +115,37 @@ def ny_wall_seconds(idx: pd.DatetimeIndex) -> np.ndarray:
     return loc.asi8.astype(np.int64)
 
 
+def ldn_wall_minutes(idx: pd.DatetimeIndex) -> np.ndarray:
+    """Minutes since 1970-01-01 00:00 in London *wall-clock* (DST-aware), unit-safe."""
+    loc = idx.tz_convert(LDN).tz_localize(None).as_unit("s")
+    return (loc.asi8 // 60).astype(np.int64)
+
+
+def ldn_wall_seconds(idx: pd.DatetimeIndex) -> np.ndarray:
+    """Seconds since 1970-01-01 00:00 in London *wall-clock* (DST-aware), unit-safe."""
+    loc = idx.tz_convert(LDN).tz_localize(None).as_unit("s")
+    return loc.asi8.astype(np.int64)
+
+
 def bucket_start_wall(wall_min: np.ndarray, tf_min: float, origin_min: float) -> np.ndarray:
-    """Floor NY wall-clock minutes to bucket starts (float minutes, allows 22.5)."""
+    """Floor wall-clock minutes to bucket starts (float minutes, allows 22.5)."""
     return np.floor((wall_min - origin_min) / tf_min) * tf_min + origin_min
 
 
 def anchor_origin(tf: str, anchor: str) -> float:
     m = TF_MIN[tf]
+    if anchor in ("ny930", "ny0930"):
+        return 9 * 60 + 30
+    if anchor in ("ldn800", "ldn0800"):
+        return 8 * 60  # evaluated on London wall-clock when anchor is ldn800
     if tf in ("H4", "H6", "M90", "D1"):
         return CYCLE_ORIGIN
-    if anchor == "ny930":
-        return 9 * 60 + 30
-    if anchor == "ldn800":
-        return 0  # London 08:00 is a whole hour in NY wall clock as well
     return 0
 
 
-def wall_to_utc(wall_min: np.ndarray) -> pd.DatetimeIndex:
+def wall_to_utc(wall_min: np.ndarray, tz_name: str = NY) -> pd.DatetimeIndex:
     naive = pd.to_datetime(wall_min.astype(np.float64) * 60, unit="s")
-    return naive.tz_localize(NY, ambiguous="NaT", nonexistent="shift_forward").tz_convert("UTC")
+    return naive.tz_localize(tz_name, ambiguous="NaT", nonexistent="shift_forward").tz_convert("UTC")
 
 
 def resample(panel: pd.DataFrame, alias: str, tf: str, anchor: str = "cal") -> pd.DataFrame:
@@ -131,7 +155,8 @@ def resample(panel: pd.DataFrame, alias: str, tf: str, anchor: str = "cal") -> p
     (possibly incomplete) bucket is flagged ``complete=False``.
     """
     m = TF_MIN[tf]
-    wall = ny_wall_minutes(panel.index)
+    tz_use = LDN if anchor in ("ldn800", "ldn0800") else NY
+    wall = ldn_wall_minutes(panel.index) if tz_use == LDN else ny_wall_minutes(panel.index)
     b = bucket_start_wall(wall, m, anchor_origin(tf, anchor))
     g = pd.DataFrame({
         "b": b, "o": panel[f"{alias}_o"].to_numpy(), "h": panel[f"{alias}_h"].to_numpy(),
@@ -142,40 +167,51 @@ def resample(panel: pd.DataFrame, alias: str, tf: str, anchor: str = "cal") -> p
                                          c=("c", "last"), ts_first=("ts", "first"),
                                          ts_last=("ts", "last"), n=("o", "size"))
     agg = agg.reset_index()
-    agg["t_open"] = wall_to_utc(agg["b"].to_numpy())
+    agg["t_open"] = wall_to_utc(agg["b"].to_numpy(), tz_use)
     agg["t_close"] = agg["t_open"] + pd.to_timedelta(m, unit="m")
     # fall back for ambiguous DST hours
     bad = agg["t_open"].isna()
     agg.loc[bad, "t_open"] = agg.loc[bad, "ts_first"]
     agg.loc[bad, "t_close"] = agg.loc[bad, "ts_first"] + pd.to_timedelta(m, unit="m")
     agg["complete"] = True
-    agg.loc[agg.index[-1], "complete"] = False
+    if len(agg) > 0:
+        agg.loc[agg.index[-1], "complete"] = False
     return agg
 
 
-def quarter_labels(idx: pd.DatetimeIndex) -> pd.DataFrame:
-    """Quarterly-Theory labels for each timestamp (NY wall clock, DST-aware).
+def quarter_labels(idx: pd.DatetimeIndex, qt_anchor: str = "ny1800") -> pd.DataFrame:
+    """Quarterly-Theory labels for each timestamp (exact wall-clock seconds, DST-aware).
 
-    q6  : 6H quarter in the 18:00 NY trading day (1=Asia 18-00, 2=London 00-06,
-          3=NY AM 06-12, 4=NY PM 12-18)
-    q90 : 90M quarter inside the 6H block (1..4)          -> "macro"
-    q22 : 22.5M quarter inside the 90M block (1..4)       -> "micro"
-    q5  : ~5.625M sub-micro quarter inside 22.5M (1..4) (needs <=30s data; with
-          1-minute bars the label is approximate)
-    Also the integer block ids (b6, b90, b22) used to group bars.
+    Supports three distinct anchors (Phase 3.2):
+      - ``ny1800`` : 18:00 America/New_York trading-day anchor
+      - ``ny0930`` : 09:30 America/New_York cash-open anchor
+      - ``ldn0800``: 08:00 Europe/London cash-open anchor
+
+    Divisions (computed in exact seconds so 30S bars divide 22.5M = 1350s exactly):
+      - q6  : 6H macro cycle (21,600s) -> Q1..Q4
+      - q90 : 90M cycle inside 6H (5,400s) -> Q1..Q4
+      - q22 : 22.5M micro-quarter inside 90M (1,350s) -> Q1..Q4
+      - q5  : 5.625M sub-micro quarter inside 22.5M (337.5s) -> Q1..Q4
     """
-    wall = ny_wall_minutes(idx).astype(np.float64)
-    rel = wall - CYCLE_ORIGIN
-    b6 = np.floor(rel / 360.0)
-    b90 = np.floor(rel / 90.0)
-    b22 = np.floor(rel / 22.5)
-    b5 = np.floor(rel / 5.625)
+    if qt_anchor not in QT_ANCHORS:
+        raise ValueError(f"Unknown qt_anchor: {qt_anchor}. Valid: {list(QT_ANCHORS)}")
+    tz_name, origin_sec = QT_ANCHORS[qt_anchor]
+    sec = (ldn_wall_seconds(idx) if tz_name == LDN else ny_wall_seconds(idx)).astype(np.float64)
+    rel = sec - origin_sec
+    b6 = np.floor(rel / 21600.0)
+    b90 = np.floor(rel / 5400.0)
+    b22 = np.floor(rel / 1350.0)
+    b5 = np.floor(rel / 337.5)
     return pd.DataFrame({
         "b6": b6.astype(np.int64), "b90": b90.astype(np.int64), "b22": b22.astype(np.int64),
+        "b5": b5.astype(np.int64),
         "q6": (np.mod(b6, 4) + 1).astype(np.int8),
         "q90": (np.mod(b90, 4) + 1).astype(np.int8),
         "q22": (np.mod(b22, 4) + 1).astype(np.int8),
         "q5": (np.mod(b5, 4) + 1).astype(np.int8),
-        "day_id": np.floor(rel / 1440.0).astype(np.int64),
+        "day_id": np.floor(rel / 86400.0).astype(np.int64),
+        "qt_anchor": qt_anchor,
+        "sec_in_q90": np.mod(rel, 5400.0),
+        "sec_in_q22": np.mod(rel, 1350.0),
     }, index=idx)
 

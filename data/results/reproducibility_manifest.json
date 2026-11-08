@@ -1,118 +1,225 @@
 {
-  "pipeline_completed_at_utc": "2026-11-08 11:40:25.254698+00:00",
-  "elapsed_seconds": 3.75,
+  "version": "v2.0",
+  "pipeline_completed_at_utc": "2026-11-08 13:11:58.052049+00:00",
+  "elapsed_seconds": 4.92,
   "store_files": {
     "US100_BID_M1.parquet": {
       "size_bytes": 35145678,
-      "sha256_head": "a852287511b2a466"
+      "sha256_full": "e192671a588d872bca1cd47da98633b50977656aeb3f43a2b33e8877280af018"
     },
     "US100_ASK_M1.parquet": {
       "size_bytes": 31760284,
-      "sha256_head": "a852287511b2a466"
+      "sha256_full": "85332e04ab612e43cb3e478f21ac3fa0594e8dfb0262bb05c5c0d64f32680c4c"
     },
     "US500_BID_M1.parquet": {
       "size_bytes": 30184845,
-      "sha256_head": "06d31a6660613127"
+      "sha256_full": "57429275146079dfdaa0e827e9ec23c3caedd23a7506370fdf3e017c2d025566"
     },
     "US500_ASK_M1.parquet": {
       "size_bytes": 28253814,
-      "sha256_head": "06d31a6660613127"
+      "sha256_full": "831c44087fcb0ef8356c1d13f9651535d633b0791d5f494d6173d20fef89f1a9"
     },
     "US30_BID_M1.parquet": {
       "size_bytes": 22917524,
-      "sha256_head": "29a29e56b7c0b0d7"
+      "sha256_full": "25112214ff063676aae8358abb65abf831b3301cc62f3874c811bf05416acd30"
     },
     "US30_ASK_M1.parquet": {
       "size_bytes": 20707260,
-      "sha256_head": "29a29e56b7c0b0d7"
+      "sha256_full": "365f587711c99adb6a8ce0980ac31231a31ea0f9e1ecf72feffcd9429280af6e"
+    },
+    "DUKA_US100_M1.parquet": {
+      "size_bytes": 57169723,
+      "sha256_full": "4d4c36fd6c5987b611c3933ba1df288bec505e86cee6b289b70dba6b890ae6a2"
+    },
+    "DUKA_US500_M1.parquet": {
+      "size_bytes": 50139904,
+      "sha256_full": "b0e6e68485dde988b8c1c71de5ed5c98f73057b95ab1cddb1dcf5cb4a31d9464"
     },
     "DUKA_US100_30S.parquet": {
       "size_bytes": 107838866,
-      "sha256_head": "37cfa505be5313d7"
+      "sha256_full": "0f26f60f034714a5424822816c21b7b7e0f4543197f64f09953844bef2ea8ab5"
     },
     "DUKA_US500_30S.parquet": {
       "size_bytes": 90144706,
-      "sha256_head": "c7bd28e10aad0f6c"
+      "sha256_full": "fe37af2770c1ffd031d85947ad6c62ff229aab96c08766a8ad25de15fc4e9cd1"
+    },
+    "DUKA_US100_TICKS_SAMPLE.parquet": {
+      "size_bytes": 16380014,
+      "sha256_full": "e642b129fa6165e4f63dd89f432340ae0be3c04c344f1cb14232f31577ffb672"
+    },
+    "OANDA_US100_M1.parquet": {
+      "size_bytes": 23824150,
+      "sha256_full": "989aa03758e96ebe41056556db716e643d2174c53d2e855f77a4cdde6e7723f1"
+    },
+    "OANDA_US500_M1.parquet": {
+      "size_bytes": 18632825,
+      "sha256_full": "c94386dcb1db884da044ba05c955b553e94a8cf8794f78c67efe8c57fc02d1e8"
+    },
+    "OANDA_US30_M1.parquet": {
+      "size_bytes": 19958833,
+      "sha256_full": "156bf9319f415bb945d75da33beb5bd853db42a4224107556341f72741a74d37"
     }
   },
   "result_files": {
     "data_quality.json": {
-      "size_bytes": 755
+      "size_bytes": 1757,
+      "sha256_full": "f230ce1a28a0f55b8d2536146cb05e99fb011f09114943611160ba1791de4a57"
+    },
+    "data_authenticity_manifest.parquet": {
+      "size_bytes": 15013,
+      "sha256_full": "0876c9e1d6dbfe64e2a14e97d0a5c229e13306dd02312fee84f7c94524f92bab"
+    },
+    "data_forensics_report.json": {
+      "size_bytes": 15748,
+      "sha256_full": "25c0ba45427f5b11243e4dd8dcc26fedf01d4a1c8f6cc122dfd3f921e011ea26"
+    },
+    "trade_features.parquet": {
+      "size_bytes": 232803562,
+      "sha256_full": "cd74a03bbca450a992232ffaef4b313da3726bc2891d427907d8d19d33f8f5a1"
+    },
+    "events.parquet": {
+      "size_bytes": 2065819,
+      "sha256_full": "e83bffdf5db0e0526edfb3ae7771c28f564fb6702360a1e73a64a847ccee22bd"
+    },
+    "intraday_24h_18models.parquet": {
+      "size_bytes": 158066,
+      "sha256_full": "8070c193e7d18e9a90a376c870888ca05b7e07cb698586109df2e4bc95f16c73"
+    },
+    "ny_5m_15m_18models.parquet": {
+      "size_bytes": 130646,
+      "sha256_full": "c378f9d2f856af2c3b20f62a06c4b44a2c9034e351aa6abee6ae3924d0233bc4"
+    },
+    "ldn_18models.parquet": {
+      "size_bytes": 65918,
+      "sha256_full": "febb82301e43513097c235e93128f906d4ed127b655acd180ecbd4fc7f06b9e6"
+    },
+    "dataset_provider_comparison.parquet": {
+      "size_bytes": 18866,
+      "sha256_full": "43a28ba7a9debf2135a51a297c5f7561aaceaf2fb5f83d9c084978c694b21412"
+    },
+    "qt_anchor_comparison.parquet": {
+      "size_bytes": 17707,
+      "sha256_full": "c52a43f91bdb998c89ea4bdeeb42b79983fccec543f475ecab9f0548aa0ce27d"
+    },
+    "micro_30s_vs_1m_perf.parquet": {
+      "size_bytes": 16659,
+      "sha256_full": "73fd292e5647ec5b72dc6d46a585ee8a6ac22ca675d2ee3154de90e80617e7e9"
+    },
+    "incremental_contribution.parquet": {
+      "size_bytes": 19169,
+      "sha256_full": "6af0fcce048db0d0bd15bb90f0fdb96ff89195ccb1803844959d377a6b62d6af"
+    },
+    "losing_trades_autopsy.parquet": {
+      "size_bytes": 3734,
+      "sha256_full": "345d5c8d544899e4087572350525fdc630214d49c042f71ab16c71632ff92108"
     },
     "tf_summary.parquet": {
-      "size_bytes": 4686
+      "size_bytes": 4686,
+      "sha256_full": "a45392c1ffce2fe1d0ac6c9f376cfd5b2d4b81d40d9a681bea864bcf54d153d2"
     },
     "crt_tf_stats.parquet": {
-      "size_bytes": 18465
+      "size_bytes": 22604,
+      "sha256_full": "ba0d892bf4649ca0ba4b3c9ee91e58218737c1fe3ce049d0c82d1e4ca06bc65d"
     },
     "crt_variants.parquet": {
-      "size_bytes": 18751
+      "size_bytes": 24717,
+      "sha256_full": "055f46049d5f745bc868eebec1d58b641fb2f0cd3ffe97ce5f8521e054d4c342"
     },
     "crt_closing_vs_dev.parquet": {
-      "size_bytes": 15757
+      "size_bytes": 20687,
+      "sha256_full": "a9eb304c55df63a823f345efa086d57d5de8421e1aeed6414e9ca52ba3db01dc"
     },
     "crt_ssmt_baselines.parquet": {
-      "size_bytes": 21886
+      "size_bytes": 28314,
+      "sha256_full": "f4db8fe33636ecbbaf5cea5b196aa441382917b383f3ae91e62466afe871682a"
     },
     "hypothesis_tests.parquet": {
-      "size_bytes": 15126
+      "size_bytes": 16885,
+      "sha256_full": "362296e14b9047e9e9bf1a1c8c0da48d5b48c2dc3ad427ff527976afd647517d"
     },
     "ssmt_timing.parquet": {
-      "size_bytes": 14921
+      "size_bytes": 19737,
+      "sha256_full": "84deaa822e8bb10a02f41e3c390c982e817eab54023c002a576a8d9bc344f71f"
     },
     "crt_ssmt_matrix.parquet": {
-      "size_bytes": 26071
+      "size_bytes": 38461,
+      "sha256_full": "c673c54e527003d6b24297d6a33fcb3ccaab6001db76cba7fb97ca37ef6101aa"
     },
     "qt_fractals.parquet": {
-      "size_bytes": 20134
+      "size_bytes": 26033,
+      "sha256_full": "d42facbf08febb57a4df60df574f1879ed4526aae394aafeda75ee8f8ed8a135"
     },
     "q2q_rankings.parquet": {
-      "size_bytes": 16192
+      "size_bytes": 26120,
+      "sha256_full": "d96ab8c1539733701c6be95e43e67550935a65af04cf6780d8a9b929c9f83f97"
     },
     "multilevel_alignment.parquet": {
-      "size_bytes": 15066
+      "size_bytes": 20246,
+      "sha256_full": "ca08bcd0bf90278730249b4402fa9d97a9247986a905b750bae81d16f290aad1"
     },
     "narrative_perf.parquet": {
-      "size_bytes": 16125
+      "size_bytes": 21139,
+      "sha256_full": "d578219f400ffe6fe51ae89739d7edff3a7c1e1d210f0ad4198e1500b1b5ccf0"
     },
     "opening_windows.parquet": {
-      "size_bytes": 17478
+      "size_bytes": 23699,
+      "sha256_full": "4bdca3cc28582e3b9ac3771861883bb94d1114cdd6b13da5746650163741a76d"
     },
     "opening_ranges_ny.parquet": {
-      "size_bytes": 174124
+      "size_bytes": 174124,
+      "sha256_full": "ca2a1265bd0dfeede474423dd0e6cdc53689c48d063b9fa717b3f99f086291ba"
     },
     "opening_ranges_ldn.parquet": {
-      "size_bytes": 173347
+      "size_bytes": 173347,
+      "sha256_full": "4f0c700f23d422744a8411954c1f56b51422500d2d0e167c66449dad9cb87fe7"
     },
     "ny_open_models.parquet": {
-      "size_bytes": 13049
+      "size_bytes": 17458,
+      "sha256_full": "c4b585a268963bcf0a73bda2977983a314a067bb665a296a26b26d8ecbb1d844"
     },
     "h1_anchoring.parquet": {
-      "size_bytes": 14553
+      "size_bytes": 18986,
+      "sha256_full": "ddb8a6cad83bc573e3695e3958b81bd82abb98c20c5ff51bf189ad805c1dd92e"
     },
     "rr_stop_exit_grid.parquet": {
-      "size_bytes": 20096
+      "size_bytes": 28386,
+      "sha256_full": "56b8e545e890b6b73aa789a50832c0c87887c5cceb7e59a0cb2f3bed7022d6d6"
     },
     "splits_eval.parquet": {
-      "size_bytes": 13714
+      "size_bytes": 18047,
+      "sha256_full": "203d3720589d8920cc7db191bb37534e97bb752d8576fa66b6812b7bf04da929"
     },
     "wfa_folds.parquet": {
-      "size_bytes": 8220
+      "size_bytes": 8212,
+      "sha256_full": "9a3e5ca21bec5e68563350a3d0487f35ef4cb204bf43ce3ff4209b8c42bd2032"
     },
     "yearly_perf.parquet": {
-      "size_bytes": 14452
+      "size_bytes": 19018,
+      "sha256_full": "656a0e36e4be4fe0254dd68ea3c44039fbf7c0e7e28b50cd1ecfc789de9d7ffb"
     },
     "monthly_perf.parquet": {
-      "size_bytes": 5510
+      "size_bytes": 5513,
+      "sha256_full": "b985e508bf8b84dc65b4b1f690c76d47241ea676c695ded6157098e60fdda23c"
     },
     "cost_sensitivity.parquet": {
-      "size_bytes": 13509
+      "size_bytes": 17977,
+      "sha256_full": "4ded08c5e8c5c5f090f6c173fa3781b8f7e306ed16f0795cff6ccb5cbc69afd5"
     },
     "regime_perf.parquet": {
-      "size_bytes": 12818
+      "size_bytes": 17029,
+      "sha256_full": "e33bed6260a28d96ae0946679e19eab21e56827eb0270b37d1fdada903a9a8cd"
     },
     "audit_sample_trades.parquet": {
-      "size_bytes": 367896
+      "size_bytes": 500686,
+      "sha256_full": "ce8874b439927573ca74aecdd8df4955274d01f489aea071d38066fa06e345ed"
+    },
+    "independent_audit_samples.json": {
+      "size_bytes": 17844,
+      "sha256_full": "f0105bbd90271b702d03dc0f2caedb75ab5fd068641e8b732a526107757580e0"
+    },
+    "v1_vs_v2_comparison.parquet": {
+      "size_bytes": 14735,
+      "sha256_full": "ecd602cda4cc6ff1475d59cdd7d73cdb47d23a86d40809bb6eb24885b98ab54f"
     }
   },
   "reports": {

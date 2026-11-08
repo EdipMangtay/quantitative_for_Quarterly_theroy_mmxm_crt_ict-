@@ -47,15 +47,17 @@ def summarize_trades(
     block_size: int = 5,
     seed: int = 42,
 ) -> dict:
-    """Compute comprehensive Section 15 metrics for a trade table."""
+    """Compute comprehensive Section 15 & Phase 6.5/9.3 metrics for a trade table."""
     if df is None or len(df) == 0:
         return {
-            "n_trades": 0, "win_rate": np.nan, "avg_r": np.nan, "median_r": np.nan,
-            "expectancy": np.nan, "total_r": 0.0, "profit_factor": np.nan,
-            "max_dd_r": 0.0, "max_consec_losses": 0, "sharpe": np.nan, "sortino": np.nan,
-            "avg_mfe": np.nan, "avg_mae": np.nan, "avg_hold_min": np.nan,
-            "ci95_low": np.nan, "ci95_high": np.nan, "p_gt_zero": np.nan,
-            "small_sample": True,
+            "n_trades": 0, "win_rate": np.nan, "avg_win_r": np.nan, "avg_loss_r": np.nan,
+            "avg_r": np.nan, "median_r": np.nan, "expectancy": np.nan, "total_r": 0.0,
+            "profit_factor": np.nan, "max_dd_r": 0.0, "max_consec_losses": 0,
+            "sharpe": np.nan, "sortino": np.nan, "avg_mfe": np.nan, "avg_mae": np.nan,
+            "avg_hold_min": np.nan, "ci95_low": np.nan, "ci95_high": np.nan,
+            "p_gt_zero": np.nan, "ci_spans_zero": True, "small_sample": True,
+            "in_sample_avg_r": np.nan, "oos_avg_r": np.nan, "oos_n": 0,
+            "stat_status": "EMPTY",
         }
     sub = df[np.isfinite(df[r_col].to_numpy(float))]
     r = sub[r_col].to_numpy(float)
@@ -66,6 +68,8 @@ def summarize_trades(
     wins = r[r > 0]
     losses = r[r < 0]
     wr = float((r > 0).mean())
+    avg_win = float(wins.mean()) if wins.size else np.nan
+    avg_loss = float(losses.mean()) if losses.size else np.nan
     avg_r = float(r.mean())
     med_r = float(np.median(r))
     tot_r = float(r.sum())
@@ -75,17 +79,25 @@ def summarize_trades(
     mdd = max_drawdown_r(r)
     mcl = max_consecutive_losses(r)
 
-    # Daily aggregated R for realistic annualised Sharpe/Sortino
+    # Daily aggregated R & In-Sample / Out-of-Sample split
     if "t_trig" in sub.columns:
-        days = pd.to_datetime(sub["t_trig"]).dt.floor("D")
+        ts_utc = pd.to_datetime(sub["t_trig"], utc=True)
+        days = ts_utc.dt.floor("D")
         daily_r = pd.Series(r).groupby(days.to_numpy()).sum().to_numpy(float)
+        oos_mask = (ts_utc >= pd.Timestamp("2025-07-01", tz="UTC")).to_numpy()
+        is_r = r[~oos_mask]
+        oos_r = r[oos_mask]
+        in_sample_avg = float(is_r.mean()) if is_r.size else np.nan
+        oos_avg = float(oos_r.mean()) if oos_r.size else np.nan
+        oos_cnt = int(oos_r.size)
     else:
         daily_r = r
+        in_sample_avg = np.nan
+        oos_avg = np.nan
+        oos_cnt = 0
+
     if daily_r.size >= 5 and daily_r.std(ddof=1) > 1e-12:
-        scale = np.sqrt(252.0 * (daily_r.size / max(1.0, (n / max(1.0, n / max(1, daily_r.size))))))
-        # Standard per-active-day annualisation (sqrt(252))
         sharpe = float((daily_r.mean() / daily_r.std(ddof=1)) * np.sqrt(252.0))
-        dn = daily_r[daily_r < 0]
         dn_std = float(np.sqrt(np.mean(np.minimum(0.0, daily_r) ** 2)))
         sortino = float((daily_r.mean() / dn_std) * np.sqrt(252.0)) if dn_std > 1e-12 else np.nan
     else:
@@ -93,9 +105,22 @@ def summarize_trades(
         sortino = np.nan
 
     ci_lo, ci_hi, p_pos = block_bootstrap_mean(r, n_boot=n_boot, block_size=block_size, seed=seed)
+    spans_zero = bool(np.isnan(ci_lo) or (ci_lo <= 0.0 <= ci_hi))
+    small_smp = bool(n < 30)
+    if small_smp:
+        status = "SMALL_SAMPLE_UNRELIABLE"
+    elif avg_r <= 0.0:
+        status = "NEGATIVE_EXPECTANCY"
+    elif not spans_zero and ci_lo > 0.0:
+        status = "VERIFIED_POSITIVE_CI"
+    else:
+        status = "POSITIVE_MEAN_CI_SPANS_ZERO"
+
     return {
         "n_trades": int(n),
         "win_rate": wr,
+        "avg_win_r": avg_win,
+        "avg_loss_r": avg_loss,
         "avg_r": avg_r,
         "median_r": med_r,
         "expectancy": avg_r,
@@ -111,7 +136,12 @@ def summarize_trades(
         "ci95_low": ci_lo,
         "ci95_high": ci_hi,
         "p_gt_zero": p_pos,
-        "small_sample": bool(n < 30),
+        "ci_spans_zero": spans_zero,
+        "small_sample": small_smp,
+        "in_sample_avg_r": in_sample_avg,
+        "oos_avg_r": oos_avg,
+        "oos_n": oos_cnt,
+        "stat_status": status,
     }
 
 
