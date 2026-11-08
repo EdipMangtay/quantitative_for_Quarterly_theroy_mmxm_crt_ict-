@@ -7,41 +7,47 @@
       "phase_number": 1,
       "phase_name": "V2_HANDOFF_AND_HPC_AUTOTUNE",
       "status": "COMPLETED",
-      "completed_at_utc": "2026-11-08 14:22:32.099982+00:00",
-      "peak_rss_mb": 282.41,
+      "completed_at_utc": "2026-11-08 15:33:40.025178+00:00",
+      "peak_rss_mb": 288.23,
       "details": {
         "v2_version": "v2.0 \u2014 Verified Intraday Fractal Research Lab",
         "v2_audit_pass": true,
         "cpu_model": "Apple M3 Pro",
         "selected_workers": 8,
         "selected_batch_size": 200000,
-        "kernel_exact_match": true
+        "kernel_exact_match": true,
+        "source_store_sha256": "17ddcb9ae521eefd6d881eebb95fcc108fb9d4063b0cca581bdcfaac4fce144f",
+        "algo_version": "ASTRA6_V3.1_CAUSAL_REPAIRED",
+        "config_hash": "3503769cd0d2e14be690846e999e406dc87ed5ce62f6ed7002d6472ef727c96f",
+        "force_recompute": false
       }
     },
     "PHASE_03": {
       "phase_number": 3,
       "phase_name": "FULL_STRUCTURAL_AND_ATOMIC_EVENTS",
       "status": "COMPLETED",
-      "completed_at_utc": "2026-11-08 14:22:46.820536+00:00",
-      "peak_rss_mb": 3162.14,
+      "completed_at_utc": "2026-11-08 15:33:58.534519+00:00",
+      "peak_rss_mb": 4413.34,
       "details": {
-        "crt_events": 815053,
+        "crt_events": 1315768,
         "ssmt_events": 440838,
         "multitf_cisd_events": 394880,
         "original_consolidations": 159180,
-        "mmxm_state_events": 316173,
-        "liquidity_events": 641776,
-        "atomic_events_total": 924513
+        "mmxm_state_events": 458336,
+        "liquidity_events": 1142491,
+        "atomic_events_total": 2253795,
+        "universe_coverage": "FULL_UNIVERSE"
       }
     },
     "PHASE_04": {
       "phase_number": 4,
-      "phase_name": "ORIGINAL_CONSOLIDATION_ENGINE",
+      "phase_name": "ORIGINAL_CONSOLIDATION_AND_INCREMENTAL_MMXM_FSM",
       "status": "COMPLETED",
-      "completed_at_utc": "2026-11-08 14:22:46.822004+00:00",
-      "peak_rss_mb": 3162.16,
+      "completed_at_utc": "2026-11-08 15:33:58.536027+00:00",
+      "peak_rss_mb": 4413.34,
       "details": {
         "total_ocs": 159180,
+        "total_mmxm_stage_events": 458336,
         "timeframes": [
           "H1",
           "H4",
@@ -55,40 +61,38 @@
     },
     "PHASE_05": {
       "phase_number": 5,
-      "phase_name": "CROSS_TIMEFRAME_TARGET_GRAPH",
+      "phase_name": "CROSS_TIMEFRAME_TARGET_ENGINE",
       "status": "COMPLETED",
-      "completed_at_utc": "2026-11-08 14:23:29.472226+00:00",
-      "peak_rss_mb": 11625.77,
+      "completed_at_utc": "2026-11-08 15:34:57.944105+00:00",
+      "peak_rss_mb": 12147.45,
       "details": {
-        "target_candidates_count": 3424568,
-        "target_outcomes_count": 3424568,
-        "target_prediction_cells": 588
+        "target_candidates": 2658437,
+        "target_outcomes": 2658437,
+        "target_prediction_cells": 423
       }
     },
     "PHASE_06": {
       "phase_number": 6,
-      "phase_name": "UNIFIED_MMXM_QT_NARRATIVE",
+      "phase_name": "UNIFIED_MMXM_QT_NARRATIVE_AND_TRADES",
       "status": "COMPLETED",
-      "completed_at_utc": "2026-11-08 14:23:29.478816+00:00",
-      "peak_rss_mb": 11625.77,
+      "completed_at_utc": "2026-11-08 15:34:57.949664+00:00",
+      "peak_rss_mb": 12147.45,
       "details": {
-        "narrative_graph_edges": 60808,
-        "pretrade_narratives": 425634,
-        "all_trades": 711903,
-        "long_trades": 346436,
-        "short_trades": 365467
+        "all_trades": 644237,
+        "long_trades": 312574,
+        "short_trades": 331663
       }
     },
     "PHASE_07": {
       "phase_number": 7,
-      "phase_name": "FACTORIAL_COMBINATIONS_64_AND_15",
+      "phase_name": "FACTORIAL_64_AND_15_FAMILIES_AND_ABLATION",
       "status": "COMPLETED",
-      "completed_at_utc": "2026-11-08 14:23:59.414012+00:00",
-      "peak_rss_mb": 11757.53,
+      "completed_at_utc": "2026-11-08 15:35:44.052754+00:00",
+      "peak_rss_mb": 12147.45,
       "details": {
-        "valid_combinations_registry": 243,
-        "combination_results_rows": 384,
-        "family_15_subsets_rows": 90
+        "combo_results_rows": 384,
+        "valid_combos_registry": 243,
+        "ablation_rows": 54
       }
     },
     "PHASE_08": {
@@ -125,24 +129,23 @@
     },
     "PHASE_11": {
       "phase_number": 11,
-      "phase_name": "NASDAQ_AND_LONDON_INTRADAY_MATRICES",
+      "phase_name": "INTRADAY_24H_NQ_OPEN_AND_LONDON_GRIDS",
       "status": "COMPLETED",
-      "completed_at_utc": "2026-11-08 14:24:07.237147+00:00",
-      "peak_rss_mb": 11757.53,
+      "completed_at_utc": "2026-11-08 15:35:54.189147+00:00",
+      "peak_rss_mb": 12147.45,
       "details": {
-        "nq_open_5min_rows": 714,
-        "hourly_matrix_rows": 648,
-        "ldn_open_rows": 189
+        "nq_open_rows": 630,
+        "hourly_rows": 576
       }
     },
     "PHASE_12": {
       "phase_number": 12,
       "phase_name": "STATISTICAL_ROBUSTNESS_AND_25_RANKINGS",
       "status": "COMPLETED",
-      "completed_at_utc": "2026-11-08 14:24:09.689888+00:00",
-      "peak_rss_mb": 11757.53,
+      "completed_at_utc": "2026-11-08 15:36:03.814355+00:00",
+      "peak_rss_mb": 12147.45,
       "details": {
-        "robustness_rows": 135,
+        "robustness_rows": 270,
         "rankings_count": 25
       }
     },
@@ -150,8 +153,8 @@
       "phase_number": 15,
       "phase_name": "INDEPENDENT_QA_AND_10x100_MANUAL_VALIDATION",
       "status": "COMPLETED",
-      "completed_at_utc": "2026-11-08 14:24:10.444440+00:00",
-      "peak_rss_mb": 11757.53,
+      "completed_at_utc": "2026-11-08 15:36:04.512109+00:00",
+      "peak_rss_mb": 12147.45,
       "details": {
         "total_reviewable_samples": 1000,
         "categories_count": 10,
@@ -176,12 +179,12 @@
       "phase_number": 16,
       "phase_name": "V4_FORWARD_TESTING_HANDOFF_AND_DUCKDB",
       "status": "COMPLETED",
-      "completed_at_utc": "2026-11-08 14:24:10.444824+00:00",
-      "peak_rss_mb": 11757.53,
+      "completed_at_utc": "2026-11-08 15:36:04.512546+00:00",
+      "peak_rss_mb": 12147.45,
       "details": {
         "v4_frozen_candidates": 10,
         "duckdb_path": "data/results/astra6_v3.duckdb",
-        "elapsed_seconds": 98.5
+        "elapsed_seconds": 144.67
       }
     }
   },
@@ -194,9 +197,9 @@
       "physical_cores": 12,
       "logical_cores": 12,
       "ram_total_gb": 36.0,
-      "ram_available_gb": 18.91,
+      "ram_available_gb": 18.59,
       "disk_total_gb": 460.43,
-      "disk_free_gb": 322.5,
+      "disk_free_gb": 322.2,
       "selected_workers": 8,
       "selected_duckdb_threads": 8,
       "selected_batch_size": 200000,
@@ -209,24 +212,29 @@
         "pyarrow": "26.0.1",
         "numba": "0.68.1"
       },
-      "detected_at_utc": "2026-11-08 14:22:31.965931+00:00"
+      "detected_at_utc": "2026-11-08 15:33:39.867454+00:00"
     },
     "kernel_verification": {
       "reference_vs_numba_exact_match": true,
       "adversarial_same_bar_sl_tp_verified": true,
-      "python_ref_seconds_2k": 0.046606,
-      "numba_opt_seconds_2k": 0.000334,
-      "speedup_factor": 139.45,
-      "throughput_evals_per_sec": 5984297.2
+      "timeout_mark_to_market_verified": true,
+      "data_end_mark_to_market_verified": true,
+      "python_ref_seconds_2k": 0.048085,
+      "numba_opt_seconds_2k": 0.000451,
+      "speedup_factor": 106.56,
+      "throughput_evals_per_sec": 4432133.0
     },
     "batch_size_benchmark_seconds": {
-      "16384": 0.00615,
-      "65536": 0.0019,
-      "131072": 0.00098,
-      "200000": 0.00074
+      "16384": 0.00659,
+      "65536": 0.0017,
+      "131072": 0.00114,
+      "200000": 0.00073
     },
     "selected_optimal_batch_size": 200000,
-    "peak_memory_rss_mb": 282.31
+    "peak_memory_rss_mb": 288.14
   },
-  "updated_at_utc": "2026-11-08 14:24:10.444831+00:00"
+  "updated_at_utc": "2026-11-08 15:36:04.512555+00:00",
+  "source_store_sha256": "17ddcb9ae521eefd6d881eebb95fcc108fb9d4063b0cca581bdcfaac4fce144f",
+  "algo_version": "ASTRA6_V3.1_CAUSAL_REPAIRED",
+  "config_hash": "3503769cd0d2e14be690846e999e406dc87ed5ce62f6ed7002d6472ef727c96f"
 }

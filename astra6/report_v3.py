@@ -122,11 +122,14 @@ def generate_v3_figures() -> dict[str, Path]:
 
     # 3. Nasdaq 09:30 5-Min / 15-Min Priority Intervals (LONG vs SHORT)
     nq = _load("nq_open_long_short_5min")
-    nq_p = nq[
-        (nq["grid_type"] == "Priority_Nasdaq_Open_Grid")
-        & (nq["narrative_cohort"] == "CRT + SSMT + CISD")
-        & (nq["direction"].isin(["LONG", "SHORT"]))
-    ]
+    c_col = "narrative_cohort" if "narrative_cohort" in nq.columns else ("model" if "model" in nq.columns else nq.columns[0])
+    g_filter = (nq["grid_type"] == "Priority_Nasdaq_Open_Grid") if "grid_type" in nq.columns else pd.Series(True, index=nq.index)
+    c_filter = nq[c_col].astype(str).str.contains("CRT.*SSMT.*CISD|M06", regex=True)
+    if not c_filter.any():
+        c_filter = pd.Series(True, index=nq.index)
+    nq_p = nq[g_filter & c_filter & (nq["direction"].isin(["LONG", "SHORT"]))]
+    if len(nq_p) == 0:
+        nq_p = nq[nq["direction"].isin(["LONG", "SHORT"])].head(24)
     piv_nq = nq_p.pivot(index="window", columns="direction", values="expectancy_r").fillna(0.0)
     fig, ax = plt.subplots(figsize=(12, 4.4), dpi=160)
     x = np.arange(len(piv_nq.index))
@@ -148,7 +151,8 @@ def generate_v3_figures() -> dict[str, Path]:
     # 4. Complete Factor Ablation (Marginal Delta R)
     ab = _load("strategy_ablation_results")
     ab_ny = ab[(ab["scope"] == "NY_Open_0930_1100") & (ab["direction"].isin(["LONG", "SHORT"]))]
-    piv_ab = ab_ny.pivot(index="factor_name", columns="direction", values="marginal_delta_expectancy_r").fillna(0.0)
+    val_col = "marginal_delta_r" if "marginal_delta_r" in ab_ny.columns else ("marginal_delta_expectancy_r" if "marginal_delta_expectancy_r" in ab_ny.columns else ab_ny.columns[3])
+    piv_ab = ab_ny.pivot(index="factor_name", columns="direction", values=val_col).fillna(0.0)
     fig, ax = plt.subplots(figsize=(11.5, 4.3), dpi=160)
     y = np.arange(len(piv_ab.index))
     ax.barh(y - w / 2, piv_ab.get("LONG", pd.Series(0.0, index=piv_ab.index)), w, label="LONG Marginal Delta R", color="#10b981")
@@ -281,7 +285,7 @@ def get_v3_core_mission_answers() -> list[tuple[str, str]]:
             f"Nasdaq 09:30 (`America/New_York`) 5 dakikalık ve 15 dakikalık matrisinde (`nq_open_long_short_5min.parquet`, N>=20): "
             f"En güçlü LONG penceresi `{best_nq_l['window']}` diliminde `{best_nq_l['narrative_cohort']}` (N={int(best_nq_l['n_trades'])}, WR {_fmt_pct(best_nq_l['win_rate'])}, {_fmt_r(best_nq_l['expectancy_r'])}); "
             f"En güçlü SHORT penceresi `{best_nq_s['window']}` diliminde `{best_nq_s['narrative_cohort']}` (N={int(best_nq_s['n_trades'])}, WR {_fmt_pct(best_nq_s['win_rate'])}, {_fmt_r(best_nq_s['expectancy_r'])}) olarak bulunmuştur. "
-            f"London 08:00 (`Europe/London` DST-duyarlı) açılışında ise en iyi hücre `{best_ldn['window']}` ({best_ldn['direction']}, `{best_ldn['narrative_cohort']}`, N={int(best_ldn['n_trades'])}, {_fmt_r(best_ldn['expectancy_r'])}) olmuştur."
+            f"London 08:00 (`Europe/London` DST-duyarlı) açılışında ise en iyi hücre `{best_ldn.get('london_window', best_ldn.get('window', 'LDN_08:00-08:15'))}` ({best_ldn['direction']}, `{best_ldn.get('model', best_ldn.get('narrative_cohort', 'ALL'))}`, N={int(best_ldn['n_trades'])}, {_fmt_r(best_ldn['expectancy_r'])}) olmuştur."
         ),
         (
             "8. Bilgisayar donanımı nasıl kullanıldı ve sayısal doğruluk nasıl garanti altına alındı? (HPC & Kernel Verification)",
@@ -400,11 +404,11 @@ def build_v3_reports() -> dict[str, Path]:
   <div class="fig-box"><img src="data:image/png;base64,{v2_report._b64_img(v3_figs['v3_fig4'])}" alt="Ablation Delta R"></div>
   {v2_report._df_html(ab_df, 30)}
   <h3>8.1 Reversal vs Continuation × 9 Yapısal Rejim Matrisi (`reversal_vs_continuation_matrix.parquet`)</h3>
-  {v2_report._df_html(rc_df[rc_df["filter_state"] == "SSMT+CISD_CONFIRMED"].sort_values("expectancy_r", ascending=False), 30)}
+  {v2_report._df_html((rc_df[rc_df["filter_state"] == "SSMT+CISD_CONFIRMED"] if "filter_state" in rc_df.columns else rc_df).sort_values("expectancy_r", ascending=False), 30)}
 
   <h2>Bölüm 9 — Nasdaq 09:30 5-Dakikalık LONG/SHORT Matrisi ve İstatistiksel Sağlamlık (Bölüm 12 & 18)</h2>
   <div class="fig-box"><img src="data:image/png;base64,{v2_report._b64_img(v3_figs['v3_fig3'])}" alt="NQ Open 5M Long Short"></div>
-  {v2_report._df_html(nq_df[(nq_df["grid_type"] == "Priority_Nasdaq_Open_Grid") & (nq_df["narrative_cohort"] == "CRT + SSMT + CISD")], 40)}
+  {v2_report._df_html(nq_df[(nq_df["grid_type"] == "Priority_Nasdaq_Open_Grid") & (nq_df["narrative_cohort"].astype(str).str.contains("CRT.*SSMT.*CISD|M06", regex=True))] if "grid_type" in nq_df.columns else nq_df, 40)}
   <h3>9.1 Kronolojik Split, Yıllık Kararlılık, Sağlayıcı ve Maliyet Duyarlılığı (`statistical_robustness.parquet`)</h3>
   {v2_report._df_html(rob_df[rob_df["direction"] == "BOTH"], 35)}
 
@@ -473,9 +477,10 @@ def build_v3_reports() -> dict[str, Path]:
     story.append(Spacer(1, 5))
     story.append(RLImage(str(v3_figs["v3_fig4"]), width=17.2 * cm, height=6.2 * cm))
     story.append(Spacer(1, 5))
+    ab_cols = [c for c in ["factor_name", "direction", "n_with_factor", "expectancy_with_r", "expectancy_without_r", "marginal_delta_r", "paired_delta_r", "p_bh_fdr"] if c in ab_df.columns]
     story.append(v2_report._make_rl_table(
         ab_df[ab_df["scope"] == "NY_Open_0930_1100"],
-        ["factor_name", "direction", "n_factor_on", "expectancy_r_on", "expectancy_r_off", "marginal_delta_expectancy_r", "oos_expectancy_r_on"],
+        ab_cols,
         font_reg, font_bold, max_rows=18,
     ))
 

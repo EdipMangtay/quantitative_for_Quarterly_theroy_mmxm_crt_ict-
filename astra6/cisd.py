@@ -223,6 +223,60 @@ def extract_tf_cisd_events(
     return df.sort_values("j_conf_m1").reset_index(drop=True)
 
 
+@njit(cache=True)
+def _match_post_sweep_cisd_numba(
+    jsw: np.ndarray,
+    sd: np.ndarray,
+    jc: np.ndarray,
+    ji: np.ndarray,
+    dr: np.ndarray,
+    ro: np.ndarray,
+    epx: np.ndarray,
+    max_wait_m1: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Match each valid liquidity sweep (`jsw[i] >= 0`) with the first subsequent CISD confirmation
+    on timeframe `tf` (`jc[k] >= jsw[i]` and `jc[k] <= jsw[i] + max_wait_m1`) in direction `sd[i]`.
+
+    If `jsw[i] < 0` (missing sweep event), returns `j_post = -1` and `delay_min = np.nan` (P0.6).
+    """
+    n = jsw.shape[0]
+    m = jc.shape[0]
+    j_post = np.full(n, -1, np.int64)
+    delay_min = np.full(n, np.nan, np.float64)
+    ref_lvl = np.full(n, np.nan, np.float64)
+    ext_lvl = np.full(n, np.nan, np.float64)
+    if m == 0:
+        return j_post, delay_min, ref_lvl, ext_lvl
+
+    for i in range(n):
+        sw_i = jsw[i]
+        if sw_i < 0:
+            continue
+        d_i = sd[i]
+        # Binary search first CISD with jc[k] >= sw_i
+        lo_k = 0
+        hi_k = m
+        while lo_k < hi_k:
+            mid = (lo_k + hi_k) // 2
+            if jc[mid] < sw_i:
+                lo_k = mid + 1
+            else:
+                hi_k = mid
+        max_j = sw_i + max_wait_m1
+        for k in range(lo_k, min(m, lo_k + 64)):
+            if jc[k] > max_j:
+                break
+            if dr[k] == d_i:
+                # Must not already be invalidated at the moment of confirmation
+                if ji[k] < 0 or ji[k] > jc[k]:
+                    j_post[i] = jc[k]
+                    delay_min[i] = float(jc[k] - sw_i)
+                    ref_lvl[i] = ro[k]
+                    ext_lvl[i] = epx[k]
+                    break
+    return j_post, delay_min, ref_lvl, ext_lvl
+
+
 def attach_true_cisd_to_signals(
     sig: pd.DataFrame,
     cisd_tables: dict[str, pd.DataFrame],
@@ -230,18 +284,20 @@ def attach_true_cisd_to_signals(
 ) -> pd.DataFrame:
     """Attach true independent M1, M3, M5, M15, M30, H1, H4 CISD flags and confirmation indices to signals.
 
-    A CISD on timeframe `tf` is valid for a signal with `(j_sweep, j_trig, dir)` iff:
-      - `cisd.dir == sig.dir`
-      - `cisd.j_conf_m1 >= sig.j_sweep - tf_lookback` (formed at or after the sweep / structural window)
-      - `cisd.j_conf_m1 <= sig.j_trig` (strictly known at or before `t_signal_known` — never after!)
-      - Not invalidated by `j_trig` (`j_inv_m1 < 0` or `j_inv_m1 > j_trig`)
+    Computes BOTH:
+      1. As-of-trigger context CISD (`cisd_<tf>`, `j_cisd_<tf>`) strictly known `<= j_trig`
+      2. Post-sweep executable CISD (`j_post_cisd_<tf>`, `cisd_delay_min_<tf>`, `post_cisd_sl_<tf>`)
+         matching the actual liquidity sweep confirmation `j_sweep` (`>= 0`) with the first subsequent
+         timeframe CISD confirmation `>= j_sweep`, keeping `j_sweep == -1` distinct (P0.4 & P0.6).
     """
     if len(sig) == 0:
         return sig
     out = sig.copy()
     jt = out["j_trig"].to_numpy(np.int64)
-    jsw_raw = np.maximum(out["j_sweep"].to_numpy(np.int64), out["j_open"].to_numpy(np.int64) - max_lookback_m1)
+    jsw_exact = out["j_sweep"].to_numpy(np.int64)
+    jsw_raw = np.maximum(jsw_exact, out["j_open"].to_numpy(np.int64) - max_lookback_m1)
     sd = out["dir"].to_numpy(np.int8)
+    out["has_valid_liquidity_sweep"] = jsw_exact >= 0
 
     tf_max_age = {
         "M1": 30,
@@ -252,13 +308,26 @@ def attach_true_cisd_to_signals(
         "H1": 360,
         "H4": 960,
     }
+    tf_max_wait_after_sweep = {
+        "M1": 20,
+        "M3": 30,
+        "M5": 45,
+        "M15": 90,
+        "M30": 150,
+        "H1": 240,
+        "H4": 480,
+    }
 
     for tf_key, tbl in cisd_tables.items():
-        col_flag = f"cisd_{tf_key.lower()}"
-        col_j = f"j_cisd_{tf_key.lower()}"
-        col_lvl = f"lvl_cisd_{tf_key.lower()}"
-        col_opp = f"cisd_opp_{tf_key.lower()}"
-        col_exp = f"cisd_exp_{tf_key.lower()}"
+        tk_lo = tf_key.lower()
+        col_flag = f"cisd_{tk_lo}"
+        col_j = f"j_cisd_{tk_lo}"
+        col_lvl = f"lvl_cisd_{tk_lo}"
+        col_opp = f"cisd_opp_{tk_lo}"
+        col_exp = f"cisd_exp_{tk_lo}"
+        col_j_post = f"j_post_cisd_{tk_lo}"
+        col_delay = f"cisd_delay_min_{tk_lo}"
+        col_post_sl = f"post_cisd_ext_{tk_lo}"
         n = len(out)
         flags = np.zeros(n, dtype=bool)
         opp_flags = np.zeros(n, dtype=bool)
@@ -266,11 +335,13 @@ def attach_true_cisd_to_signals(
         j_arr = np.full(n, -1, dtype=np.int64)
         lvl_arr = np.full(n, np.nan, dtype=np.float64)
         max_age = tf_max_age.get(tf_key.upper(), 60)
+        max_wait = tf_max_wait_after_sweep.get(tf_key.upper(), 60)
         if len(tbl) > 0:
             jc = tbl["j_conf_m1"].to_numpy(np.int64)
             ji = tbl["j_inv_m1"].to_numpy(np.int64)
             dr = tbl["dir"].to_numpy(np.int8)
             ro = tbl["ref_open"].to_numpy(np.float64)
+            epx = tbl["extreme_px"].to_numpy(np.float64)
             for i in range(n):
                 min_j = min(jsw_raw[i] - 5, jt[i] - max_age)
                 k = np.searchsorted(jc, jt[i], side="right") - 1
@@ -293,13 +364,37 @@ def attach_true_cisd_to_signals(
                         break
                     k -= 1
                     steps += 1
+
+            j_post, delay_min, _, ext_lvl = _match_post_sweep_cisd_numba(
+                jsw_exact, sd, jc, ji, dr, ro, epx, max_wait
+            )
+        else:
+            j_post = np.full(n, -1, dtype=np.int64)
+            delay_min = np.full(n, np.nan, dtype=np.float64)
+            ext_lvl = np.full(n, np.nan, dtype=np.float64)
+
         out[col_flag] = flags
         out[col_j] = j_arr
         out[col_lvl] = lvl_arr
         out[col_opp] = opp_flags
         out[col_exp] = exp_flags
+        out[col_j_post] = j_post
+        out[col_delay] = delay_min
+        out[col_post_sl] = ext_lvl
 
     # Combine M1 scan_crt intrabar CISD with standalone M1 CISD
     out["cisd_m1"] = out["has_cisd"] | out.get("cisd_m1", False)
+    # If intrabar M1 `j_cisd` from scan_crt occurred at or after `j_sweep >= 0` and earlier than `j_post_cisd_m1`, use it
+    if "j_cisd" in out.columns and "j_post_cisd_m1" in out.columns:
+        jc_crt = out["j_cisd"].to_numpy(np.int64)
+        jp_m1 = out["j_post_cisd_m1"].to_numpy(np.int64)
+        valid_crt_c = (jsw_exact >= 0) & (jc_crt >= jsw_exact) & ((jp_m1 < 0) | (jc_crt < jp_m1))
+        jp_m1 = np.where(valid_crt_c, jc_crt, jp_m1)
+        out["j_post_cisd_m1"] = jp_m1
+        out["cisd_delay_min_m1"] = np.where(
+            (jsw_exact >= 0) & (jp_m1 >= jsw_exact),
+            (jp_m1 - jsw_exact).astype(np.float64),
+            np.nan,
+        )
     return out
 

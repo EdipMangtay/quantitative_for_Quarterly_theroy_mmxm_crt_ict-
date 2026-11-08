@@ -1,0 +1,945 @@
+{
+  "table_rows": {
+    "original_consolidations.parquet": {
+      "before": 159180,
+      "after": 159180,
+      "delta": 0
+    },
+    "mmxm_state_events.parquet": {
+      "before": 316173,
+      "after": 458336,
+      "delta": 142163
+    },
+    "multitf_cisd_events.parquet": {
+      "before": 394880,
+      "after": 394880,
+      "delta": 0
+    },
+    "crt_events.parquet": {
+      "before": 815053,
+      "after": 1315768,
+      "delta": 500715
+    },
+    "ssmt_events.parquet": {
+      "before": 440838,
+      "after": 440838,
+      "delta": 0
+    },
+    "liquidity_events.parquet": {
+      "before": 641776,
+      "after": 1142491,
+      "delta": 500715
+    },
+    "atomic_events.parquet": {
+      "before": 924513,
+      "after": 2253795,
+      "delta": 1329282
+    },
+    "candidate_opportunities.parquet": {
+      "before": 711903,
+      "after": 644237,
+      "delta": -67666
+    },
+    "pretrade_narratives.parquet": {
+      "before": 425634,
+      "after": 375860,
+      "delta": -49774
+    },
+    "fractal_narrative_graph.parquet": {
+      "before": 60808,
+      "after": 1127580,
+      "delta": 1066772
+    },
+    "target_candidates.parquet": {
+      "before": 3424568,
+      "after": 2658437,
+      "delta": -766131
+    },
+    "target_outcomes.parquet": {
+      "before": 3424568,
+      "after": 2658437,
+      "delta": -766131
+    },
+    "target_prediction_results.parquet": {
+      "before": 588,
+      "after": 423,
+      "delta": -165
+    },
+    "all_trades.parquet": {
+      "before": 711903,
+      "after": 644237,
+      "delta": -67666
+    },
+    "long_trades.parquet": {
+      "before": 346436,
+      "after": 312574,
+      "delta": -33862
+    },
+    "short_trades.parquet": {
+      "before": 365467,
+      "after": 331663,
+      "delta": -33804
+    },
+    "combination_results.parquet": {
+      "before": 384,
+      "after": 384,
+      "delta": 0
+    },
+    "v3_family_15_subsets.parquet": {
+      "before": 90,
+      "after": 90,
+      "delta": 0
+    },
+    "timeframe_alignment_matrix.parquet": {
+      "before": 288,
+      "after": 312,
+      "delta": 24
+    },
+    "entry_target_timeframe_matrix.parquet": {
+      "before": 1568,
+      "after": 1354,
+      "delta": -214
+    },
+    "mmxm_qt_narrative_matrix.parquet": {
+      "before": 178,
+      "after": 253,
+      "delta": 75
+    },
+    "macro_micro_ssmt_matrix.parquet": {
+      "before": 55,
+      "after": 55,
+      "delta": 0
+    },
+    "liquidity_cisd_pair_matrix.parquet": {
+      "before": 181,
+      "after": 197,
+      "delta": 16
+    },
+    "reversal_vs_continuation_matrix.parquet": {
+      "before": 229,
+      "after": 44,
+      "delta": -185
+    },
+    "nq_open_long_short_5min.parquet": {
+      "before": 714,
+      "after": 630,
+      "delta": -84
+    },
+    "hourly_combination_matrix.parquet": {
+      "before": 648,
+      "after": 576,
+      "delta": -72
+    },
+    "strategy_ablation_results.parquet": {
+      "before": 54,
+      "after": 54,
+      "delta": 0
+    },
+    "statistical_robustness.parquet": {
+      "before": 135,
+      "after": 270,
+      "delta": 135
+    },
+    "v3_rankings_25.parquet": {
+      "before": 25,
+      "after": 25,
+      "delta": 0
+    }
+  },
+  "mmxm_stage_counts": {
+    "before": {
+      "1": 26477,
+      "2": 26477,
+      "3": 26477,
+      "4": 25243,
+      "5": 24741,
+      "6": 24320,
+      "7": 26477,
+      "8": 26477,
+      "9": 25728,
+      "10": 25728,
+      "11": 16710,
+      "12": 14842,
+      "13": 14842,
+      "14": 10885,
+      "15": 749
+    },
+    "after": {
+      "1": 46466,
+      "2": 46466,
+      "3": 46466,
+      "4": 39506,
+      "5": 39314,
+      "6": 33619,
+      "7": 33493,
+      "8": 32196,
+      "9": 32118,
+      "10": 32118,
+      "11": 19618,
+      "12": 10492,
+      "13": 7039,
+      "14": 25079,
+      "15": 14346
+    }
+  },
+  "example_a_m5_to_h1_liq": {
+    "before": [
+      {
+        "entry_tf": "M1",
+        "narrative_tf": "M5",
+        "target_tf": "H1",
+        "target_type": "H1_LIQ",
+        "tf_hierarchy_relation": "LTF_STRUCT_TO_HTF_TARGET",
+        "direction": "LONG",
+        "qt_phase": "ALL_QT",
+        "n_trades": 8074,
+        "n_unique_opportunities": 8074,
+        "mean_target_distance_r": 3.095,
+        "prob_target_reached_horizon": 0.6753,
+        "prob_trade_reached_before_stop": 0.2611,
+        "prob_reached_only_after_stop": 0.4142,
+        "expectancy_r": -0.23727,
+        "total_r": -1915.71,
+        "profit_factor": 0.6856
+      },
+      {
+        "entry_tf": "M5",
+        "narrative_tf": "M5",
+        "target_tf": "H1",
+        "target_type": "H1_LIQ",
+        "tf_hierarchy_relation": "LTF_STRUCT_TO_HTF_TARGET",
+        "direction": "LONG",
+        "qt_phase": "ALL_QT",
+        "n_trades": 18441,
+        "n_unique_opportunities": 18441,
+        "mean_target_distance_r": 4.823,
+        "prob_target_reached_horizon": 0.644,
+        "prob_trade_reached_before_stop": 0.1768,
+        "prob_reached_only_after_stop": 0.4672,
+        "expectancy_r": -0.35673,
+        "total_r": -6578.42,
+        "profit_factor": 0.5791
+      },
+      {
+        "entry_tf": "M3",
+        "narrative_tf": "M5",
+        "target_tf": "H1",
+        "target_type": "H1_LIQ",
+        "tf_hierarchy_relation": "LTF_STRUCT_TO_HTF_TARGET",
+        "direction": "LONG",
+        "qt_phase": "ALL_QT",
+        "n_trades": 934,
+        "n_unique_opportunities": 934,
+        "mean_target_distance_r": 2.274,
+        "prob_target_reached_horizon": 0.7548,
+        "prob_trade_reached_before_stop": 0.2666,
+        "prob_reached_only_after_stop": 0.4882,
+        "expectancy_r": -0.36791,
+        "total_r": -343.63,
+        "profit_factor": 0.5111
+      },
+      {
+        "entry_tf": "M1",
+        "narrative_tf": "M5",
+        "target_tf": "H1",
+        "target_type": "H1_LIQ",
+        "tf_hierarchy_relation": "LTF_STRUCT_TO_HTF_TARGET",
+        "direction": "SHORT",
+        "qt_phase": "ALL_QT",
+        "n_trades": 9718,
+        "n_unique_opportunities": 9718,
+        "mean_target_distance_r": 4.499,
+        "prob_target_reached_horizon": 0.6208,
+        "prob_trade_reached_before_stop": 0.1654,
+        "prob_reached_only_after_stop": 0.4554,
+        "expectancy_r": -0.43126,
+        "total_r": -4191.01,
+        "profit_factor": 0.5003
+      },
+      {
+        "entry_tf": "M3",
+        "narrative_tf": "M5",
+        "target_tf": "H1",
+        "target_type": "H1_LIQ",
+        "tf_hierarchy_relation": "LTF_STRUCT_TO_HTF_TARGET",
+        "direction": "SHORT",
+        "qt_phase": "ALL_QT",
+        "n_trades": 1123,
+        "n_unique_opportunities": 1123,
+        "mean_target_distance_r": 3.145,
+        "prob_target_reached_horizon": 0.7311,
+        "prob_trade_reached_before_stop": 0.2128,
+        "prob_reached_only_after_stop": 0.5183,
+        "expectancy_r": -0.50747,
+        "total_r": -569.89,
+        "profit_factor": 0.3808
+      },
+      {
+        "entry_tf": "M5",
+        "narrative_tf": "M5",
+        "target_tf": "H1",
+        "target_type": "H1_LIQ",
+        "tf_hierarchy_relation": "LTF_STRUCT_TO_HTF_TARGET",
+        "direction": "SHORT",
+        "qt_phase": "ALL_QT",
+        "n_trades": 21042,
+        "n_unique_opportunities": 21042,
+        "mean_target_distance_r": 7.102,
+        "prob_target_reached_horizon": 0.6056,
+        "prob_trade_reached_before_stop": 0.0971,
+        "prob_reached_only_after_stop": 0.5085,
+        "expectancy_r": -0.55207,
+        "total_r": -11616.61,
+        "profit_factor": 0.416
+      }
+    ],
+    "after": []
+  },
+  "example_b_h1_to_m5_oc": {
+    "before": [
+      {
+        "entry_tf": "M5",
+        "narrative_tf": "H1",
+        "target_tf": "M5",
+        "target_type": "M5_OC",
+        "tf_hierarchy_relation": "HTF_STRUCT_TO_LTF_TARGET",
+        "direction": "LONG",
+        "qt_phase": "ALL_QT",
+        "n_trades": 904,
+        "n_unique_opportunities": 904,
+        "mean_target_distance_r": 1.212,
+        "prob_target_reached_horizon": 0.6294,
+        "prob_trade_reached_before_stop": 0.4502,
+        "prob_reached_only_after_stop": 0.1792,
+        "expectancy_r": -0.18002,
+        "total_r": -162.74,
+        "profit_factor": 0.6751
+      },
+      {
+        "entry_tf": "M15",
+        "narrative_tf": "H1",
+        "target_tf": "M5",
+        "target_type": "M5_OC",
+        "tf_hierarchy_relation": "HTF_STRUCT_TO_LTF_TARGET",
+        "direction": "SHORT",
+        "qt_phase": "ALL_QT",
+        "n_trades": 245,
+        "n_unique_opportunities": 245,
+        "mean_target_distance_r": 1.521,
+        "prob_target_reached_horizon": 0.6531,
+        "prob_trade_reached_before_stop": 0.4,
+        "prob_reached_only_after_stop": 0.2531,
+        "expectancy_r": -0.19658,
+        "total_r": -48.16,
+        "profit_factor": 0.6759
+      },
+      {
+        "entry_tf": "M1",
+        "narrative_tf": "H1",
+        "target_tf": "M5",
+        "target_type": "M5_OC",
+        "tf_hierarchy_relation": "HTF_STRUCT_TO_LTF_TARGET",
+        "direction": "LONG",
+        "qt_phase": "ALL_QT",
+        "n_trades": 11070,
+        "n_unique_opportunities": 11070,
+        "mean_target_distance_r": 1.724,
+        "prob_target_reached_horizon": 0.676,
+        "prob_trade_reached_before_stop": 0.3814,
+        "prob_reached_only_after_stop": 0.2946,
+        "expectancy_r": -0.20168,
+        "total_r": -2232.59,
+        "profit_factor": 0.678
+      },
+      {
+        "entry_tf": "M1",
+        "narrative_tf": "H1",
+        "target_tf": "M5",
+        "target_type": "M5_OC",
+        "tf_hierarchy_relation": "HTF_STRUCT_TO_LTF_TARGET",
+        "direction": "SHORT",
+        "qt_phase": "ALL_QT",
+        "n_trades": 14687,
+        "n_unique_opportunities": 14687,
+        "mean_target_distance_r": 1.944,
+        "prob_target_reached_horizon": 0.657,
+        "prob_trade_reached_before_stop": 0.3442,
+        "prob_reached_only_after_stop": 0.3129,
+        "expectancy_r": -0.22556,
+        "total_r": -3312.81,
+        "profit_factor": 0.6614
+      },
+      {
+        "entry_tf": "M30",
+        "narrative_tf": "H1",
+        "target_tf": "M5",
+        "target_type": "M5_OC",
+        "tf_hierarchy_relation": "HTF_STRUCT_TO_LTF_TARGET",
+        "direction": "SHORT",
+        "qt_phase": "ALL_QT",
+        "n_trades": 522,
+        "n_unique_opportunities": 522,
+        "mean_target_distance_r": 2.146,
+        "prob_target_reached_horizon": 0.6264,
+        "prob_trade_reached_before_stop": 0.318,
+        "prob_reached_only_after_stop": 0.3084,
+        "expectancy_r": -0.23517,
+        "total_r": -122.76,
+        "profit_factor": 0.6607
+      },
+      {
+        "entry_tf": "M5",
+        "narrative_tf": "H1",
+        "target_tf": "M5",
+        "target_type": "M5_OC",
+        "tf_hierarchy_relation": "HTF_STRUCT_TO_LTF_TARGET",
+        "direction": "SHORT",
+        "qt_phase": "ALL_QT",
+        "n_trades": 1277,
+        "n_unique_opportunities": 1277,
+        "mean_target_distance_r": 1.427,
+        "prob_target_reached_horizon": 0.6319,
+        "prob_trade_reached_before_stop": 0.4017,
+        "prob_reached_only_after_stop": 0.2302,
+        "expectancy_r": -0.23709,
+        "total_r": -302.76,
+        "profit_factor": 0.6082
+      },
+      {
+        "entry_tf": "H1",
+        "narrative_tf": "H1",
+        "target_tf": "M5",
+        "target_type": "M5_OC",
+        "tf_hierarchy_relation": "HTF_STRUCT_TO_LTF_TARGET",
+        "direction": "LONG",
+        "qt_phase": "ALL_QT",
+        "n_trades": 1481,
+        "n_unique_opportunities": 1481,
+        "mean_target_distance_r": 2.853,
+        "prob_target_reached_horizon": 0.6226,
+        "prob_trade_reached_before_stop": 0.2789,
+        "prob_reached_only_after_stop": 0.3437,
+        "expectancy_r": -0.24249,
+        "total_r": -359.13,
+        "profit_factor": 0.6688
+      },
+      {
+        "entry_tf": "M15",
+        "narrative_tf": "H1",
+        "target_tf": "M5",
+        "target_type": "M5_OC",
+        "tf_hierarchy_relation": "HTF_STRUCT_TO_LTF_TARGET",
+        "direction": "LONG",
+        "qt_phase": "ALL_QT",
+        "n_trades": 198,
+        "n_unique_opportunities": 198,
+        "mean_target_distance_r": 1.237,
+        "prob_target_reached_horizon": 0.5909,
+        "prob_trade_reached_before_stop": 0.404,
+        "prob_reached_only_after_stop": 0.1869,
+        "expectancy_r": -0.24357,
+        "total_r": -48.23,
+        "profit_factor": 0.5945
+      },
+      {
+        "entry_tf": "M30",
+        "narrative_tf": "H1",
+        "target_tf": "M5",
+        "target_type": "M5_OC",
+        "tf_hierarchy_relation": "HTF_STRUCT_TO_LTF_TARGET",
+        "direction": "LONG",
+        "qt_phase": "ALL_QT",
+        "n_trades": 472,
+        "n_unique_opportunities": 472,
+        "mean_target_distance_r": 1.783,
+        "prob_target_reached_horizon": 0.6631,
+        "prob_trade_reached_before_stop": 0.3178,
+        "prob_reached_only_after_stop": 0.3453,
+        "expectancy_r": -0.27414,
+        "total_r": -129.39,
+        "profit_factor": 0.6038
+      },
+      {
+        "entry_tf": "H1",
+        "narrative_tf": "H1",
+        "target_tf": "M5",
+        "target_type": "M5_OC",
+        "tf_hierarchy_relation": "HTF_STRUCT_TO_LTF_TARGET",
+        "direction": "SHORT",
+        "qt_phase": "ALL_QT",
+        "n_trades": 1919,
+        "n_unique_opportunities": 1919,
+        "mean_target_distance_r": 2.716,
+        "prob_target_reached_horizon": 0.5972,
+        "prob_trade_reached_before_stop": 0.2574,
+        "prob_reached_only_after_stop": 0.3398,
+        "expectancy_r": -0.27661,
+        "total_r": -530.81,
+        "profit_factor": 0.6341
+      }
+    ],
+    "after": []
+  },
+  "combination_top5_both": {
+    "before": [
+      {
+        "base_config_id": "CFG64_35",
+        "config_label": "CRT+CISD+MMXM",
+        "n_trades": 61544,
+        "win_rate": 0.28836,
+        "expectancy_r": -0.17544,
+        "ci95_low": -0.18595,
+        "ci95_high": -0.16493
+      },
+      {
+        "base_config_id": "CFG64_51",
+        "config_label": "CRT+MacroSSMT+CISD+MMXM",
+        "n_trades": 15464,
+        "win_rate": 0.27373,
+        "expectancy_r": -0.21357,
+        "ci95_low": -0.23437,
+        "ci95_high": -0.19278
+      },
+      {
+        "base_config_id": "CFG64_43",
+        "config_label": "CRT+MicroSSMT+CISD+MMXM",
+        "n_trades": 12880,
+        "win_rate": 0.27252,
+        "expectancy_r": -0.2187,
+        "ci95_low": -0.2414,
+        "ci95_high": -0.19601
+      },
+      {
+        "base_config_id": "CFG64_34",
+        "config_label": "CRT+CISD",
+        "n_trades": 53755,
+        "win_rate": 0.26375,
+        "expectancy_r": -0.24321,
+        "ci95_low": -0.25423,
+        "ci95_high": -0.23218
+      },
+      {
+        "base_config_id": "CFG64_63",
+        "config_label": "CRT+MacroSSMT+MicroSSMT+StdSMT+CISD+MMXM",
+        "n_trades": 4362,
+        "win_rate": 0.26204,
+        "expectancy_r": -0.24387,
+        "ci95_low": -0.28277,
+        "ci95_high": -0.20496
+      }
+    ],
+    "after": [
+      {
+        "base_config_id": "CFG64_56",
+        "n_trades": 506,
+        "win_rate": 0.27668,
+        "expectancy_r": -0.19765
+      },
+      {
+        "base_config_id": "CFG64_30",
+        "n_trades": 3381,
+        "win_rate": 0.26442,
+        "expectancy_r": -0.23119
+      },
+      {
+        "base_config_id": "CFG64_60",
+        "n_trades": 236,
+        "win_rate": 0.26271,
+        "expectancy_r": -0.24366
+      },
+      {
+        "base_config_id": "CFG64_62",
+        "n_trades": 3748,
+        "win_rate": 0.25961,
+        "expectancy_r": -0.25073
+      },
+      {
+        "base_config_id": "CFG64_35",
+        "n_trades": 62870,
+        "win_rate": 0.26378,
+        "expectancy_r": -0.25443
+      }
+    ]
+  },
+  "rankings_25": {
+    "before": [
+      {
+        "cat": "01. Best LONG overall",
+        "n": 18773,
+        "wr": 0.27918,
+        "exp": -0.19629
+      },
+      {
+        "cat": "02. Best SHORT overall",
+        "n": 15575,
+        "wr": 0.24957,
+        "exp": -0.28171
+      },
+      {
+        "cat": "03. Best LONG Nasdaq Open (09:30-11:00)",
+        "n": 4005,
+        "wr": 0.33283,
+        "exp": -0.04719
+      },
+      {
+        "cat": "04. Best SHORT Nasdaq Open (09:30-11:00)",
+        "n": 4226,
+        "wr": 0.3107,
+        "exp": -0.09066
+      },
+      {
+        "cat": "05. Best reversal LONG",
+        "n": 32155,
+        "wr": 0.28027,
+        "exp": -0.19273
+      },
+      {
+        "cat": "06. Best reversal SHORT",
+        "n": 33033,
+        "wr": 0.24003,
+        "exp": -0.31159
+      },
+      {
+        "cat": "07. Best continuation LONG",
+        "n": 71445,
+        "wr": 0.24378,
+        "exp": -0.30645
+      },
+      {
+        "cat": "08. Best continuation SHORT",
+        "n": 64330,
+        "wr": 0.20922,
+        "exp": -0.41231
+      },
+      {
+        "cat": "09. Best Weekly->H4 alignment",
+        "n": 9904,
+        "wr": 0.31179,
+        "exp": -0.13044
+      },
+      {
+        "cat": "10. Best Daily->H1 alignment",
+        "n": 5603,
+        "wr": 0.32268,
+        "exp": -0.12038
+      },
+      {
+        "cat": "11. Best H4->M15 alignment",
+        "n": 19227,
+        "wr": 0.28673,
+        "exp": -0.17402
+      },
+      {
+        "cat": "12. Best M15->M5 alignment",
+        "n": 35138,
+        "wr": 0.24668,
+        "exp": -0.28609
+      },
+      {
+        "cat": "13. Best M5->M1 alignment",
+        "n": 52278,
+        "wr": 0.24877,
+        "exp": -0.27999
+      },
+      {
+        "cat": "14. Best M5 MMXM -> H1 liquidity",
+        "n": 48776,
+        "wr": 0.21209,
+        "exp": -0.39726
+      },
+      {
+        "cat": "15. Best H1 MMXM/CRT -> M5 OC",
+        "n": 15647,
+        "wr": 0.34211,
+        "exp": -0.03636
+      },
+      {
+        "cat": "16. Best higher-timeframe target models (LTF Entry -> HTF Target)",
+        "n": 100016,
+        "wr": 0.22951,
+        "exp": -0.34391
+      },
+      {
+        "cat": "17. Best lower-timeframe target models (HTF Reversal -> LTF OC Target)",
+        "n": 19245,
+        "wr": 0.35614,
+        "exp": -0.01654
+      },
+      {
+        "cat": "18. Best Macro SSMT only",
+        "n": 36420,
+        "wr": 0.26233,
+        "exp": -0.24632
+      },
+      {
+        "cat": "19. Best Micro SSMT only",
+        "n": 43641,
+        "wr": 0.26182,
+        "exp": -0.24787
+      },
+      {
+        "cat": "20. Best No-SSMT models",
+        "n": 61544,
+        "wr": 0.28836,
+        "exp": -0.17544
+      },
+      {
+        "cat": "21. Best CRT-free models",
+        "n": 63926,
+        "wr": 0.22446,
+        "exp": -0.36151
+      },
+      {
+        "cat": "22. Best MMXM x QT narrative",
+        "n": 57158,
+        "wr": 0.25071,
+        "exp": -0.28496
+      },
+      {
+        "cat": "23. Best low-drawdown models (NY Open H1 CRT+SSMT+CISD)",
+        "n": 542,
+        "wr": 0.35978,
+        "exp": -0.0091
+      },
+      {
+        "cat": "24. Best robust OOS expectancy",
+        "n": 1616,
+        "wr": 0.35953,
+        "exp": 0.03993
+      },
+      {
+        "cat": "25. Best no-trade conditions (Worst Expectancy Avoided)",
+        "n": 41705,
+        "wr": 0.18156,
+        "exp": -0.49692
+      }
+    ],
+    "after": [
+      {
+        "cat": "01. Best LONG overall (searched across 64 core configs)",
+        "strat": "base_config_id=CFG64_60 | config_label=CRT+MacSSMT+MicSSMT+StdSMT",
+        "n": 76,
+        "wr": 0.3158,
+        "exp": -0.0766,
+        "se_clust": 0.1813,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "02. Best SHORT overall (searched across 64 core configs)",
+        "strat": "base_config_id=CFG64_30 | config_label=MacSSMT+MicSSMT+StdSMT+CISD",
+        "n": 1813,
+        "wr": 0.2609,
+        "exp": -0.2421,
+        "se_clust": 0.0454,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "03. Best LONG Nasdaq Open 09:30-11:00 (searched across 64 configs)",
+        "strat": "base_config_id=CFG64_33 | config_label=CRT+MMXM",
+        "n": 234,
+        "wr": 0.3718,
+        "exp": 0.1009,
+        "se_clust": 0.104,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "04. Best SHORT Nasdaq Open 09:30-11:00 (searched across 64 configs)",
+        "strat": "base_config_id=CFG64_48 | config_label=CRT+MacSSMT",
+        "n": 39,
+        "wr": 0.359,
+        "exp": 0.0639,
+        "se_clust": 0.2693,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "05. Best reversal LONG (searched across structural regimes)",
+        "strat": "structural_regime=Mixed_HTF_LTF_State | mmxm_directional_relation=HTF_Reversal_LTF_Continuation",
+        "n": 4182,
+        "wr": 0.3216,
+        "exp": -0.1068,
+        "se_clust": 0.0307,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "06. Best reversal SHORT (searched across structural regimes)",
+        "strat": "structural_regime=Mixed_HTF_LTF_State | mmxm_directional_relation=HTF_Reversal_LTF_Continuation",
+        "n": 4319,
+        "wr": 0.2577,
+        "exp": -0.2666,
+        "se_clust": 0.0279,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "07. Best continuation LONG (searched across structural regimes)",
+        "strat": "structural_regime=Mixed_HTF_LTF_State | mmxm_directional_relation=Standard_Single_TF_MMXM",
+        "n": 10363,
+        "wr": 0.2774,
+        "exp": -0.2087,
+        "se_clust": 0.0199,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "08. Best continuation SHORT (searched across structural regimes)",
+        "strat": "structural_regime=Mixed_HTF_LTF_State | mmxm_directional_relation=Standard_Single_TF_MMXM",
+        "n": 10266,
+        "wr": 0.2284,
+        "exp": -0.3465,
+        "se_clust": 0.0184,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "09. Best Weekly->H4 alignment",
+        "strat": "structure_chain=W1 -> H4 | alignment_state=Aligned | direction=SHORT",
+        "n": 610,
+        "wr": 0.3852,
+        "exp": 0.0349,
+        "se_clust": 0.0522,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "10. Best Daily->H1 alignment",
+        "strat": "structure_chain=D1 -> H1 | alignment_state=Counter_HTF_Correction | direction=LONG",
+        "n": 2768,
+        "wr": 0.3743,
+        "exp": -0.0039,
+        "se_clust": 0.0297,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "11. Best H4->M15 alignment",
+        "strat": "structure_chain=H4 -> M15 | alignment_state=Counter_HTF_Correction | direction=LONG",
+        "n": 11092,
+        "wr": 0.3101,
+        "exp": -0.125,
+        "se_clust": 0.017,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "12. Best M15->M5 alignment",
+        "strat": "structure_chain=M15 -> M5 -> M1 | alignment_state=Full_3TF_Aligned | direction=LONG",
+        "n": 24499,
+        "wr": 0.2927,
+        "exp": -0.1708,
+        "se_clust": 0.0119,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "13. Best M5->M1 alignment",
+        "strat": "structure_chain=M15 -> M5 -> M1 | alignment_state=Full_3TF_Aligned | direction=LONG",
+        "n": 24499,
+        "wr": 0.2927,
+        "exp": -0.1708,
+        "se_clust": 0.0119,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "14. Best M5 MMXM/Structure -> H1 liquidity (target-consistent sim)",
+        "strat": "entry_tf=M1 | narrative_tf=M5 | target_type=H1_LIQ | direction=LONG",
+        "n": 11017,
+        "wr": 0.2551,
+        "exp": -0.2625,
+        "se_clust": 0.016,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "15. Best H1 Reversal -> M5 OC (target-consistent sim)",
+        "strat": "entry_tf=M15 | narrative_tf=H1 | target_type=M5_OC | direction=SHORT",
+        "n": 792,
+        "wr": 0.4457,
+        "exp": 0.1911,
+        "se_clust": 0.0615,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "16. Best higher-timeframe target models (LTF -> HTF target-consistent)",
+        "strat": "narrative_tf=M3 | entry_tf=M1 | target_tf=H1 | target_type=MMXM_ALL_TARGETS | direction=LONG",
+        "n": 57,
+        "wr": 0.3333,
+        "exp": 0.3598,
+        "se_clust": 0.4108,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "17. Best lower-timeframe target models (HTF -> LTF target-consistent)",
+        "strat": "narrative_tf=H1 | entry_tf=M5 | target_tf=M15 | target_type=M15_LIQ | direction=LONG",
+        "n": 325,
+        "wr": 0.8215,
+        "exp": 0.8279,
+        "se_clust": 0.0657,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "18. Best Macro SSMT only (searched across 32 configs)",
+        "strat": "base_config_id=CFG64_53 | config_label=CRT+MacSSMT+StdSMT+MMXM | direction=LONG",
+        "n": 105,
+        "wr": 0.2952,
+        "exp": -0.1371,
+        "se_clust": 0.1413,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "19. Best Micro SSMT only (searched across 32 configs)",
+        "strat": "base_config_id=CFG64_44 | config_label=CRT+MicSSMT+StdSMT | direction=LONG",
+        "n": 170,
+        "wr": 0.3,
+        "exp": -0.1219,
+        "se_clust": 0.1127,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "20. Best No-SSMT models (searched across 24 non-SMT configs)",
+        "strat": "base_config_id=CFG64_32 | config_label=CRT | direction=LONG",
+        "n": 1505,
+        "wr": 0.2777,
+        "exp": -0.1897,
+        "se_clust": 0.0398,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "21. Best CRT-free models (searched across 96 non-CRT cells)",
+        "strat": "base_config_id=CFG64_12 | config_label=MicSSMT+StdSMT | direction=LONG",
+        "n": 161,
+        "wr": 0.236,
+        "exp": -0.3137,
+        "se_clust": 0.0979,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "22. Best MMXM x QT narrative (searched across true joined MMXM stages x QT)",
+        "strat": "mmxm_stage_label=13_COMPLETED | qt_90m_quarter=Q2 | direction=LONG | hypothesis_type=REVERSAL",
+        "n": 42,
+        "wr": 0.4524,
+        "exp": 0.3651,
+        "se_clust": 0.2856,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "23. Best low-drawdown models (searched across all 384 scope x config cells)",
+        "strat": "scope=NY_Open_0930_1100 | base_config_id=CFG64_61 | config_label=CRT+MacSSMT+MicSSMT+StdSMT+MMXM | direction=BOTH",
+        "n": 33,
+        "wr": 0.3939,
+        "exp": 0.165,
+        "se_clust": 0.2532,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "24. Best robust OOS expectancy (selected in-sample, verified on OOS_TEST)",
+        "strat": "scope=NY_Open_0930_1100 | base_config_id=CFG64_48 | config_label=CRT+MacSSMT | direction=SHORT",
+        "n": 39,
+        "wr": 0.359,
+        "exp": 0.0639,
+        "se_clust": 0.2693,
+        "verdict": "NO VERIFIED POSITIVE EDGE"
+      },
+      {
+        "cat": "25. Best no-trade conditions (Worst Expectancy Avoided across all cells)",
+        "strat": "scope=All_Sessions | base_config_id=CFG64_53 | config_label=CRT+MacSSMT+StdSMT+MMXM | direction=SHORT",
+        "n": 161,
+        "wr": 0.087,
+        "exp": -0.7841,
+        "se_clust": 0.0669,
+        "verdict": "VERIFIED_NO_TRADE_AVOIDANCE_ZONE (Statistically Negative Expectancy)"
+      }
+    ]
+  }
+}

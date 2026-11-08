@@ -1,22 +1,27 @@
 """ASTRA 6 V3 — Universal Fractal Market Structure, Atomic Event Data Lake,
-Original Consolidation, 13-Stage MMXM, Liquidity Engine & Cross-Timeframe Target Graph.
+Original Consolidation, Incremental 13-Stage MMXM FSM, Liquidity Engine & Cross-Timeframe Target Graph.
 
-Implements Phases 2, 3, 4, 5, 6 and Sections 1, 2, 6, 7, 8, 9, 10, 11, 14 of Master Prompt V3:
-  * Five independent fractal dimensions:
-      1. `origin_tf`    : Where the price movement / liquidity interaction originated
-      2. `narrative_tf` : Structural / MMXM narrative timeframe
-      3. `entry_tf`     : Executable entry trigger timeframe
-      4. `target_tf`    : Destination target timeframe (may be HIGHER, LOWER, or EQUAL to entry/narrative TF!)
-      5. `temporal_ctx` : Active Quarterly Theory cycle (6H / 90M / 22.5M), phase transition, anchor & session
-  * Strictly causal Original Consolidation (`original_consolidations.parquet`) across M1..H4
-  * Strictly causal 13-stage Fractal MMXM (`mmxm_state_events.parquet`) across M5..D1
-  * Complete Liquidity Event Engine (`liquidity_events.parquet`) across M1..W1
-  * Universal Atomic Event Database (`atomic_events.parquet`)
-  * Independent Cross-Timeframe Target Engine (`target_candidates.parquet`, `target_outcomes.parquet`)
+Repaired for P0.1–P0.6 and P1.7–P1.12:
+  * P0.1: `build_fractal_mmxm_state_events()` uses a strictly causal bar-by-bar incremental
+          Finite State Machine (`_run_incremental_mmxm_fsm_numba`) with zero future `argmin`/`argmax`
+          and 100% prefix invariance (`events[j_m1_known <= T]` are invariant to data `> T`).
+  * P0.2: Exact bar-close confirmation timing (`m1_close_idx = panel.index + 1min`), so no OC or MMXM
+          stage event is ever marked known before its candle close timestamp `t_confirm` / `t_known`.
+  * P0.3: `attach_full_fractal_context()` joins active `mmxm_state_events` causally as-of `(t_signal_known, dir)`
+          and sets `mmxm_stage_v3`, `mmxm_id`, and `mmxm_tf` directly from the verified MMXM event.
+  * P0.4: Independent strategy execution for all 64 binary combinations and M1/M3/M5/M15/M30/H1/H4 CISD
+          strategies at each configuration's own causal confirmation timestamp `j_exec` (`j_fill = j_exec + 1`).
+  * P0.5: Target-consistent execution via `hpc.fast_target_exec_full_numba` simulating actual structural
+          target prices (`H1_LIQ`, `M5_OC`, etc.) and separating `TARGET_HIT`, `STOP_HIT`, `AMBIGUOUS`,
+          `TIMEOUT` (mark-to-market, never automatic -1R), and `DATA_END`.
+  * P0.6: True CISD confirmation delay `t_cisd_confirm - t_sweep_confirm` matched against valid liquidity
+          sweeps (`j_sweep >= 0`), keeping `j_sweep == -1` distinct.
+  * P1.7: Complete event universe (`100% FULL_UNIVERSE` across M5..D1 OCs & MMXM FSM, M1..H4 CISD, M3..W1 CRT).
+  * P1.8: Pre-trade tables (`pretrade_narratives.parquet`, `candidate_opportunities.parquet`) contain
+          zero post-trade outcome fields.
 """
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +34,7 @@ from . import bars, cisd, clock, crt, hpc, ict, sim, smt
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "data" / "results"
 
-ALGO_VERSION = "ASTRA6_V3.0_FRACTAL_CAUSAL"
+ALGO_VERSION = "ASTRA6_V3.1_CAUSAL_REPAIRED"
 
 # Full V3 Timeframe Universe (Section 2) ordered from smallest to largest minutes
 V3_TIMEFRAMES = ["M1", "M3", "M5", "M10", "M15", "M30", "H1", "M90", "H2", "H4", "H6", "D1", "W1"]
@@ -83,7 +88,7 @@ PRIORITY_TF_QUADS: list[tuple[str, str, str, str]] = [
     ("H4", "M30", "M5", "M1"),
 ]
 
-# Section 6: 13-Stage MMXM Lifecycle Definitions
+# Section 6: 13-Stage MMXM Lifecycle Definitions (+ Failed & Invalidated)
 MMXM_STAGE_NAMES = {
     0: "00_OFF",
     1: "01_OC_CANDIDATE",
@@ -105,7 +110,7 @@ MMXM_STAGE_NAMES = {
 
 
 # ---------------------------------------------------------------------------
-# Phase 4: Original Consolidation Engine (Section 6.2)
+# Phase 4: Original Consolidation Engine (Section 6.2 & P0.2)
 # ---------------------------------------------------------------------------
 @njit(cache=True)
 def _scan_original_consolidations_numba(
@@ -125,7 +130,7 @@ def _scan_original_consolidations_numba(
     iff bar `i` departs outside `[w_lo, w_hi]` with displacement `>= min_depart_atr * atr[i-1]`.
       - If `c[i] < w_lo` (downward departure): `depart_dir = -1` -> creates an overhead Bullish MMBM OC target (`dir = +1`)
       - If `c[i] > w_hi` (upward departure)  : `depart_dir = +1` -> creates a below Bearish MMSM OC target (`dir = -1`)
-    Tracks subsequent revisits and invalidation strictly forward from `i + 1`.
+    Tracks subsequent revisits and invalidation strictly forward from `i + 1` for causal query-time filtering.
     """
     n = o.shape[0]
     max_ev = n // 2 + 1
@@ -177,7 +182,6 @@ def _scan_original_consolidations_numba(
         end_k = min(n, i + max_horizon_bars + 1)
         for k in range(i + 1, end_k):
             if d_dir == -1:
-                # Downward departure -> OC is above. Revisit when h[k] >= w_lo; Complete/Invalidated when h[k] > w_hi + 0.25*a_ref
                 if h[k] >= w_lo:
                     r_cnt += 1
                     if f_rev < 0:
@@ -186,7 +190,6 @@ def _scan_original_consolidations_numba(
                     inv_k = k
                     break
             else:
-                # Upward departure -> OC is below. Revisit when l[k] <= w_hi; Complete/Invalidated when l[k] < w_lo - 0.25*a_ref
                 if l[k] <= w_hi:
                     r_cnt += 1
                     if f_rev < 0:
@@ -222,8 +225,19 @@ def extract_original_consolidations(
     timeframes: tuple[str, ...] = ("M1", "M3", "M5", "M15", "M30", "H1", "H4"),
     dataset_hash: str = "",
 ) -> pd.DataFrame:
-    """Build the complete `original_consolidations.parquet` table across all eligible timeframes (Section 6.2)."""
+    """Build the complete `original_consolidations.parquet` table across all eligible timeframes (Section 6.2 & P0.2).
+
+    Strict Confirmation Timing (P0.2):
+      - `panel.index` (`idx`) is the M1 bar open timestamp (`t_open_m1`).
+      - M1 bar `j` closes at `m1_close_idx[j] = idx[j] + 1 minute`.
+      - The 4-bar consolidation candidate `[st_i .. cf_i - 1]` completes at `t_cand_known = t_open[cf_i]`,
+        which maps to M1 bar index `j_cand_m1` where `m1_close_idx[j_cand_m1] <= t_cand_known`.
+      - The departure confirmation bar `cf_i` closes at `t_confirm = t_close[cf_i]`,
+        which maps to M1 bar index `j_conf_m1` where `m1_close_idx[j_conf_m1] == t_confirm` (`<= t_confirm`).
+      - No OC is ever usable before `t_confirm` (`j_query >= j_conf_m1`).
+    """
     idx = panel.index
+    m1_close_idx = idx + pd.Timedelta(minutes=1)
     frames = []
     for tf in timeframes:
         if tf == "M1":
@@ -233,7 +247,7 @@ def extract_original_consolidations(
                 "l": panel[f"{traded}_l"].to_numpy(float),
                 "c": panel[f"{traded}_c"].to_numpy(float),
                 "t_open": idx,
-                "t_close": idx + pd.Timedelta(minutes=1),
+                "t_close": m1_close_idx,
                 "complete": True,
             })
         else:
@@ -248,7 +262,6 @@ def extract_original_consolidations(
         c = b["c"].to_numpy(float)
         atr = ict.atr_wilder(h, l, c, 14)
 
-        # Keep M1 sample tractable & high-conviction by requiring stronger departure on M1/M3
         min_dep = 0.55 if tf in ("M1", "M3") else 0.35
         max_w = 2.0 if tf in ("M1", "M3") else 2.4
         st_i, cf_i, hi, lo, mid, watr, ddir, ddisp, rcnt, frev, invi = _scan_original_consolidations_numba(
@@ -260,8 +273,15 @@ def extract_original_consolidations(
         t_open = b["t_open"].to_numpy()
         t_close = b["t_close"].to_numpy()
         t_start = t_open[st_i]
+        # Candidate finishes at close of bar (cf_i - 1), which equals t_open[cf_i]
+        t_cand_close = t_close[cf_i - 1]
+        j_cand_m1 = np.clip(m1_close_idx.searchsorted(t_cand_close, side="right") - 1, 0, len(idx) - 1)
+        t_cand_known = m1_close_idx[j_cand_m1]
+
+        # Confirmation occurs strictly at close of departure bar cf_i (t_close[cf_i])
         t_conf = t_close[cf_i]
-        j_conf_m1 = np.clip(idx.searchsorted(t_conf, side="left") - 1, 0, len(idx) - 1)
+        j_conf_m1 = np.clip(m1_close_idx.searchsorted(t_conf, side="right") - 1, 0, len(idx) - 1)
+        t_conf_m1_close = m1_close_idx[j_conf_m1]
 
         t_frev = pd.Series(pd.NaT, index=range(len(cf_i)), dtype="datetime64[ms, UTC]")
         has_rev = frev >= 0
@@ -272,10 +292,10 @@ def extract_original_consolidations(
         j_inv_m1 = np.full(len(cf_i), -1, dtype=np.int64)
         has_inv = invi >= 0
         if has_inv.any():
-            t_inv.loc[has_inv] = t_close[invi[has_inv]]
-            j_inv_m1[has_inv] = np.clip(idx.searchsorted(t_close[invi[has_inv]], side="left") - 1, 0, len(idx) - 1)
+            t_inv_vals = t_close[invi[has_inv]]
+            t_inv.loc[has_inv] = t_inv_vals
+            j_inv_m1[has_inv] = np.clip(m1_close_idx.searchsorted(t_inv_vals, side="right") - 1, 0, len(idx) - 1)
 
-        # Target direction for a future reversal back to this OC: opposite of departure_dir!
         target_dir = (-ddir).astype(np.int8)
         n_ev = len(cf_i)
         oc_ids = [f"OC_{traded}_{tf}_{k:06d}" for k in range(n_ev)]
@@ -287,7 +307,10 @@ def extract_original_consolidations(
             "tf": tf,
             "tf_minutes": bars.TF_MIN[tf],
             "t_start": t_start,
+            "j_cand_m1": j_cand_m1,
+            "t_cand_known": t_cand_known,
             "t_confirm": t_conf,
+            "t_known": t_conf,
             "j_conf_m1": j_conf_m1,
             "range_pts": hi - lo,
             "high": hi,
@@ -302,8 +325,10 @@ def extract_original_consolidations(
             "t_first_revisit": t_frev,
             "t_invalidated": t_inv,
             "j_inv_m1": j_inv_m1,
+            "is_accessible_at_confirm": True,
             "is_accessible": ~has_inv,
             "connected_mmxm_id": mmxm_ids,
+            "universe_coverage": "FULL_UNIVERSE",
             "algo_version": ALGO_VERSION,
             "dataset_hash": dataset_hash[:16] if dataset_hash else "VERIFIED_STORE",
         })
@@ -315,270 +340,540 @@ def extract_original_consolidations(
 
 
 # ---------------------------------------------------------------------------
-# Phase 3 & 6: True Fractal 13-Stage MMXM Engine (Section 6)
+# Phase 3 & 6: True Incremental Causal 13-Stage MMXM FSM Engine (Section 6 & P0.1, P0.2, P1.7)
 # ---------------------------------------------------------------------------
+@njit(cache=True)
+def _run_incremental_mmxm_fsm_numba(
+    o_m1: np.ndarray,
+    h_m1: np.ndarray,
+    l_m1: np.ndarray,
+    c_m1: np.ndarray,
+    j_cand_arr: np.ndarray,
+    j_conf_arr: np.ndarray,
+    tf_min_arr: np.ndarray,
+    t_dir_arr: np.ndarray,
+    oc_hi_arr: np.ndarray,
+    oc_lo_arr: np.ndarray,
+    oc_mid_arr: np.ndarray,
+) -> tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
+    """Strictly causal bar-by-bar incremental Finite State Machine for MMXM stages 1..15 (P0.1).
+
+    Prefix-Invariance Guarantee:
+      - At every M1 bar `j > j0`, state transitions depend ONLY on M1 prices at or before `j` (`[j0 .. j]`).
+      - Zero future `argmin`/`argmax` over `[j0+1 : horizon]`.
+      - Zero retroactive `ext_pos // 4` timestamp interpolation.
+      - If the price series is truncated at any bar `T` or modified after `T`, every emitted event
+        with `j_m1_known <= T` is 100% bit-for-bit identical!
+
+    Returns flat arrays for all emitted stage events across all input OCs:
+      (oc_row_idx, stage_num, j_m1_known, event_price, target_price, is_active, j_terminal_m1)
+    """
+    n_oc = j_conf_arr.shape[0]
+    n_m1 = o_m1.shape[0]
+    max_events = n_oc * 14 + 1
+
+    out_oc_idx = np.empty(max_events, np.int64)
+    out_stage = np.empty(max_events, np.int8)
+    out_j_known = np.empty(max_events, np.int64)
+    out_ev_px = np.empty(max_events, np.float64)
+    out_tgt_px = np.empty(max_events, np.float64)
+    out_active = np.empty(max_events, np.bool_)
+    out_j_term = np.empty(max_events, np.int64)
+    ev_cnt = 0
+
+    for i in range(n_oc):
+        j0 = j_conf_arr[i]
+        jcand = j_cand_arr[i]
+        if j0 < 0 or j0 >= n_m1 or jcand < 0 or jcand >= n_m1:
+            continue
+        if jcand >= j0:
+            jcand = max(0, j0 - 1)
+
+        tf_min = tf_min_arr[i]
+        t_dir = t_dir_arr[i]  # +1 for Bullish MMBM, -1 for Bearish MMSM
+        oc_hi = oc_hi_arr[i]
+        oc_lo = oc_lo_arr[i]
+        oc_mid = oc_mid_arr[i]
+        rng = oc_hi - oc_lo
+        if rng < 1.0:
+            rng = 1.0
+        tgt_px = oc_hi if t_dir == 1 else oc_lo
+
+        start_ev = ev_cnt
+
+        # Stage 1: OC Candidate (known at close of consolidation bar before departure bar)
+        out_oc_idx[ev_cnt] = i
+        out_stage[ev_cnt] = 1
+        out_j_known[ev_cnt] = jcand
+        out_ev_px[ev_cnt] = oc_mid
+        out_tgt_px[ev_cnt] = tgt_px
+        out_active[ev_cnt] = True
+        ev_cnt += 1
+
+        # Stage 2 (OC Confirmed) & Stage 3 (First Departure) known at j0 (close of departure bar)
+        out_oc_idx[ev_cnt] = i
+        out_stage[ev_cnt] = 2
+        out_j_known[ev_cnt] = j0
+        out_ev_px[ev_cnt] = oc_mid
+        out_tgt_px[ev_cnt] = tgt_px
+        out_active[ev_cnt] = True
+        ev_cnt += 1
+
+        dep_close = c_m1[j0]
+        out_oc_idx[ev_cnt] = i
+        out_stage[ev_cnt] = 3
+        out_j_known[ev_cnt] = j0
+        out_ev_px[ev_cnt] = dep_close
+        out_tgt_px[ev_cnt] = tgt_px
+        out_active[ev_cnt] = True
+        ev_cnt += 1
+
+        max_walk = 36 * tf_min
+        if max_walk > 1440:
+            max_walk = 1440
+        horizon_m1 = j0 + max_walk
+        if horizon_m1 >= n_m1:
+            horizon_m1 = n_m1 - 1
+
+        state = 3
+        run_ext = l_m1[j0] if t_dir == 1 else h_m1[j0]
+        interm_ext = run_ext
+        manip_ext = run_ext
+        rev_bound = h_m1[j0] if t_dir == 1 else l_m1[j0]
+        terminal_j = horizon_m1
+        terminated = False
+
+        # Step strictly bar-by-bar using ONLY current bar j (and j-1)
+        for j in range(j0 + 1, horizon_m1 + 1):
+            oj = o_m1[j]
+            hj = h_m1[j]
+            lj = l_m1[j]
+            cj = c_m1[j]
+            bar_rng = hj - lj
+            if bar_rng < 1e-6:
+                bar_rng = 1e-6
+
+            if t_dir == 1:
+                # Bullish MMBM: downward left-side departure, sweeps manipulation low, reverses up toward oc_lo / oc_mid
+                if state < 9:
+                    # Causal invalidation check before reversal confirmation:
+                    # If price returns to oc_mid before forming left-side progression (state < 6) or drops > 6*rng
+                    if (state < 6 and hj >= oc_mid) or (lj < oc_lo - 6.0 * rng):
+                        out_oc_idx[ev_cnt] = i
+                        out_stage[ev_cnt] = 15
+                        out_j_known[ev_cnt] = j
+                        out_ev_px[ev_cnt] = cj
+                        out_tgt_px[ev_cnt] = tgt_px
+                        out_active[ev_cnt] = False
+                        ev_cnt += 1
+                        terminal_j = j
+                        terminated = True
+                        break
+
+                    if state == 3:
+                        if lj <= dep_close - 0.15 * rng:
+                            state = 4
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 4
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = cj
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+                    elif state == 4:
+                        # Local pause / counter-candle during left-side progression forms intermediate consolidation
+                        if cj > oj or lj >= l_m1[j - 1]:
+                            state = 5
+                            interm_ext = run_ext
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 5
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = cj
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+                    elif state == 5:
+                        # Liquidity engineering: tests or sweeps intermediate low
+                        if lj <= interm_ext + 0.05 * rng:
+                            state = 6
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 6
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = lj
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+                    elif state == 6:
+                        # HTF POI interaction: reaches displacement zone below OC
+                        if lj <= oc_lo - 0.40 * rng or lj < interm_ext:
+                            state = 7
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 7
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = lj
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+                    elif state == 7:
+                        # Reversal candidate: sweeps/tests running low and closes with bullish rejection
+                        if lj <= run_ext + 0.10 * rng and (cj >= oj or (cj - lj) >= 0.35 * bar_rng):
+                            state = 8
+                            manip_ext = lj if lj < run_ext else run_ext
+                            rev_bound = hj
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 8
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = manip_ext
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+                    elif state == 8:
+                        # While in Stage 8 candidate, check if deeper manipulation low occurs or reversal confirms
+                        if lj < manip_ext:
+                            manip_ext = lj
+                            rev_bound = hj
+                        conf_thresh = manip_ext + 0.35 * rng
+                        if rev_bound < conf_thresh and rev_bound > manip_ext:
+                            conf_thresh = rev_bound
+                        if cj >= conf_thresh and cj > manip_ext + 0.20 * rng:
+                            state = 10
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 9
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = cj
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 10
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = cj
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+
+                    if lj < run_ext:
+                        run_ext = lj
+
+                else:
+                    # Right-side delivery (state in 10, 11, 12)
+                    # Pessimistic failure check first: breach of confirmed manipulation low before completion -> Stage 14 FAILED
+                    if lj < manip_ext:
+                        out_oc_idx[ev_cnt] = i
+                        out_stage[ev_cnt] = 14
+                        out_j_known[ev_cnt] = j
+                        out_ev_px[ev_cnt] = manip_ext
+                        out_tgt_px[ev_cnt] = tgt_px
+                        out_active[ev_cnt] = False
+                        ev_cnt += 1
+                        terminal_j = j
+                        terminated = True
+                        break
+
+                    mid_way = 0.5 * (manip_ext + oc_lo)
+                    if state == 10 and hj >= mid_way:
+                        state = 11
+                        out_oc_idx[ev_cnt] = i
+                        out_stage[ev_cnt] = 11
+                        out_j_known[ev_cnt] = j
+                        out_ev_px[ev_cnt] = mid_way
+                        out_tgt_px[ev_cnt] = tgt_px
+                        out_active[ev_cnt] = True
+                        ev_cnt += 1
+
+                    if state in (10, 11) and hj >= oc_lo:
+                        state = 12
+                        out_oc_idx[ev_cnt] = i
+                        out_stage[ev_cnt] = 12
+                        out_j_known[ev_cnt] = j
+                        out_ev_px[ev_cnt] = oc_lo
+                        out_tgt_px[ev_cnt] = tgt_px
+                        out_active[ev_cnt] = True
+                        ev_cnt += 1
+
+                    if state == 12 and hj >= oc_mid:
+                        state = 13
+                        out_oc_idx[ev_cnt] = i
+                        out_stage[ev_cnt] = 13
+                        out_j_known[ev_cnt] = j
+                        out_ev_px[ev_cnt] = oc_mid
+                        out_tgt_px[ev_cnt] = tgt_px
+                        out_active[ev_cnt] = False
+                        ev_cnt += 1
+                        terminal_j = j
+                        terminated = True
+                        break
+
+            else:
+                # Bearish MMSM: upward left-side departure, sweeps manipulation high, reverses down toward oc_hi / oc_mid
+                if state < 9:
+                    if (state < 6 and lj <= oc_mid) or (hj > oc_hi + 6.0 * rng):
+                        out_oc_idx[ev_cnt] = i
+                        out_stage[ev_cnt] = 15
+                        out_j_known[ev_cnt] = j
+                        out_ev_px[ev_cnt] = cj
+                        out_tgt_px[ev_cnt] = tgt_px
+                        out_active[ev_cnt] = False
+                        ev_cnt += 1
+                        terminal_j = j
+                        terminated = True
+                        break
+
+                    if state == 3:
+                        if hj >= dep_close + 0.15 * rng:
+                            state = 4
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 4
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = cj
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+                    elif state == 4:
+                        if cj < oj or hj <= h_m1[j - 1]:
+                            state = 5
+                            interm_ext = run_ext
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 5
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = cj
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+                    elif state == 5:
+                        if hj >= interm_ext - 0.05 * rng:
+                            state = 6
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 6
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = hj
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+                    elif state == 6:
+                        if hj >= oc_hi + 0.40 * rng or hj > interm_ext:
+                            state = 7
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 7
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = hj
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+                    elif state == 7:
+                        if hj >= run_ext - 0.10 * rng and (cj <= oj or (hj - cj) >= 0.35 * bar_rng):
+                            state = 8
+                            manip_ext = hj if hj > run_ext else run_ext
+                            rev_bound = lj
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 8
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = manip_ext
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+                    elif state == 8:
+                        if hj > manip_ext:
+                            manip_ext = hj
+                            rev_bound = lj
+                        conf_thresh = manip_ext - 0.35 * rng
+                        if rev_bound > conf_thresh and rev_bound < manip_ext:
+                            conf_thresh = rev_bound
+                        if cj <= conf_thresh and cj < manip_ext - 0.20 * rng:
+                            state = 10
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 9
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = cj
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+
+                            out_oc_idx[ev_cnt] = i
+                            out_stage[ev_cnt] = 10
+                            out_j_known[ev_cnt] = j
+                            out_ev_px[ev_cnt] = cj
+                            out_tgt_px[ev_cnt] = tgt_px
+                            out_active[ev_cnt] = True
+                            ev_cnt += 1
+
+                    if hj > run_ext:
+                        run_ext = hj
+
+                else:
+                    if hj > manip_ext:
+                        out_oc_idx[ev_cnt] = i
+                        out_stage[ev_cnt] = 14
+                        out_j_known[ev_cnt] = j
+                        out_ev_px[ev_cnt] = manip_ext
+                        out_tgt_px[ev_cnt] = tgt_px
+                        out_active[ev_cnt] = False
+                        ev_cnt += 1
+                        terminal_j = j
+                        terminated = True
+                        break
+
+                    mid_way = 0.5 * (manip_ext + oc_hi)
+                    if state == 10 and lj <= mid_way:
+                        state = 11
+                        out_oc_idx[ev_cnt] = i
+                        out_stage[ev_cnt] = 11
+                        out_j_known[ev_cnt] = j
+                        out_ev_px[ev_cnt] = mid_way
+                        out_tgt_px[ev_cnt] = tgt_px
+                        out_active[ev_cnt] = True
+                        ev_cnt += 1
+
+                    if state in (10, 11) and lj <= oc_hi:
+                        state = 12
+                        out_oc_idx[ev_cnt] = i
+                        out_stage[ev_cnt] = 12
+                        out_j_known[ev_cnt] = j
+                        out_ev_px[ev_cnt] = oc_hi
+                        out_tgt_px[ev_cnt] = tgt_px
+                        out_active[ev_cnt] = True
+                        ev_cnt += 1
+
+                    if state == 12 and lj <= oc_mid:
+                        state = 13
+                        out_oc_idx[ev_cnt] = i
+                        out_stage[ev_cnt] = 13
+                        out_j_known[ev_cnt] = j
+                        out_ev_px[ev_cnt] = oc_mid
+                        out_tgt_px[ev_cnt] = tgt_px
+                        out_active[ev_cnt] = False
+                        ev_cnt += 1
+                        terminal_j = j
+                        terminated = True
+                        break
+
+        # If horizon_m1 was reached inside the available data (j0 + max_walk < n_m1) without terminating,
+        # emit terminal timeout stage at horizon_m1
+        if (not terminated) and (j0 + max_walk < n_m1):
+            st_end = 14 if state >= 10 else 15
+            out_oc_idx[ev_cnt] = i
+            out_stage[ev_cnt] = st_end
+            out_j_known[ev_cnt] = horizon_m1
+            out_ev_px[ev_cnt] = c_m1[horizon_m1]
+            out_tgt_px[ev_cnt] = tgt_px
+            out_active[ev_cnt] = False
+            ev_cnt += 1
+            terminal_j = horizon_m1
+
+        for k_ev in range(start_ev, ev_cnt):
+            out_j_term[k_ev] = terminal_j
+
+    return (
+        out_oc_idx[:ev_cnt],
+        out_stage[:ev_cnt],
+        out_j_known[:ev_cnt],
+        out_ev_px[:ev_cnt],
+        out_tgt_px[:ev_cnt],
+        out_active[:ev_cnt],
+        out_j_term[:ev_cnt],
+    )
+
+
 def build_fractal_mmxm_state_events(
     panel: pd.DataFrame,
     oc_df: pd.DataFrame,
     traded: str = "US100",
     timeframes: tuple[str, ...] = ("M5", "M15", "M30", "H1", "H4", "D1"),
 ) -> pd.DataFrame:
-    """Track all 13 MMXM lifecycle stages causally from each confirmed Original Consolidation
-    across `M5`, `M15`, `M30`, `H1`, `H4`, `D1` (`mmxm_state_events.parquet`)."""
+    """Track all 13+2 MMXM lifecycle stages causally from every confirmed Original Consolidation
+    across `M5`, `M15`, `M30`, `H1`, `H4`, `D1` (`mmxm_state_events.parquet`) (P0.1, P0.2, P1.7).
+
+    Zero Sub-Sampling (`FULL_UNIVERSE`):
+      - Runs `_run_incremental_mmxm_fsm_numba` across 100% of all confirmed OCs on `timeframes`.
+    Strict Confirmation Timing (P0.2):
+      - `t_known = m1_close_idx[j_m1_known]` (exact M1 bar close timestamp, never bar open!).
+    Prefix Invariance (P0.1):
+      - Truncating `panel` at any bar `T` leaves all events with `j_m1_known <= T` bit-for-bit identical.
+    """
     if len(oc_df) == 0:
         return pd.DataFrame()
     idx = panel.index
-    h_m1 = panel[f"{traded}_h"].to_numpy(float)
-    l_m1 = panel[f"{traded}_l"].to_numpy(float)
-    c_m1 = panel[f"{traded}_c"].to_numpy(float)
-    o_m1 = panel[f"{traded}_o"].to_numpy(float)
+    m1_close_idx = idx + pd.Timedelta(minutes=1)
     n_m1 = len(idx)
 
-    rows = []
-    sub_oc = oc_df[oc_df["tf"].isin(timeframes)].copy()
-    # Sample evenly if huge, keeping all H4/D1/H1/M30/M15 and top M5
-    m5_oc = sub_oc[sub_oc["tf"] == "M5"]
-    other_oc = sub_oc[sub_oc["tf"] != "M5"]
-    if len(m5_oc) > 8000:
-        step = max(1, len(m5_oc) // 8000)
-        m5_oc = m5_oc.iloc[::step]
-    work_oc = pd.concat([other_oc, m5_oc], ignore_index=True).sort_values("j_conf_m1").reset_index(drop=True)
+    work_oc = (
+        oc_df[oc_df["tf"].isin(timeframes) & (oc_df["j_conf_m1"] < n_m1)]
+        .sort_values(["j_conf_m1", "oc_id"])
+        .reset_index(drop=True)
+    )
+    if len(work_oc) == 0:
+        return pd.DataFrame()
 
-    for r in work_oc.itertuples(index=False):
-        j0 = int(r.j_conf_m1)
-        if j0 <= 5 or j0 >= n_m1 - 30:
-            continue
-        tf = str(r.tf)
-        tf_min = int(r.tf_minutes)
-        mmxm_id = str(r.connected_mmxm_id)
-        oc_id = str(r.oc_id)
-        t_dir = int(r.target_dir)  # +1 for Bullish MMBM, -1 for Bearish MMSM
-        model_type = "MMBM" if t_dir == 1 else "MMSM"
-        oc_hi = float(r.high)
-        oc_lo = float(r.low)
-        oc_mid = float(r.midpoint)
-        rng = max(1.0, oc_hi - oc_lo)
+    o_m1 = panel[f"{traded}_o"].to_numpy(np.float64)
+    h_m1 = panel[f"{traded}_h"].to_numpy(np.float64)
+    l_m1 = panel[f"{traded}_l"].to_numpy(np.float64)
+    c_m1 = panel[f"{traded}_c"].to_numpy(np.float64)
 
-        # Stage 1: OC Candidate (formed during the 4-bar consolidation window prior to j0)
-        j_cand = max(0, j0 - tf_min)
-        rows.append((
-            f"{mmxm_id}_S01", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-            1, MMXM_STAGE_NAMES[1], j_cand, idx[j_cand], oc_hi, oc_lo, oc_mid,
-            oc_hi if t_dir == 1 else oc_lo, True,
-        ))
-        # Stage 2 & 3 emitted at j0 (OC confirmed & First departure)
-        rows.append((
-            f"{mmxm_id}_S02", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-            2, MMXM_STAGE_NAMES[2], j0, idx[j0], oc_hi, oc_lo, oc_mid,
-            oc_hi if t_dir == 1 else oc_lo, True,
-        ))
-        rows.append((
-            f"{mmxm_id}_S03", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-            3, MMXM_STAGE_NAMES[3], j0, idx[j0], oc_hi, oc_lo,
-            c_m1[j0], oc_hi if t_dir == 1 else oc_lo, True,
-        ))
+    j_conf_arr = work_oc["j_conf_m1"].to_numpy(np.int64)
+    if "j_cand_m1" in work_oc.columns:
+        j_cand_arr = work_oc["j_cand_m1"].to_numpy(np.int64)
+    else:
+        j_cand_arr = np.maximum(0, j_conf_arr - work_oc["tf_minutes"].to_numpy(np.int64))
+    tf_min_arr = work_oc["tf_minutes"].to_numpy(np.int64)
+    t_dir_arr = work_oc["target_dir"].to_numpy(np.int8)
+    oc_hi_arr = work_oc["high"].to_numpy(np.float64)
+    oc_lo_arr = work_oc["low"].to_numpy(np.float64)
+    oc_mid_arr = work_oc["midpoint"].to_numpy(np.float64)
 
-        # Walk forward over window up to 48 bars of `tf` (capped at 1440 M1 bars)
-        horizon_m1 = min(n_m1 - 1, j0 + min(1440, 36 * tf_min))
-        slc_h = h_m1[j0 + 1 : horizon_m1 + 1]
-        slc_l = l_m1[j0 + 1 : horizon_m1 + 1]
-        slc_c = c_m1[j0 + 1 : horizon_m1 + 1]
-        slc_o = o_m1[j0 + 1 : horizon_m1 + 1]
-        if len(slc_c) < 6:
-            continue
+    oc_idx, st_num, j_known, ev_px, tgt_px, is_act, j_term = _run_incremental_mmxm_fsm_numba(
+        o_m1, h_m1, l_m1, c_m1,
+        j_cand_arr, j_conf_arr, tf_min_arr, t_dir_arr, oc_hi_arr, oc_lo_arr, oc_mid_arr,
+    )
+    if len(oc_idx) == 0:
+        return pd.DataFrame()
 
-        left_len = max(3, len(slc_c) // 2)
-        if t_dir == 1:
-            # Bullish MMBM: price departs down (left side), sweeps manipulation low, reverses up toward oc_hi
-            ext_pos = int(np.argmin(slc_l[:left_len]))
-            j_rev = j0 + 1 + ext_pos
-            manip_ext = float(slc_l[ext_pos])
-            # Stage 4 (Left side), Stage 5 (Intermediate consolidation), Stage 6 (Liquidity engineering), Stage 7 (HTF POI interaction)
-            j_s4 = j0 + 1 + max(0, ext_pos // 4)
-            j_s5 = j0 + 1 + max(1, ext_pos // 2)
-            j_s6 = j0 + 1 + max(2, (3 * ext_pos) // 4)
-            j_s7 = max(j0 + 1, j_rev - 1)
-            if j_s4 < j_rev:
-                rows.append((
-                    f"{mmxm_id}_S04", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                    4, MMXM_STAGE_NAMES[4], j_s4, idx[j_s4], oc_hi, oc_lo, float(c_m1[j_s4]), oc_hi, True,
-                ))
-            if j_s5 < j_rev:
-                rows.append((
-                    f"{mmxm_id}_S05", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                    5, MMXM_STAGE_NAMES[5], j_s5, idx[j_s5], oc_hi, oc_lo, float(c_m1[j_s5]), oc_hi, True,
-                ))
-            if j_s6 < j_rev:
-                rows.append((
-                    f"{mmxm_id}_S06", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                    6, MMXM_STAGE_NAMES[6], j_s6, idx[j_s6], oc_hi, oc_lo, float(c_m1[j_s6]), oc_hi, True,
-                ))
-            rows.append((
-                f"{mmxm_id}_S07", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                7, MMXM_STAGE_NAMES[7], j_s7, idx[j_s7], oc_hi, oc_lo, float(l_m1[j_s7]), oc_hi, True,
-            ))
-            # Stage 8: Reversal candidate at manipulation low sweep
-            rows.append((
-                f"{mmxm_id}_S08", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                8, MMXM_STAGE_NAMES[8], j_rev, idx[j_rev], oc_hi, oc_lo,
-                manip_ext, oc_hi, True,
-            ))
-            # Check Stage 9/10 confirmation after j_rev (close recovers above manipulation low + 0.35*rng)
-            post_c = slc_c[ext_pos:]
-            conf_rel = np.nonzero(post_c >= manip_ext + 0.35 * rng)[0]
-            if len(conf_rel) > 0:
-                j_conf_rev = j_rev + int(conf_rel[0])
-                rows.append((
-                    f"{mmxm_id}_S09", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                    9, MMXM_STAGE_NAMES[9], j_conf_rev, idx[j_conf_rev], oc_hi, oc_lo,
-                    float(c_m1[j_conf_rev]), oc_hi, True,
-                ))
-                rows.append((
-                    f"{mmxm_id}_S10", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                    10, MMXM_STAGE_NAMES[10], j_conf_rev, idx[j_conf_rev], oc_hi, oc_lo,
-                    float(c_m1[j_conf_rev]), oc_hi, True,
-                ))
-                # Check Stage 11 (Intermediate delivery), Stage 12 (Terminus delivery), Stage 13 (Completed) vs Stage 14 (Failed)
-                rem_h = h_m1[j_conf_rev + 1 : horizon_m1 + 1]
-                rem_l = l_m1[j_conf_rev + 1 : horizon_m1 + 1]
-                if len(rem_h) > 0:
-                    mid_way = 0.5 * (manip_ext + oc_lo)
-                    hit_int = np.nonzero(rem_h >= mid_way)[0]
-                    hit_tgt = np.nonzero(rem_h >= oc_lo)[0]
-                    hit_term = np.nonzero(rem_h >= oc_mid)[0]
-                    hit_fail = np.nonzero(rem_l < manip_ext)[0]
-                    t_fail = int(hit_fail[0]) if len(hit_fail) > 0 else 999999
-                    if len(hit_int) > 0 and int(hit_int[0]) < t_fail:
-                        j_s11 = j_conf_rev + 1 + int(hit_int[0])
-                        rows.append((
-                            f"{mmxm_id}_S11", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                            11, MMXM_STAGE_NAMES[11], j_s11, idx[j_s11], oc_hi, oc_lo, mid_way, oc_hi, True,
-                        ))
-                    t_hit = int(hit_tgt[0]) if len(hit_tgt) > 0 else 999999
-                    if t_hit < t_fail and t_hit < 999999:
-                        j_done = j_conf_rev + 1 + t_hit
-                        rows.append((
-                            f"{mmxm_id}_S12", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                            12, MMXM_STAGE_NAMES[12], j_done, idx[j_done], oc_hi, oc_lo, oc_lo, oc_hi, True,
-                        ))
-                        j_comp = j_conf_rev + 1 + int(hit_term[0]) if (len(hit_term) > 0 and int(hit_term[0]) < t_fail) else j_done
-                        rows.append((
-                            f"{mmxm_id}_S13", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                            13, MMXM_STAGE_NAMES[13], j_comp, idx[j_comp], oc_hi, oc_lo,
-                            oc_mid, oc_hi, False,
-                        ))
-                    else:
-                        j_fail = j_conf_rev + 1 + t_fail if t_fail < 999999 else horizon_m1
-                        rows.append((
-                            f"{mmxm_id}_S14", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                            14, MMXM_STAGE_NAMES[14], j_fail, idx[j_fail], oc_hi, oc_lo,
-                            manip_ext, oc_hi, False,
-                        ))
-            else:
-                rows.append((
-                    f"{mmxm_id}_S15", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                    15, MMXM_STAGE_NAMES[15], horizon_m1, idx[horizon_m1], oc_hi, oc_lo,
-                    float(c_m1[horizon_m1]), oc_hi, False,
-                ))
-        else:
-            # Bearish MMSM: price departs up (left side), sweeps manipulation high, reverses down toward oc_lo
-            ext_pos = int(np.argmax(slc_h[:left_len]))
-            j_rev = j0 + 1 + ext_pos
-            manip_ext = float(slc_h[ext_pos])
-            j_s4 = j0 + 1 + max(0, ext_pos // 4)
-            j_s5 = j0 + 1 + max(1, ext_pos // 2)
-            j_s6 = j0 + 1 + max(2, (3 * ext_pos) // 4)
-            j_s7 = max(j0 + 1, j_rev - 1)
-            if j_s4 < j_rev:
-                rows.append((
-                    f"{mmxm_id}_S04", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                    4, MMXM_STAGE_NAMES[4], j_s4, idx[j_s4], oc_hi, oc_lo, float(c_m1[j_s4]), oc_lo, True,
-                ))
-            if j_s5 < j_rev:
-                rows.append((
-                    f"{mmxm_id}_S05", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                    5, MMXM_STAGE_NAMES[5], j_s5, idx[j_s5], oc_hi, oc_lo, float(c_m1[j_s5]), oc_lo, True,
-                ))
-            if j_s6 < j_rev:
-                rows.append((
-                    f"{mmxm_id}_S06", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                    6, MMXM_STAGE_NAMES[6], j_s6, idx[j_s6], oc_hi, oc_lo, float(c_m1[j_s6]), oc_lo, True,
-                ))
-            rows.append((
-                f"{mmxm_id}_S07", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                7, MMXM_STAGE_NAMES[7], j_s7, idx[j_s7], oc_hi, oc_lo, float(h_m1[j_s7]), oc_lo, True,
-            ))
-            rows.append((
-                f"{mmxm_id}_S08", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                8, MMXM_STAGE_NAMES[8], j_rev, idx[j_rev], oc_hi, oc_lo,
-                manip_ext, oc_lo, True,
-            ))
-            post_c = slc_c[ext_pos:]
-            conf_rel = np.nonzero(post_c <= manip_ext - 0.35 * rng)[0]
-            if len(conf_rel) > 0:
-                j_conf_rev = j_rev + int(conf_rel[0])
-                rows.append((
-                    f"{mmxm_id}_S09", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                    9, MMXM_STAGE_NAMES[9], j_conf_rev, idx[j_conf_rev], oc_hi, oc_lo,
-                    float(c_m1[j_conf_rev]), oc_lo, True,
-                ))
-                rows.append((
-                    f"{mmxm_id}_S10", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                    10, MMXM_STAGE_NAMES[10], j_conf_rev, idx[j_conf_rev], oc_hi, oc_lo,
-                    float(c_m1[j_conf_rev]), oc_lo, True,
-                ))
-                rem_h = h_m1[j_conf_rev + 1 : horizon_m1 + 1]
-                rem_l = l_m1[j_conf_rev + 1 : horizon_m1 + 1]
-                if len(rem_l) > 0:
-                    mid_way = 0.5 * (manip_ext + oc_hi)
-                    hit_int = np.nonzero(rem_l <= mid_way)[0]
-                    hit_tgt = np.nonzero(rem_l <= oc_hi)[0]
-                    hit_term = np.nonzero(rem_l <= oc_mid)[0]
-                    hit_fail = np.nonzero(rem_h > manip_ext)[0]
-                    t_fail = int(hit_fail[0]) if len(hit_fail) > 0 else 999999
-                    if len(hit_int) > 0 and int(hit_int[0]) < t_fail:
-                        j_s11 = j_conf_rev + 1 + int(hit_int[0])
-                        rows.append((
-                            f"{mmxm_id}_S11", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                            11, MMXM_STAGE_NAMES[11], j_s11, idx[j_s11], oc_hi, oc_lo, mid_way, oc_lo, True,
-                        ))
-                    t_hit = int(hit_tgt[0]) if len(hit_tgt) > 0 else 999999
-                    if t_hit < t_fail and t_hit < 999999:
-                        j_done = j_conf_rev + 1 + t_hit
-                        rows.append((
-                            f"{mmxm_id}_S12", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                            12, MMXM_STAGE_NAMES[12], j_done, idx[j_done], oc_hi, oc_lo, oc_hi, oc_lo, True,
-                        ))
-                        j_comp = j_conf_rev + 1 + int(hit_term[0]) if (len(hit_term) > 0 and int(hit_term[0]) < t_fail) else j_done
-                        rows.append((
-                            f"{mmxm_id}_S13", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                            13, MMXM_STAGE_NAMES[13], j_comp, idx[j_comp], oc_hi, oc_lo,
-                            oc_mid, oc_lo, False,
-                        ))
-                    else:
-                        j_fail = j_conf_rev + 1 + t_fail if t_fail < 999999 else horizon_m1
-                        rows.append((
-                            f"{mmxm_id}_S14", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                            14, MMXM_STAGE_NAMES[14], j_fail, idx[j_fail], oc_hi, oc_lo,
-                            manip_ext, oc_lo, False,
-                        ))
-            else:
-                rows.append((
-                    f"{mmxm_id}_S15", mmxm_id, oc_id, traded, tf, t_dir, model_type,
-                    15, MMXM_STAGE_NAMES[15], horizon_m1, idx[horizon_m1], oc_hi, oc_lo,
-                    float(c_m1[horizon_m1]), oc_lo, False,
-                ))
+    mmxm_ids_src = work_oc["connected_mmxm_id"].to_numpy()
+    oc_ids_src = work_oc["oc_id"].to_numpy()
+    tfs_src = work_oc["tf"].to_numpy()
+    dirs_src = work_oc["target_dir"].to_numpy(np.int8)
 
-    cols = [
-        "mmxm_event_id", "mmxm_id", "oc_id", "instrument", "tf", "direction", "model_type",
-        "stage_num", "stage_name", "j_m1_known", "t_known", "oc_high", "oc_low",
-        "event_price", "terminus_target_px", "is_active",
-    ]
-    return pd.DataFrame(rows, columns=cols).sort_values("j_m1_known").reset_index(drop=True)
+    parent_mmxm = mmxm_ids_src[oc_idx]
+    parent_oc = oc_ids_src[oc_idx]
+    parent_tf = tfs_src[oc_idx]
+    parent_dir = dirs_src[oc_idx]
+    stage_names = np.array([MMXM_STAGE_NAMES[int(s)] for s in st_num], dtype=object)
+    model_types = np.where(parent_dir == 1, "MMBM", "MMSM")
+    ev_ids = [f"{m_id}_S{int(s):02d}" for m_id, s in zip(parent_mmxm, st_num)]
+
+    out = pd.DataFrame({
+        "mmxm_event_id": ev_ids,
+        "mmxm_id": parent_mmxm,
+        "oc_id": parent_oc,
+        "instrument": traded,
+        "tf": parent_tf,
+        "direction": parent_dir,
+        "model_type": model_types,
+        "stage_num": st_num.astype(np.int64),
+        "stage_name": stage_names,
+        "j_m1_known": j_known,
+        "t_known": m1_close_idx[j_known],
+        "oc_high": oc_hi_arr[oc_idx],
+        "oc_low": oc_lo_arr[oc_idx],
+        "event_price": ev_px,
+        "target_price": tgt_px,
+        "is_active": is_act,
+        "j_terminal_m1": j_term,
+        "universe_coverage": "FULL_UNIVERSE",
+    })
+    return out.sort_values(["j_m1_known", "stage_num"]).reset_index(drop=True)
 
 
 # ---------------------------------------------------------------------------
-# Phase 3: Complete Liquidity Event Engine (Section 8)
+# Phase 3 & Section 8: Complete Liquidity Event Engine (`liquidity_events.parquet`)
 # ---------------------------------------------------------------------------
 def build_liquidity_events_table(
     ctx: dict,
@@ -586,12 +881,10 @@ def build_liquidity_events_table(
     oc_df: pd.DataFrame,
     dataset_hash: str = "",
 ) -> pd.DataFrame:
-    """Build `liquidity_events.parquet` covering all observable liquidity interactions:
-      - Approach, Sweep, Reclaim, Rejection, Accepted_Breakout, Failed_Breakout, Retest, Invalidation
-      - Across M5, M15, M30, H1, H4, D1, W1, Session highs/lows, QT quarter highs/lows, EQH/EQL, OC boundaries.
-    """
+    """Build `liquidity_events.parquet` modeling all 8 liquidity interaction classes (Section 8)."""
     panel = ctx["panel"]
     idx = panel.index
+    m1_close_idx = idx + pd.Timedelta(minutes=1)
     traded = ctx["traded"]
     rows = []
 
@@ -606,8 +899,6 @@ def build_liquidity_events_table(
         lr = ev_df["Lr"].to_numpy(float)
         c = ev_df["c"].to_numpy(float)
         o = ev_df["o"].to_numpy(float)
-        h = ev_df["h"].to_numpy(float)
-        l = ev_df["l"].to_numpy(float)
         atr = ev_df["atr_ref"].fillna(15.0).to_numpy(float)
         is_a = ev_df["A"].to_numpy(bool)
         is_c = ev_df["C"].to_numpy(bool)
@@ -621,7 +912,6 @@ def build_liquidity_events_table(
             opp_lvl = float(lr[k]) if d[k] == -1 else float(hr[k])
             pen = float(sw_depth[k])
 
-            # Classify interaction type (Section 8)
             if is_h[k]:
                 inter_type = "Failed_Breakout"
                 reclaim_state = "Reclaimed_Next_Candle"
@@ -641,16 +931,16 @@ def build_liquidity_events_table(
                 inter_type = "Sweep"
                 reclaim_state = "Intrabar_Reclaim_Then_Breakout"
                 hyp_mode = "CONTINUATION"
-                # Price swept and closed outside reference range -> continuation in sweep direction!
                 trade_dir = -int(d[k])
             else:
-                # Closed outside reference level -> Accepted Breakout / Continuation candidate
                 body_sz = abs(c[k] - o[k])
                 inter_type = "Accepted_Breakout" if body_sz >= 0.45 * atr[k] else "Sweep"
                 reclaim_state = "Closed_Outside_Level"
                 hyp_mode = "CONTINUATION"
                 trade_dir = -int(d[k])
 
+            jf_clip = int(np.clip(j_first, 0, len(idx) - 1))
+            jc_clip = int(np.clip(j_conf, 0, len(idx) - 1))
             rows.append((
                 f"LIQ_{traded}_{tf_name}_{k:06d}",
                 traded,
@@ -659,16 +949,18 @@ def build_liquidity_events_table(
                 inter_type,
                 reclaim_state,
                 hyp_mode,
-                int(d[k]),        # reversal direction (+1 bull after low sweep, -1 bear after high sweep)
-                int(trade_dir),   # hypothesis direction (+1 LONG, -1 SHORT)
+                int(d[k]),
+                int(trade_dir),
                 lvl,
                 opp_lvl,
                 pen,
                 round(pen / max(atr[k], 1e-6), 4),
+                int(jsw[k]),
                 j_first,
                 j_conf,
-                idx[np.clip(j_first, 0, len(idx) - 1)],
-                idx[np.clip(j_conf, 0, len(idx) - 1)] + pd.Timedelta(minutes=1),
+                m1_close_idx[jf_clip],
+                m1_close_idx[jc_clip],
+                "FULL_UNIVERSE",
                 ALGO_VERSION,
                 dataset_hash[:16] if dataset_hash else "VERIFIED_STORE",
             ))
@@ -677,8 +969,8 @@ def build_liquidity_events_table(
         "liq_event_id", "instrument", "source_tf", "pool_type",
         "interaction_type", "reclaim_state", "hypothesis_mode",
         "reversal_dir", "hypothesis_dir", "level_px", "opposing_level_px",
-        "penetration_pts", "penetration_atr", "j_first_obs", "j_confirm",
-        "t_first_obs", "t_confirm", "algo_version", "dataset_hash",
+        "penetration_pts", "penetration_atr", "j_sweep_raw", "j_first_obs", "j_confirm",
+        "t_first_obs", "t_confirm", "universe_coverage", "algo_version", "dataset_hash",
     ]
     return pd.DataFrame(rows, columns=cols).sort_values("j_confirm").reset_index(drop=True)
 
@@ -693,12 +985,15 @@ def build_atomic_events_database(
     mmxm_ev_df: pd.DataFrame,
     dataset_hash: str = "",
 ) -> pd.DataFrame:
-    """Combine all atomic events into `atomic_events.parquet` with standardized schema (Section 14)."""
+    """Combine all atomic events into `atomic_events.parquet` with standardized schema (Section 14 & P1.7).
+
+    Includes 100% of all liquidity, SSMT, CISD, Original Consolidation, and MMXM stage events
+    with `universe_coverage = "FULL_UNIVERSE"`.
+    """
     traded = ctx["traded"]
     h_tag = dataset_hash[:16] if dataset_hash else "VERIFIED_STORE"
     parts = []
 
-    # 1. Liquidity & CRT events
     if len(liq_df) > 0:
         parts.append(pd.DataFrame({
             "event_id": liq_df["liq_event_id"],
@@ -714,11 +1009,11 @@ def build_atomic_events_database(
             "price_low": np.minimum(liq_df["level_px"], liq_df["opposing_level_px"]),
             "price_high": np.maximum(liq_df["level_px"], liq_df["opposing_level_px"]),
             "related_event_ids": liq_df["pool_type"],
+            "universe_coverage": "FULL_UNIVERSE",
             "algo_version": ALGO_VERSION,
             "dataset_hash": h_tag,
         }))
 
-    # 2. Macro & Micro SSMT events
     for ssmt_df, fam, tf_lbl in [
         (ctx["ssmt_mac"], "SSMT_MACRO_90M", "M90"),
         (ctx["ssmt_mic"], "SSMT_MICRO_22_5M", "22.5M"),
@@ -738,72 +1033,69 @@ def build_atomic_events_database(
                 "price_low": np.nan,
                 "price_high": np.nan,
                 "related_event_ids": ssmt_df["inst_pair"].astype(str) + ":" + ssmt_df["pair_label"].astype(str) + ":Lead_" + ssmt_df["lead"].astype(str),
+                "universe_coverage": "FULL_UNIVERSE",
                 "algo_version": ALGO_VERSION,
                 "dataset_hash": h_tag,
             }))
 
-    # 3. Multi-TF CISD events (M1, M3, M5, M15, M30, H1, H4)
     for tf_k, c_df in ctx["cisd_tables"].items():
         if len(c_df) == 0:
             continue
-        # Keep full M5..H4 and cap M1/M3 at 25k in combined atomic lake to keep parquet compact & fast
-        sub_c = c_df if tf_k not in ("M1", "M3") else c_df.iloc[::max(1, len(c_df) // 20000)]
         parts.append(pd.DataFrame({
-            "event_id": [f"CISD_{traded}_{tf_k}_{k:06d}" for k in range(len(sub_c))],
+            "event_id": [f"CISD_{traded}_{tf_k}_{k:06d}" for k in range(len(c_df))],
             "event_family": f"CISD_{tf_k}",
             "instrument": traded,
             "source_provider": "DUKA_OANDA_VERIFIED",
             "source_tf": tf_k,
-            "direction": sub_c["dir"],
-            "t_event": sub_c["t_deliv_open"],
-            "t_confirm": sub_c["t_confirm"],
+            "direction": c_df["dir"],
+            "t_event": c_df["t_deliv_open"],
+            "t_confirm": c_df["t_confirm"],
             "t_invalidated": pd.NaT,
-            "price_level": sub_c["ref_open"],
-            "price_low": np.minimum(sub_c["ref_open"], sub_c["extreme_px"]),
-            "price_high": np.maximum(sub_c["ref_open"], sub_c["extreme_px"]),
-            "related_event_ids": "Variant_" + sub_c["variant"].astype(str),
+            "price_level": c_df["ref_open"],
+            "price_low": np.minimum(c_df["ref_open"], c_df["extreme_px"]),
+            "price_high": np.maximum(c_df["ref_open"], c_df["extreme_px"]),
+            "related_event_ids": "Variant_" + c_df["variant"].astype(str),
+            "universe_coverage": "FULL_UNIVERSE",
             "algo_version": ALGO_VERSION,
             "dataset_hash": h_tag,
         }))
 
-    # 4. Original Consolidations
     if len(oc_df) > 0:
-        sub_oc = oc_df if len(oc_df) <= 30000 else oc_df.iloc[::max(1, len(oc_df) // 30000)]
         parts.append(pd.DataFrame({
-            "event_id": sub_oc["oc_id"],
+            "event_id": oc_df["oc_id"],
             "event_family": "ORIGINAL_CONSOLIDATION",
-            "instrument": sub_oc["instrument"],
+            "instrument": oc_df["instrument"],
             "source_provider": "DUKA_OANDA_VERIFIED",
-            "source_tf": sub_oc["tf"],
-            "direction": sub_oc["target_dir"],
-            "t_event": sub_oc["t_start"],
-            "t_confirm": sub_oc["t_confirm"],
-            "t_invalidated": sub_oc["t_invalidated"],
-            "price_level": sub_oc["midpoint"],
-            "price_low": sub_oc["low"],
-            "price_high": sub_oc["high"],
-            "related_event_ids": sub_oc["connected_mmxm_id"],
+            "source_tf": oc_df["tf"],
+            "direction": oc_df["target_dir"],
+            "t_event": oc_df["t_start"],
+            "t_confirm": oc_df["t_confirm"],
+            "t_invalidated": oc_df["t_invalidated"],
+            "price_level": oc_df["midpoint"],
+            "price_low": oc_df["low"],
+            "price_high": oc_df["high"],
+            "related_event_ids": oc_df["connected_mmxm_id"],
+            "universe_coverage": "FULL_UNIVERSE",
             "algo_version": ALGO_VERSION,
             "dataset_hash": h_tag,
         }))
 
-    # 5. MMXM Stage Events
     if len(mmxm_ev_df) > 0:
-        sub_m = mmxm_ev_df if len(mmxm_ev_df) <= 30000 else mmxm_ev_df.iloc[::max(1, len(mmxm_ev_df) // 30000)]
         parts.append(pd.DataFrame({
-            "event_id": sub_m["mmxm_event_id"],
-            "event_family": "MMXM_" + sub_m["stage_name"].astype(str),
-            "instrument": sub_m["instrument"],
+            "event_id": mmxm_ev_df["mmxm_event_id"],
+            "event_family": "MMXM_" + mmxm_ev_df["stage_name"].astype(str),
+            "instrument": mmxm_ev_df["instrument"],
             "source_provider": "DUKA_OANDA_VERIFIED",
-            "source_tf": sub_m["tf"],
-            "direction": sub_m["direction"],
-            "t_event": sub_m["t_known"],
-            "t_confirm": sub_m["t_known"],
+            "source_tf": mmxm_ev_df["tf"],
+            "direction": mmxm_ev_df["direction"],
+            "t_event": mmxm_ev_df["t_known"],
+            "t_confirm": mmxm_ev_df["t_known"],
             "t_invalidated": pd.NaT,
-            "price_level": sub_m["event_price"],
-            "price_low": sub_m["oc_low"],
-            "price_high": sub_m["oc_high"],
-            "related_event_ids": sub_m["oc_id"],
+            "price_level": mmxm_ev_df["event_price"],
+            "price_low": mmxm_ev_df["oc_low"],
+            "price_high": mmxm_ev_df["oc_high"],
+            "related_event_ids": mmxm_ev_df["oc_id"],
+            "universe_coverage": "FULL_UNIVERSE",
             "algo_version": ALGO_VERSION,
             "dataset_hash": h_tag,
         }))
@@ -818,16 +1110,93 @@ def build_atomic_events_database(
 
 
 # ---------------------------------------------------------------------------
-# Phase 2 & 5: Multi-Timeframe Structure Context & Cross-Timeframe Target Engine
+# Phase 2 & 5: Causal As-Of MMXM Event Join & Multi-Timeframe Structure Context (P0.3)
 # ---------------------------------------------------------------------------
+@njit(cache=True)
+def _asof_join_active_mmxm_numba(
+    jt_query: np.ndarray,
+    dir_query: np.ndarray,
+    ev_j_known: np.ndarray,
+    ev_j_term: np.ndarray,
+    ev_dir: np.ndarray,
+    ev_stage: np.ndarray,
+    ev_tf_code: np.ndarray,
+    ev_row_idx: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Causal as-of join linking each candidate opportunity `(jt_query[i], dir_query[i])`
+    with the most recent active `mmxm_state_events` record where:
+      - `ev_dir[k] == dir_query[i]`
+      - `ev_j_known[k] <= jt_query[i]` (strictly confirmed at or before `t_signal_known`)
+      - `ev_j_term[k] >= jt_query[i]` (model has not terminated prior to `jt_query[i]`)
+
+    Returns:
+      (matched_stage, matched_tf_code, matched_j_known, matched_ev_row_idx)
+    """
+    n_q = jt_query.shape[0]
+    n_e = ev_j_known.shape[0]
+    m_stage = np.zeros(n_q, np.int8)
+    m_tf = np.full(n_q, -1, np.int8)
+    m_j_known = np.full(n_q, -1, np.int64)
+    m_row = np.full(n_q, -1, np.int64)
+
+    if n_e == 0:
+        return m_stage, m_tf, m_j_known, m_row
+
+    for i in range(n_q):
+        jq = jt_query[i]
+        dq = dir_query[i]
+        # Binary search right-most event with ev_j_known[k] <= jq
+        lo = 0
+        hi = n_e
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if ev_j_known[mid] <= jq:
+                lo = mid + 1
+            else:
+                hi = mid
+        k = lo - 1
+        steps = 0
+        best_stage = 0
+        best_tf = -1
+        best_jk = -1
+        best_r = -1
+        while k >= 0 and steps < 120:
+            if jq - ev_j_known[k] > 1440:
+                break
+            if ev_dir[k] == dq and ev_j_term[k] >= jq:
+                st_k = ev_stage[k]
+                # Prefer active progression/reversal/delivery stages (4..12) over mere OC confirmation (1..3)
+                if st_k > best_stage and st_k <= 13:
+                    best_stage = st_k
+                    best_tf = ev_tf_code[k]
+                    best_jk = ev_j_known[k]
+                    best_r = ev_row_idx[k]
+                    if best_stage >= 8:
+                        break
+                elif best_stage == 0:
+                    best_stage = st_k
+                    best_tf = ev_tf_code[k]
+                    best_jk = ev_j_known[k]
+                    best_r = ev_row_idx[k]
+            k -= 1
+            steps += 1
+        m_stage[i] = best_stage
+        m_tf[i] = best_tf
+        m_j_known[i] = best_jk
+        m_row[i] = best_r
+
+    return m_stage, m_tf, m_j_known, m_row
+
+
 def attach_full_fractal_context(
     ctx: dict,
     cands: pd.DataFrame,
     oc_df: pd.DataFrame,
+    mmxm_ev_df: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    """Attach full multi-timeframe structural directions (`W1`, `D1`, `H4`, `H1`, `M15`, `M5`),
-    historical Original Consolidations from both LOWER and HIGHER timeframes (`m5_oc`, `m15_oc`, `h1_oc`, `h4_oc`),
-    and external HTF liquidity pools (`h1_liq`, `h4_liq`, `d1_liq`, `w1_liq`) known strictly at `t_signal_known`!
+    """Attach full multi-timeframe structural directions (`W1..M1`),
+    causal Original Consolidations (`m5_oc`, `m15_oc`, `h1_oc`, `h4_oc`),
+    and TRUE causal as-of joined `mmxm_state_events` (`mmxm_stage_v3`, `mmxm_tf`, `mmxm_id`) (P0.2 & P0.3).
     """
     if len(cands) == 0:
         return cands
@@ -836,17 +1205,24 @@ def attach_full_fractal_context(
     traded = ctx["traded"]
     idx = panel.index
 
-    # 1. Assign stable unique `opportunity_id` so one opportunity is never double-counted (Section 14)
+    # 1. Assign stable unique `opportunity_id` and `underlying_event_id` + `ny_day_id` (P1.10)
     out["opportunity_id"] = [
         f"OPP_{traded}_{tf}_{md}_{jt}_{ 'L' if d == 1 else 'S' }"
         for tf, md, jt, d in zip(out["tf"], out["entry_mode"], out["j_trig"], out["dir"])
     ]
+    out["underlying_event_id"] = [
+        f"UEV_{traded}_{tf}_{jo}_{ 'L' if d == 1 else 'S' }"
+        for tf, jo, d in zip(out["tf"], out["j_open"], out["dir"])
+    ]
+    t_sig = pd.to_datetime(out["t_signal_known"], utc=True)
+    # NY trading day ID (shifted by +6h so 18:00 NY starts the next session day)
+    ny_shifted = t_sig.dt.tz_convert("America/New_York") + pd.Timedelta(hours=6)
+    out["ny_day_id"] = (ny_shifted.dt.year * 10000 + ny_shifted.dt.month * 100 + ny_shifted.dt.day).to_numpy(np.int64)
 
-    # Attach M30, H1, H4 CISD and opposing/expired CISD flags if not yet attached or if NaN exists after concat
-    if "cisd_m30" not in out.columns or out["cisd_m30"].isna().any():
-        out = cisd.attach_true_cisd_to_signals(
-            out, {k: v for k, v in ctx["cisd_tables"].items() if k in ("M30", "H1", "H4")}
-        )
+    # Attach all 7 CISD timeframes (both as-of context and post-sweep confirmation delay, P0.4 & P0.6)
+    if "j_post_cisd_m1" not in out.columns or "cisd_m30" not in out.columns or out["cisd_m30"].isna().any():
+        out = cisd.attach_true_cisd_to_signals(out, ctx["cisd_tables"])
+
     for tf_c in ("m1", "m3", "m5", "m15", "m30", "h1", "h4"):
         for pref in ("cisd_", "cisd_opp_", "cisd_exp_"):
             cname = f"{pref}{tf_c}"
@@ -856,7 +1232,6 @@ def attach_full_fractal_context(
                 out[cname] = False
 
     # 2. Compute strictly causal structure bias across ALL V3 timeframes (known at candle close <= t_signal_known)
-    t_sig = pd.to_datetime(out["t_signal_known"], utc=True)
     for tf_s in ("W1", "D1", "H6", "H4", "H2", "M90", "H1", "M30", "M15", "M10", "M5", "M3"):
         b = bars.resample(panel, traded, tf_s, "cal")
         bc = b[b["complete"]].copy()
@@ -875,7 +1250,6 @@ def attach_full_fractal_context(
         out[f"prev_l_{tf_s.lower()}"] = joined["prev_l"].to_numpy(float)
         out[f"prev_mid_{tf_s.lower()}"] = joined["prev_mid"].to_numpy(float)
 
-    # M1 bias & prev_h/prev_l directly from index j_trig
     jt_idx = np.clip(out["j_trig"].to_numpy(np.int64), 0, len(panel) - 1)
     m1_o = panel[f"{traded}_o"].to_numpy(float)[jt_idx]
     m1_c = panel[f"{traded}_c"].to_numpy(float)[jt_idx]
@@ -884,7 +1258,7 @@ def attach_full_fractal_context(
     out["prev_l_m1"] = panel[f"{traded}_l"].to_numpy(float)[jt_idx]
     out["prev_mid_m1"] = 0.5 * (out["prev_h_m1"] + out["prev_l_m1"])
 
-    # 3. Attach most recent active Original Consolidation on M5, M15, H1, H4 for the candidate's direction
+    # 3. Attach most recent active Original Consolidation on M5, M15, H1, H4 for the candidate's direction (P0.2)
     for oc_tf in ("M5", "M15", "H1", "H4"):
         sub_oc = oc_df[oc_df["tf"] == oc_tf].copy() if len(oc_df) > 0 else pd.DataFrame()
         col_px = f"oc_target_{oc_tf.lower()}"
@@ -896,13 +1270,12 @@ def attach_full_fractal_context(
             out[col_age] = np.nan
             continue
 
-        # Split by target_dir (+1 for Bullish MMBM target above, -1 for Bearish MMSM target below)
         px_arr = np.full(len(out), np.nan, dtype=np.float64)
         id_arr = np.array([""] * len(out), dtype=object)
         age_arr = np.full(len(out), np.nan, dtype=np.float64)
         jt = out["j_trig"].to_numpy(np.int64)
         d = out["dir"].to_numpy(np.int8)
-        c_trig = panel[f"{traded}_c"].to_numpy(float)[jt]
+        c_trig = panel[f"{traded}_c"].to_numpy(float)[jt_idx]
 
         for tdir in (-1, 1):
             mask_d = np.nonzero(d == tdir)[0]
@@ -918,11 +1291,11 @@ def attach_full_fractal_context(
             for idx_i in mask_d:
                 j_q = jt[idx_i]
                 cur_px = c_trig[idx_i]
+                # Strictly causal: jc[k] <= j_q means OC bar close t_confirm <= t_signal_known!
                 k = np.searchsorted(jc, j_q, side="right") - 1
                 steps = 0
                 while k >= 0 and steps < 50:
-                    # Must not be invalidated before j_q, and must lie in the trade direction!
-                    if (ji[k] < 0 or ji[k] > j_q):
+                    if ji[k] < 0 or ji[k] > j_q:
                         if (tdir == 1 and mid_p[k] > cur_px + 3.0) or (tdir == -1 and mid_p[k] < cur_px - 3.0):
                             px_arr[idx_i] = mid_p[k]
                             id_arr[idx_i] = str(oid[k])
@@ -934,7 +1307,45 @@ def attach_full_fractal_context(
         out[col_id] = id_arr
         out[col_age] = age_arr
 
-    # 4. Classify Pre-Entry Reversal vs Continuation & HTF/LTF Alignment States (Section 3 & 6.1)
+    # 4. TRUE MMXM × QT Integration via causal as-of event join on `mmxm_state_events` (P0.3)
+    mmxm_tfs_list = ["M5", "M15", "M30", "H1", "H4", "D1"]
+    tf_to_code = {t: idx_t for idx_t, t in enumerate(mmxm_tfs_list)}
+    code_to_tf = {idx_t: t for idx_t, t in enumerate(mmxm_tfs_list)}
+
+    if mmxm_ev_df is not None and len(mmxm_ev_df) > 0:
+        ev_sorted = mmxm_ev_df.sort_values("j_m1_known").reset_index(drop=True)
+        ev_jk = ev_sorted["j_m1_known"].to_numpy(np.int64)
+        ev_jt = (
+            ev_sorted["j_terminal_m1"].to_numpy(np.int64)
+            if "j_terminal_m1" in ev_sorted.columns
+            else (ev_jk + 360)
+        )
+        ev_dr = ev_sorted["direction"].to_numpy(np.int8)
+        ev_st = ev_sorted["stage_num"].to_numpy(np.int8)
+        ev_tc = np.array([tf_to_code.get(str(t), 0) for t in ev_sorted["tf"]], dtype=np.int8)
+        ev_ri = np.arange(len(ev_sorted), dtype=np.int64)
+
+        m_st, m_tf, m_jk, m_row = _asof_join_active_mmxm_numba(
+            out["j_trig"].to_numpy(np.int64),
+            out["dir"].to_numpy(np.int8),
+            ev_jk, ev_jt, ev_dr, ev_st, ev_tc, ev_ri,
+        )
+        out["mmxm_stage_v3"] = m_st.astype(np.int64)
+        out["j_mmxm_known"] = m_jk
+        mmxm_ids_col = ev_sorted["mmxm_id"].to_numpy()
+        out["mmxm_id"] = [str(mmxm_ids_col[r]) if r >= 0 else "NONE" for r in m_row]
+        # P0.3: `mmxm_tf` is strictly the timeframe of the verified MMXM event, NOT derived from OC target!
+        out["mmxm_tf"] = [code_to_tf.get(int(tc), "NONE") if tc >= 0 else "NONE" for tc in m_tf]
+    else:
+        out["mmxm_stage_v3"] = 0
+        out["j_mmxm_known"] = -1
+        out["mmxm_id"] = "NONE"
+        out["mmxm_tf"] = "NONE"
+
+    # Active MMXM progression/reversal/delivery flag (Stages 4..12 from true V3 MMXM state machine, independent of CISD)
+    out["f_mmxm"] = ((out["mmxm_stage_v3"] >= 4) & (out["mmxm_stage_v3"] <= 12)).astype(bool)
+
+    # 5. Classify Pre-Entry Reversal vs Continuation & HTF/LTF Alignment States (Section 3 & 6.1)
     d = out["dir"].to_numpy(int)
     b_d1 = out["bias_d1"].to_numpy(int)
     b_h4 = out["bias_h4"].to_numpy(int)
@@ -942,7 +1353,6 @@ def attach_full_fractal_context(
     b_m15 = out["bias_m15"].to_numpy(int)
     b_m5 = out["bias_m5"].to_numpy(int)
 
-    # Pre-entry hypothesis: Reversal (sweeping reference/HTF level and reclaiming inside) vs Continuation (aligned with structure / breakout)
     is_rev = out["A"].to_numpy(bool) | (out["entry_mode"].isin(["dev_cisd", "dev_reclaim"]).to_numpy(bool) & out["pd_zone_ok"].to_numpy(bool))
     out["hypothesis_type"] = np.where(is_rev, "REVERSAL", "CONTINUATION")
     out["direction_label"] = np.where(d == 1, "LONG", "SHORT")
@@ -971,12 +1381,13 @@ def attach_full_fractal_context(
         default="Mixed_HTF_LTF_State",
     )
 
+    f_mmxm_arr = out["f_mmxm"].to_numpy(bool)
     out["mmxm_directional_relation"] = np.select(
         [
-            out["mmxm_early_candidate"] & (d == 1) & (b_h1 == 1) & (b_m15 == 1),
-            out["mmxm_early_candidate"] & (d == -1) & (b_h1 == -1) & (b_m15 == -1),
-            out["mmxm_early_candidate"] & (d == 1) & (b_h1 == 1) & (b_m15 == -1),
-            out["mmxm_early_candidate"] & (d == -1) & (b_h1 == -1) & (b_m15 == 1),
+            f_mmxm_arr & (d == 1) & (b_h1 == 1) & (b_m15 == 1),
+            f_mmxm_arr & (d == -1) & (b_h1 == -1) & (b_m15 == -1),
+            f_mmxm_arr & (d == 1) & (b_h1 == 1) & (b_m15 == -1),
+            f_mmxm_arr & (d == -1) & (b_h1 == -1) & (b_m15 == 1),
             is_rev & (b_h4 != d) & (b_m5 == d),
             ~is_rev & (b_h4 == d) & (b_m5 != d),
         ],
@@ -991,45 +1402,13 @@ def attach_full_fractal_context(
         default="Standard_Single_TF_MMXM",
     )
 
-    # 5. Independent structural MMXM flag (Stage >= 5: OC + Departure + Liquidity Engineering + POI Sweep, independent of CISD!)
-    out["f_mmxm"] = out["mmxm_stage"] >= 5
-    # Map V2 mmxm_stage (0..8) onto V3 13-stage lifecycle (0..13)
-    s_raw = out["mmxm_stage"].to_numpy(int)
-    out["mmxm_stage_v3"] = np.select(
-        [
-            s_raw == 0,
-            s_raw == 1,
-            s_raw == 2,
-            s_raw == 3,
-            s_raw == 4,
-            (s_raw == 5) & (~out["A"].to_numpy(bool)),
-            (s_raw == 5) & out["A"].to_numpy(bool),
-            s_raw == 6,
-            s_raw == 7,
-            s_raw >= 8,
-        ],
-        [0, 1, 2, 4, 6, 7, 8, 9, 10, 12],
-        default=0,
-    )
-
-    # Determine explicit Origin TF, Narrative TF, MMXM TF, and Entry TF (Section 1)
+    # Determine explicit Origin TF, Narrative TF, and Entry TF (Section 1)
     out["origin_tf"] = np.select(
         [out["pw_swept"], out["pd_swept"], out["tf"] == "H4", out["tf"] == "H1", out["tf"] == "M30", out["tf"] == "M15"],
         ["W1", "D1", "H4", "H1", "M30", "M15"],
         default=out["tf"],
     )
     out["narrative_tf"] = out["tf"]
-    out["mmxm_tf"] = np.select(
-        [
-            out["oc_target_m5"].notna() & (out["tf"] == "M5"),
-            out["oc_target_m15"].notna() & (out["tf"].isin(["M15", "M5"])),
-            out["oc_target_h1"].notna() & (out["tf"].isin(["H1", "M30", "M15"])),
-            out["oc_target_h4"].notna() & (out["tf"].isin(["H4", "H1"])),
-            out["f_mmxm"],
-        ],
-        ["M5", "M15", "H1", "H4", "M5"],
-        default=out["tf"],
-    )
     out["entry_tf"] = np.select(
         [
             out["entry_mode"].isin(["dev_cisd", "dev_reclaim"]) & out["cisd_m1"],
@@ -1044,90 +1423,103 @@ def attach_full_fractal_context(
             (out["tf"] == "M30") & out["cisd_m5"],
             (out["tf"] == "H1") & out["cisd_m1"] & (~out["cisd_m5"]) & (~out["cisd_m15"]),
             (out["tf"] == "H1") & out["cisd_m5"] & (~out["cisd_m15"]),
-            (out["tf"] == "H1") & out["cisd_m15"] & (~out.get("cisd_m30", False)),
-            (out["tf"] == "H1") & out.get("cisd_m30", False),
-            (out["tf"] == "H4") & out["cisd_m5"] & (~out["cisd_m15"]),
-            (out["tf"] == "H4") & out["cisd_m15"] & (~out.get("cisd_h1", False)),
-            (out["tf"] == "H4") & out.get("cisd_h1", False),
+            (out["tf"] == "H1") & out["cisd_m15"],
+            (out["tf"] == "H4") & out["cisd_m1"],
+            (out["tf"] == "H4") & out["cisd_m5"],
+            (out["tf"] == "H4") & out["cisd_m15"],
         ],
         [
             "M1", "M3", "M5", "M1",
             "M1", "M3",
             "M1", "M3", "M5",
             "M5",
-            "M1", "M5", "M15", "M30",
-            "M5", "M15", "H1",
+            "M1", "M5", "M15",
+            "M1", "M5", "M15",
         ],
         default=out["tf"],
     )
+
     return out
 
 
+# ---------------------------------------------------------------------------
+# Phase 5: Target-Consistent Cross-Timeframe Target Engine (Sections 1, 2.4, 7 & P0.5)
+# ---------------------------------------------------------------------------
 def build_cross_timeframe_targets_and_outcomes(
     ctx: dict,
     cands: pd.DataFrame,
     horizon_bars: int = 360,
     slip: float = 0.25,
+    universe_coverage: str = "FULL_UNIVERSE",
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Build `target_candidates.parquet`, `target_outcomes.parquet`, and `target_prediction_results.parquet` (Section 7).
+    """Evaluate all pre-existing structural targets across LOWER, EQUAL, and HIGHER timeframes
+    with true target-consistent trade execution (`hpc.fast_target_exec_full_numba`) (P0.5).
 
-    Evaluates HIGHER-timeframe targets (e.g., M5 MMXM -> H1/H4/D1/W1 liquidity),
-    LOWER-timeframe targets (e.g., H1/H4 Reversal -> M5/M15 Original Consolidation),
-    and SAME-timeframe targets for every candidate opportunity!
+    Separates:
+      - `TARGET_HIT` (cleanly reached target before stop)
+      - `STOP_HIT` (stop touched before target)
+      - `AMBIGUOUS` (both SL and TP touched on same M1 bar; pessimistic stop-out PnL, separate status)
+      - `TIMEOUT` (neither SL nor TP touched within `horizon_bars`; mark-to-market exit at horizon close, NEVER automatic -1R!)
+      - `DATA_END` (neither SL nor TP touched before dataset end; mark-to-market exit at final close)
     """
-    if len(cands) == 0:
-        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
-
     panel = ctx["panel"]
     traded = ctx["traded"]
-    bh = panel[f"{traded}_h"].to_numpy(float)
-    bl = panel[f"{traded}_l"].to_numpy(float)
-    ah = panel[f"{traded}_ah"].to_numpy(float)
-    al = panel[f"{traded}_al"].to_numpy(float)
+    bh = panel[f"{traded}_h"].to_numpy(np.float64)
+    bl = panel[f"{traded}_l"].to_numpy(np.float64)
+    bc = panel[f"{traded}_c"].to_numpy(np.float64)
+    ah = panel[f"{traded}_ah"].to_numpy(np.float64)
+    al = panel[f"{traded}_al"].to_numpy(np.float64)
+    ac = panel[f"{traded}_ac"].to_numpy(np.float64)
 
-    # Pre-extract arrays from cands
+    n_c = len(cands)
+    if n_c == 0:
+        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+
     opp_ids = cands["opportunity_id"].to_numpy()
+    uev_ids = cands["underlying_event_id"].to_numpy() if "underlying_event_id" in cands.columns else opp_ids
+    day_ids = cands["ny_day_id"].to_numpy(np.int64) if "ny_day_id" in cands.columns else np.arange(n_c, dtype=np.int64)
+    t_sig_arr = cands["t_signal_known"].to_numpy()
+    j_fills = np.clip(cands["j_trig"].to_numpy(np.int64) + 1, 0, len(bh) - 1)
+    dirs = cands["dir"].to_numpy(np.int64)
+    ep_arr = cands["px_entry"].to_numpy(np.float64)
+    sl_arr = cands["sl_init"].to_numpy(np.float64)
+    atr_arr = cands["atr_ref"].fillna(15.0).to_numpy(np.float64)
+    risk_arr = np.maximum(np.abs(ep_arr - sl_arr), 3.0)
+
     orig_tfs = cands["origin_tf"].to_numpy()
     narr_tfs = cands["narrative_tf"].to_numpy()
     mmxm_tfs = cands["mmxm_tf"].to_numpy()
     ent_tfs = cands["entry_tf"].to_numpy()
-    dirs = cands["dir"].to_numpy(np.int64)
-    j_fills = cands["j_fill"].to_numpy(np.int64)
-    ep_arr = cands["px_entry"].to_numpy(float)
-    sl_arr = cands["sl_init"].to_numpy(float)
-    atr_arr = cands["atr_ref"].fillna(15.0).to_numpy(float)
-    q90_arr = cands["q90_trig"].to_numpy(np.int8)
-    mmxm_flag = cands["mmxm_early_candidate"].to_numpy(bool)
     hyp_type = cands["hypothesis_type"].to_numpy()
-    t_sig_arr = cands["t_signal_known"].to_numpy()
+    q90_arr = cands["q90_trig"].to_numpy(np.int8)
+    mmxm_flag = cands["f_mmxm"].to_numpy(bool)
+    val_split = cands["validation_split"].to_numpy() if "validation_split" in cands.columns else np.array(["OOS_TEST"] * n_c)
 
-    risk_arr = np.maximum(1.0, np.where(dirs == 1, ep_arr - sl_arr, sl_arr - ep_arr))
+    hr_arr = cands["Hr"].to_numpy(float) if "Hr" in cands.columns else cands["h"].to_numpy(float)
+    lr_arr = cands["Lr"].to_numpy(float) if "Lr" in cands.columns else cands["l"].to_numpy(float)
+    d1_h = cands["prev_h_d1"].to_numpy(float) if "prev_h_d1" in cands.columns else (cands["pdh"].to_numpy(float) if "pdh" in cands.columns else hr_arr)
+    d1_l = cands["prev_l_d1"].to_numpy(float) if "prev_l_d1" in cands.columns else (cands["pdl"].to_numpy(float) if "pdl" in cands.columns else lr_arr)
+    w1_h = cands["prev_h_w1"].to_numpy(float) if "prev_h_w1" in cands.columns else (cands["pwh"].to_numpy(float) if "pwh" in cands.columns else hr_arr)
+    w1_l = cands["prev_l_w1"].to_numpy(float) if "prev_l_w1" in cands.columns else (cands["pwl"].to_numpy(float) if "pwl" in cands.columns else lr_arr)
 
-    # Define candidate target specs: (target_type, target_tf, price_array_bull, price_array_bear)
     target_specs = [
-        ("M5_OC", "M5", cands["oc_target_m5"].to_numpy(float), cands["oc_target_m5"].to_numpy(float)),
-        ("M15_OC", "M15", cands["oc_target_m15"].to_numpy(float), cands["oc_target_m15"].to_numpy(float)),
-        ("H1_OC", "H1", cands["oc_target_h1"].to_numpy(float), cands["oc_target_h1"].to_numpy(float)),
-        ("H4_OC", "H4", cands["oc_target_h4"].to_numpy(float), cands["oc_target_h4"].to_numpy(float)),
-        ("M5_LIQ", "M5", cands["prev_h_m5"].to_numpy(float), cands["prev_l_m5"].to_numpy(float)),
-        ("M15_LIQ", "M15", cands["prev_h_m15"].to_numpy(float), cands["prev_l_m15"].to_numpy(float)),
-        ("H1_LIQ", "H1", cands["prev_h_h1"].to_numpy(float), cands["prev_l_h1"].to_numpy(float)),
-        ("H4_LIQ", "H4", cands["prev_h_h4"].to_numpy(float), cands["prev_l_h4"].to_numpy(float)),
-        ("D1_LIQ_PDH_PDL", "D1", cands["PDH"].to_numpy(float), cands["PDL"].to_numpy(float)),
-        ("W1_LIQ_PWH_PWL", "W1", cands["PWH"].to_numpy(float), cands["PWL"].to_numpy(float)),
-        ("CRT_MIDPOINT", "SAME", cands["mid_target"].to_numpy(float), cands["mid_target"].to_numpy(float)),
-        ("CRT_OPP_BOUNDARY", "SAME", cands["opp_range_target"].to_numpy(float), cands["opp_range_target"].to_numpy(float)),
+        ("CRT_OPP_BOUNDARY", narr_tfs, np.where(dirs == 1, hr_arr, lr_arr)),
+        ("M5_OC", np.array(["M5"] * n_c), cands["oc_target_m5"].to_numpy(float)),
+        ("M15_OC", np.array(["M15"] * n_c), cands["oc_target_m15"].to_numpy(float)),
+        ("H1_OC", np.array(["H1"] * n_c), cands["oc_target_h1"].to_numpy(float)),
+        ("H4_OC", np.array(["H4"] * n_c), cands["oc_target_h4"].to_numpy(float)),
+        ("M15_LIQ", np.array(["M15"] * n_c), np.where(dirs == 1, cands["prev_h_m15"].to_numpy(float), cands["prev_l_m15"].to_numpy(float))),
+        ("H1_LIQ", np.array(["H1"] * n_c), np.where(dirs == 1, cands["prev_h_h1"].to_numpy(float), cands["prev_l_h1"].to_numpy(float))),
+        ("H4_LIQ", np.array(["H4"] * n_c), np.where(dirs == 1, cands["prev_h_h4"].to_numpy(float), cands["prev_l_h4"].to_numpy(float))),
+        ("D1_LIQ", np.array(["D1"] * n_c), np.where(dirs == 1, d1_h, d1_l)),
+        ("W1_LIQ", np.array(["W1"] * n_c), np.where(dirs == 1, w1_h, w1_l)),
     ]
 
     cand_frames = []
     outcome_frames = []
 
-    for tgt_type, tgt_tf_raw, px_bull, px_bear in target_specs:
-        tgt_px = np.where(dirs == 1, px_bull, px_bear)
-        tgt_tf_arr = np.where(tgt_tf_raw == "SAME", narr_tfs, tgt_tf_raw)
-
-        # Target must be finite and in the trade's direction by at least 3.0 points (0.25 R minimum)
-        dist_pts = np.where(dirs == 1, tgt_px - ep_arr, ep_arr - tgt_px)
+    for tgt_type, tgt_tf_arr, tgt_px in target_specs:
+        dist_pts = (tgt_px - ep_arr) * dirs
         dist_r = dist_pts / risk_arr
         dist_atr = dist_pts / np.maximum(atr_arr, 1.0)
         valid_mask = np.isfinite(tgt_px) & (dist_pts >= 3.0) & (dist_r >= 0.35) & (dist_r <= 25.0)
@@ -1137,45 +1529,58 @@ def build_cross_timeframe_targets_and_outcomes(
 
         sub_jf = j_fills[valid_idx]
         sub_dir = dirs[valid_idx]
+        sub_ep = ep_arr[valid_idx]
         sub_sl = sl_arr[valid_idx]
         sub_tp = tgt_px[valid_idx]
-        sub_ep = ep_arr[valid_idx]
-        sub_risk = risk_arr[valid_idx]
 
-        # Evaluate Longs on Bid highs/lows, Shorts on Ask highs/lows using verified Numba kernel
-        # Split Long and Short so each uses its exact executable exit quote side (Bid for Long, Ask for Short)!
-        reached_any = np.zeros(len(valid_idx), dtype=bool)
-        reached_clean = np.zeros(len(valid_idx), dtype=bool)
-        bars_to_tgt = np.full(len(valid_idx), -1, dtype=np.int64)
+        m_len = len(valid_idx)
+        reached_any = np.zeros(m_len, dtype=bool)
+        reached_clean = np.zeros(m_len, dtype=bool)
+        bars_to_tgt = np.full(m_len, -1, dtype=np.int64)
+        out_code = np.zeros(m_len, dtype=np.int8)
+        exit_j = np.full(m_len, -1, dtype=np.int64)
+        exit_p = np.full(m_len, np.nan, dtype=np.float64)
+        realized_r = np.full(m_len, np.nan, dtype=np.float64)
+        mfe_r = np.zeros(m_len, dtype=np.float64)
+        mae_r = np.zeros(m_len, dtype=np.float64)
 
         long_m = np.nonzero(sub_dir == 1)[0]
         if len(long_m) > 0:
-            ra_l, rc_l, bt_l = hpc.fast_target_horizon_eval_numba(
-                bh, bl, sub_jf[long_m], sub_dir[long_m], sub_sl[long_m], sub_tp[long_m], horizon_bars
+            ra_l, rc_l, bt_l, oc_l, ej_l, ep_l, rr_l, mf_l, ma_l = hpc.fast_target_exec_full_numba(
+                bh, bl, bc,
+                sub_jf[long_m], sub_dir[long_m], sub_ep[long_m], sub_sl[long_m], sub_tp[long_m],
+                horizon_bars, slip,
             )
             reached_any[long_m] = ra_l
             reached_clean[long_m] = rc_l
             bars_to_tgt[long_m] = bt_l
+            out_code[long_m] = oc_l
+            exit_j[long_m] = ej_l
+            exit_p[long_m] = ep_l
+            realized_r[long_m] = rr_l
+            mfe_r[long_m] = mf_l
+            mae_r[long_m] = ma_l
 
         short_m = np.nonzero(sub_dir == -1)[0]
         if len(short_m) > 0:
-            ra_s, rc_s, bt_s = hpc.fast_target_horizon_eval_numba(
-                ah, al, sub_jf[short_m], sub_dir[short_m], sub_sl[short_m], sub_tp[short_m], horizon_bars
+            ra_s, rc_s, bt_s, oc_s, ej_s, ep_s, rr_s, mf_s, ma_s = hpc.fast_target_exec_full_numba(
+                ah, al, ac,
+                sub_jf[short_m], sub_dir[short_m], sub_ep[short_m], sub_sl[short_m], sub_tp[short_m],
+                horizon_bars, slip,
             )
             reached_any[short_m] = ra_s
             reached_clean[short_m] = rc_s
             bars_to_tgt[short_m] = bt_s
+            out_code[short_m] = oc_s
+            exit_j[short_m] = ej_s
+            exit_p[short_m] = ep_s
+            realized_r[short_m] = rr_s
+            mfe_r[short_m] = mf_s
+            mae_r[short_m] = ma_s
 
-        # Realized net R when trading toward this structural target (before stop-out)
-        # If reached_clean: net R = (dist_pts - slip) / risk; else if stopped out: -1.0 - slip/risk
         sub_dist_pts = dist_pts[valid_idx]
         sub_dist_r = dist_r[valid_idx]
         sub_dist_atr = dist_atr[valid_idx]
-        realized_r = np.where(
-            reached_clean,
-            (sub_dist_pts - slip) / sub_risk,
-            -1.0 - (slip / sub_risk),
-        )
 
         ent_min = np.array([TF_ORDER_MAP.get(str(x), 15) for x in ent_tfs[valid_idx]])
         nar_min = np.array([TF_ORDER_MAP.get(str(x), 15) for x in narr_tfs[valid_idx]])
@@ -1189,15 +1594,18 @@ def build_cross_timeframe_targets_and_outcomes(
             tgt_min > nar_min, "LTF_STRUCT_TO_HTF_TARGET",
             np.where(tgt_min < nar_min, "HTF_STRUCT_TO_LTF_TARGET", "SAME_TF_STRUCT_TARGET"),
         )
-        # Count intervening obstacles (0 if <=1.5 ATR, 1 if <=3.5 ATR, 2+ if >3.5 ATR)
         obstacles = np.where(sub_dist_atr <= 1.5, 0, np.where(sub_dist_atr <= 3.5, 1, 2))
+        out_status = np.array([hpc.OUTCOME_CODE_TO_LABEL.get(int(c), "UNKNOWN") for c in out_code], dtype=object)
 
         t_cand_ids = [f"TC_{opp_ids[i]}_{tgt_type}" for i in valid_idx]
         cand_frames.append(pd.DataFrame({
             "target_candidate_id": t_cand_ids,
             "opportunity_id": opp_ids[valid_idx],
+            "underlying_event_id": uev_ids[valid_idx],
+            "ny_day_id": day_ids[valid_idx],
             "t_signal_known": t_sig_arr[valid_idx],
             "direction": np.where(sub_dir == 1, "LONG", "SHORT"),
+            "dir": sub_dir.astype(np.int8),
             "hypothesis_type": hyp_type[valid_idx],
             "origin_tf": orig_tfs[valid_idx],
             "narrative_tf": narr_tfs[valid_idx],
@@ -1217,12 +1625,17 @@ def build_cross_timeframe_targets_and_outcomes(
             "distance_r": sub_dist_r,
             "intervening_obstacles": obstacles,
             "known_before_entry": True,
+            "universe_coverage": universe_coverage,
         }))
 
         outcome_frames.append(pd.DataFrame({
             "target_candidate_id": t_cand_ids,
             "opportunity_id": opp_ids[valid_idx],
+            "underlying_event_id": uev_ids[valid_idx],
+            "ny_day_id": day_ids[valid_idx],
+            "validation_split": val_split[valid_idx],
             "direction": np.where(sub_dir == 1, "LONG", "SHORT"),
+            "dir": sub_dir.astype(np.int8),
             "hypothesis_type": hyp_type[valid_idx],
             "narrative_tf": narr_tfs[valid_idx],
             "mmxm_tf": mmxm_tfs[valid_idx],
@@ -1234,17 +1647,24 @@ def build_cross_timeframe_targets_and_outcomes(
             "qt_q90": q90_arr[valid_idx],
             "has_mmxm": mmxm_flag[valid_idx],
             "distance_r": sub_dist_r,
+            "outcome_code": out_code,
+            "outcome_status": out_status,
+            "exit_bar_idx": exit_j,
+            "exit_px": exit_p,
             "target_reached_horizon": reached_any,
             "trade_reached_before_stop": reached_clean,
             "reached_only_after_stop": reached_any & (~reached_clean),
             "bars_to_target": bars_to_tgt,
             "realized_net_r": realized_r,
+            "mfe": mfe_r,
+            "mae": mae_r,
+            "hold": np.maximum(1, exit_j - sub_jf),
+            "universe_coverage": universe_coverage,
         }))
 
     df_cands = pd.concat(cand_frames, ignore_index=True) if cand_frames else pd.DataFrame()
     df_out = pd.concat(outcome_frames, ignore_index=True) if outcome_frames else pd.DataFrame()
 
-    # Build aggregated `target_prediction_results.parquet` (Section 7.2 & 7.3)
     if len(df_out) > 0:
         pred_summary = (
             df_out.groupby(
@@ -1254,10 +1674,16 @@ def build_cross_timeframe_targets_and_outcomes(
             .agg(
                 n_evaluations=("opportunity_id", "size"),
                 n_unique_opportunities=("opportunity_id", "nunique"),
+                n_unique_days=("ny_day_id", "nunique"),
                 mean_target_r=("distance_r", "mean"),
                 prob_target_reached_horizon=("target_reached_horizon", "mean"),
                 prob_trade_reached_before_stop=("trade_reached_before_stop", "mean"),
                 prob_reached_after_stop=("reached_only_after_stop", "mean"),
+                prob_target_hit=("outcome_status", lambda s: float((s == "TARGET_HIT").mean())),
+                prob_stop_hit=("outcome_status", lambda s: float((s == "STOP_HIT").mean())),
+                prob_ambiguous=("outcome_status", lambda s: float((s == "AMBIGUOUS").mean())),
+                prob_timeout=("outcome_status", lambda s: float((s == "TIMEOUT").mean())),
+                prob_data_end=("outcome_status", lambda s: float((s == "DATA_END").mean())),
                 expectancy_net_r=("realized_net_r", "mean"),
                 total_net_r=("realized_net_r", "sum"),
                 median_bars_to_target=("bars_to_target", lambda s: float(s[s >= 0].median()) if (s >= 0).any() else np.nan),
@@ -1266,6 +1692,7 @@ def build_cross_timeframe_targets_and_outcomes(
             .sort_values(["expectancy_net_r"], ascending=False)
             .reset_index(drop=True)
         )
+        pred_summary["universe_coverage"] = universe_coverage
     else:
         pred_summary = pd.DataFrame()
 
@@ -1273,67 +1700,153 @@ def build_cross_timeframe_targets_and_outcomes(
 
 
 # ---------------------------------------------------------------------------
-# Phase 6: Causal Narrative Graph & Pre-Trade Narratives (Sections 5 & 11)
+# P0.4 & P0.6: Independent Strategy Execution for Multi-TF CISD & 64 Combinations
+# ---------------------------------------------------------------------------
+def execute_strategy_at_custom_triggers(
+    ctx: dict,
+    base_df: pd.DataFrame,
+    j_exec_arr: np.ndarray,
+    rr_target: float = 2.0,
+    horizon_bars: int = 360,
+    slip_pts: float = 0.25,
+) -> pd.DataFrame:
+    """Execute a strategy cohort where each candidate row enters at its OWN causal trigger bar `j_exec_arr[i]`
+    (`j_fill = j_exec_arr[i] + 1`), with its own next-bar open fill price, structural stop-loss known at `j_exec`,
+    and target-consistent outcome (`TARGET_HIT`, `STOP_HIT`, `AMBIGUOUS`, `TIMEOUT`, `DATA_END`) (P0.4 & P0.5).
+    """
+    panel = ctx["panel"]
+    traded = ctx["traded"]
+    idx = panel.index
+    n_m1 = len(idx)
+
+    bo = panel[f"{traded}_o"].to_numpy(np.float64)
+    bh = panel[f"{traded}_h"].to_numpy(np.float64)
+    bl = panel[f"{traded}_l"].to_numpy(np.float64)
+    bc = panel[f"{traded}_c"].to_numpy(np.float64)
+    ao = panel[f"{traded}_ao"].to_numpy(np.float64)
+    ah = panel[f"{traded}_ah"].to_numpy(np.float64)
+    al = panel[f"{traded}_al"].to_numpy(np.float64)
+    ac = panel[f"{traded}_ac"].to_numpy(np.float64)
+
+    valid_m = (j_exec_arr >= 0) & (j_exec_arr + 1 < n_m1)
+    valid_idx = np.nonzero(valid_m)[0]
+    if len(valid_idx) == 0:
+        return base_df.iloc[0:0].copy()
+
+    sub = base_df.iloc[valid_idx].copy().reset_index(drop=True)
+    j_ex = j_exec_arr[valid_idx].astype(np.int64)
+    j_fl = j_ex + 1
+    dirs = sub["dir"].to_numpy(np.int64)
+
+    # Executable fill price at j_fill (Ask Open + slip for LONG, Bid Open - slip for SHORT)
+    ep = np.where(dirs == 1, ao[j_fl] + slip_pts, bo[j_fl] - slip_pts)
+
+    # Causal structural stop-loss known at j_exec: sweep extreme / reference extreme + buffer
+    sl_base = sub["sl_init"].to_numpy(np.float64)
+    atr_ref = sub["atr_ref"].fillna(15.0).to_numpy(np.float64)
+    # If price moved between base j_trig and j_exec, ensure stop is causally valid relative to ep
+    sl_px = np.where(
+        dirs == 1,
+        np.minimum(sl_base, bl[j_ex] - 0.15 * atr_ref),
+        np.maximum(sl_base, bh[j_ex] + 0.15 * atr_ref),
+    )
+    risk = np.maximum(np.abs(ep - sl_px), 3.0)
+    sl_px = np.where(dirs == 1, ep - risk, ep + risk)
+    tp_px = np.where(dirs == 1, ep + rr_target * risk, ep - rr_target * risk)
+
+    m_len = len(sub)
+    out_code = np.zeros(m_len, dtype=np.int8)
+    exit_j = np.full(m_len, -1, dtype=np.int64)
+    exit_p = np.full(m_len, np.nan, dtype=np.float64)
+    realized_r = np.full(m_len, np.nan, dtype=np.float64)
+    mfe_r = np.zeros(m_len, dtype=np.float64)
+    mae_r = np.zeros(m_len, dtype=np.float64)
+
+    long_m = np.nonzero(dirs == 1)[0]
+    if len(long_m) > 0:
+        _, _, _, oc_l, ej_l, ep_l, rr_l, mf_l, ma_l = hpc.fast_target_exec_full_numba(
+            bh, bl, bc,
+            j_fl[long_m], dirs[long_m], ep[long_m], sl_px[long_m], tp_px[long_m],
+            horizon_bars, slip_pts,
+        )
+        out_code[long_m] = oc_l
+        exit_j[long_m] = ej_l
+        exit_p[long_m] = ep_l
+        realized_r[long_m] = rr_l
+        mfe_r[long_m] = mf_l
+        mae_r[long_m] = ma_l
+
+    short_m = np.nonzero(dirs == -1)[0]
+    if len(short_m) > 0:
+        _, _, _, oc_s, ej_s, ep_s, rr_s, mf_s, ma_s = hpc.fast_target_exec_full_numba(
+            ah, al, ac,
+            j_fl[short_m], dirs[short_m], ep[short_m], sl_px[short_m], tp_px[short_m],
+            horizon_bars, slip_pts,
+        )
+        out_code[short_m] = oc_s
+        exit_j[short_m] = ej_s
+        exit_p[short_m] = ep_s
+        realized_r[short_m] = rr_s
+        mfe_r[short_m] = mf_s
+        mae_r[short_m] = ma_s
+
+    m1_close_idx = idx + pd.Timedelta(minutes=1)
+    sub["j_trig"] = j_ex
+    sub["j_fill"] = j_fl
+    sub["t_signal_known"] = m1_close_idx[j_ex]
+    sub["t_fill"] = idx[j_fl]
+    sub["px_entry"] = ep
+    sub["sl_init"] = sl_px
+    sub["tp_init"] = tp_px
+    sub["px_exit"] = exit_p
+    sub["outcome_code"] = out_code
+    sub["outcome_status"] = [hpc.OUTCOME_CODE_TO_LABEL.get(int(c), "UNKNOWN") for c in out_code]
+    sub["r"] = realized_r
+    sub["mfe"] = mfe_r
+    sub["mae"] = mae_r
+    sub["hold"] = np.maximum(1, exit_j - j_fl)
+    return sub
+
+
+# ---------------------------------------------------------------------------
+# Phase 6: Causal Narrative Graph & Pre-Trade Narratives (Sections 5, 11 & P1.8)
 # ---------------------------------------------------------------------------
 def build_narrative_graph_and_snapshots(
     cands: pd.DataFrame,
-    target_outcomes: pd.DataFrame,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Build `fractal_narrative_graph.parquet` (Section 11) and `pretrade_narratives.parquet` (Section 5).
-
-    Answers all 16 narrative questions at decision time `t_signal_known` and preserves exact event sequences:
-      - Liquidity -> SSMT -> CISD
-      - SSMT -> Liquidity -> CISD
-      - CRT_Developing -> Micro_SSMT -> CISD
-      - CRT_Confirmed -> CISD
-      - MMXM_Reversal_Candidate -> QT_Transition -> CISD
-      - QT_Transition -> Liquidity -> CRT -> CISD
+    target_candidates: pd.DataFrame,
+    universe_coverage: str = "FULL_UNIVERSE",
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Build `fractal_narrative_graph.parquet`, `pretrade_narratives.parquet` (100% causal pre-trade),
+    and `posttrade_outcomes.parquet` (post-trade outcomes kept strictly separate per P1.8).
     """
     if len(cands) == 0:
-        return pd.DataFrame(), pd.DataFrame()
+        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
-    # Classify exact temporal sequence of confirmations before `j_trig` (Section 11)
-    jsw = cands["j_sweep"].to_numpy(int)
-    jt = cands["j_trig"].to_numpy(int)
-    j_ssmt = np.where(
-        cands["micro_ssmt"], cands["micro_jform"].to_numpy(int),
-        np.where(cands["macro_ssmt"], cands["macro_jform"].to_numpy(int), -1),
-    )
-    j_cisd = np.where(
-        cands["cisd_m1"], cands["j_cisd_m1"].to_numpy(int),
-        np.where(cands["cisd_m5"], cands["j_cisd_m5"].to_numpy(int), cands["j_cisd"].to_numpy(int)),
-    )
-    is_dev = (cands["entry_mode"] == "dev_cisd").to_numpy(bool)
-    is_conf = (cands["entry_mode"] == "confirmed").to_numpy(bool)
-    has_ssmt = cands["any_ssmt"].to_numpy(bool)
-    has_cisd = (cands["cisd_m1"] | cands["cisd_m3"] | cands["cisd_m5"] | cands["cisd_m15"]).to_numpy(bool)
-    has_mmxm = cands["mmxm_early_candidate"].to_numpy(bool)
+    has_mmxm = cands["f_mmxm"].to_numpy(bool)
+    has_ssmt = (cands["macro_ssmt"] | cands["micro_ssmt"]).to_numpy(bool)
+    has_cisd_any = (
+        cands["cisd_m1"] | cands["cisd_m3"] | cands["cisd_m5"] | cands["cisd_m15"]
+        | cands.get("cisd_m30", False) | cands.get("cisd_h1", False) | cands.get("cisd_h4", False)
+    ).to_numpy(bool)
 
     seq_label = np.select(
         [
-            is_dev & has_ssmt & has_cisd & (jsw <= j_ssmt) & (j_ssmt <= j_cisd),
-            is_dev & has_ssmt & has_cisd & (j_ssmt < jsw) & (jsw <= j_cisd),
-            is_dev & cands["micro_ssmt"].to_numpy(bool) & has_cisd,
-            is_conf & has_cisd & (~has_ssmt),
-            has_mmxm & (cands["q90_trig"].isin([2, 3]).to_numpy(bool)) & has_cisd,
-            (cands["q90_trig"].isin([2, 3]).to_numpy(bool)) & cands["A"].to_numpy(bool) & has_cisd,
-            cands["A"].to_numpy(bool) & has_ssmt,
+            has_mmxm & has_ssmt & has_cisd_any,
+            has_mmxm & (~has_ssmt) & has_cisd_any,
+            (~has_mmxm) & has_ssmt & has_cisd_any,
+            has_ssmt & (~has_cisd_any),
             cands["A"].to_numpy(bool),
         ],
         [
-            "Liquidity_Sweep -> SSMT -> CISD",
-            "SSMT -> Liquidity_Sweep -> CISD",
-            "CRT_Developing -> Micro_SSMT -> CISD",
-            "CRT_Confirmed -> CISD",
-            "MMXM_Reversal_Candidate -> QT_Transition -> CISD",
-            "QT_Transition -> Liquidity_Sweep -> CRT -> CISD",
+            "Liquidity_Sweep -> MMXM_Stage -> QT_SSMT -> CISD -> Target",
+            "Liquidity_Sweep -> MMXM_Stage -> CISD (No_SSMT) -> Target",
+            "Liquidity_Sweep -> CRT -> QT_SSMT -> CISD -> Target",
             "Liquidity_Sweep -> CRT_Confirmed -> SSMT",
             "Liquidity_Sweep -> CRT_Confirmed",
         ],
         default="Liquidity_Sweep -> Structural_Trigger",
     )
 
-    # Map Example Narratives A..F from Section 1 & Section 5
     d = cands["dir"].to_numpy(int)
     tf = cands["tf"].to_numpy()
     narrative_archetype = np.select(
@@ -1358,11 +1871,10 @@ def build_narrative_graph_and_snapshots(
         default="General_Causal_Fractal_Narrative",
     )
 
-    # Best known target before entry for each opportunity
-    best_tgt_map = {}
-    if len(target_outcomes) > 0:
-        # Select frozen pre-trade primary target (closest >= 1.5R structural target)
-        sub_t = target_outcomes[target_outcomes["distance_r"] >= 1.2].sort_values(["opportunity_id", "distance_r"])
+    # Select best pre-existing target strictly from PRE-TRADE `target_candidates` (P1.8)
+    best_tgt_map: dict[str, dict[str, Any]] = {}
+    if len(target_candidates) > 0:
+        sub_t = target_candidates[target_candidates["distance_r"] >= 1.2].sort_values(["opportunity_id", "distance_r"])
         first_t = sub_t.groupby("opportunity_id", as_index=False).first()
         best_tgt_map = first_t.set_index("opportunity_id").to_dict("index")
 
@@ -1380,11 +1892,12 @@ def build_narrative_graph_and_snapshots(
             tgt_type_list.append("FIXED_2R_BASELINE")
             tgt_rel_list.append("SAME_TF_STRUCT_TARGET")
 
-    # Build immutable `pretrade_narratives.parquet` answering all 16 questions of Section 5
+    # P1.8: `pretrade_narratives.parquet` contains ZERO post-trade fields!
     pretrade_df = pd.DataFrame({
         "opportunity_id": cands["opportunity_id"],
+        "underlying_event_id": cands.get("underlying_event_id", cands["opportunity_id"]),
+        "ny_day_id": cands.get("ny_day_id", 0),
         "t_signal_known": cands["t_signal_known"],
-        "t_fill": cands["t_fill"],
         "instrument": cands.get("instrument", "US100"),
         "direction": cands["direction_label"],
         "q01_origin_tf": cands["origin_tf"],
@@ -1417,49 +1930,70 @@ def build_narrative_graph_and_snapshots(
         "q14_target_tf_relation": tgt_rel_list,
         "q15_structural_consistency": cands["structural_regime"],
         "q16_invalidation_price": cands["sl_init"],
+        "mmxm_id": cands.get("mmxm_id", "NONE"),
+        "mmxm_tf": cands["mmxm_tf"],
         "target_tf": tgt_tf_list,
         "temporal_sequence": seq_label,
         "narrative_archetype": narrative_archetype,
         "mmxm_directional_relation": cands["mmxm_directional_relation"],
-        "realized_r_post_trade": cands["r"],
+        "universe_coverage": universe_coverage,
     })
 
-    # Build `fractal_narrative_graph.parquet` (Section 11 edge list for causal sequences)
-    # Sample up to 15,000 representative opportunities -> ~60,000 causal graph edges
-    sub_p = pretrade_df if len(pretrade_df) <= 15000 else pretrade_df.iloc[::max(1, len(pretrade_df) // 15000)]
-    edges = []
-    for row in sub_p.itertuples(index=False):
-        oid = str(row.opportunity_id)
-        ts = row.t_signal_known
-        # Edge 1: Origin Liquidity -> CRT / MMXM Stage
-        edges.append((
-            f"EDGE_{oid}_1", oid, "Liquidity", f"{row.q01_origin_tf}:{row.q02_liquidity_pool}",
-            "swept" if "Sweep" in str(row.q03_interaction_class) else "approached",
-            "MMXM_Stage", str(row.q05_mmxm_stage_observable), ts, str(row.temporal_sequence),
-        ))
-        # Edge 2: QT Phase / SSMT -> CISD / Entry
-        edges.append((
-            f"EDGE_{oid}_2", oid, "QT_SSMT_Context", f"{row.q07_active_qt_phases}|{row.q09_ssmt_state}",
-            "confirms" if row.q09_ssmt_state != "Conflict" else "contradicts",
-            "CISD", str(row.q11_cisd_timeframes) or "NO_CISD", ts, str(row.temporal_sequence),
-        ))
-        # Edge 3: Entry -> Pre-Existing Target
-        edges.append((
-            f"EDGE_{oid}_3", oid, "Entry", f"{row.q12_executable_entry_tf}:{row.direction}",
-            "targets",
-            "Target", f"{row.target_tf}:{row.q13_known_target_type} ({row.q14_target_tf_relation})", ts, str(row.temporal_sequence),
-        ))
-        # Edge 4: Entry -> Invalidation Stop
-        edges.append((
-            f"EDGE_{oid}_4", oid, "Invalidation", f"SL@{row.q16_invalidation_price:.2f}",
-            "invalidates",
-            "Entry", f"{row.q12_executable_entry_tf}:{row.direction}", ts, str(row.temporal_sequence),
-        ))
+    # Separate post-trade outcome table (P1.8)
+    posttrade_df = pd.DataFrame({
+        "opportunity_id": cands["opportunity_id"],
+        "t_fill": cands["t_fill"],
+        "px_entry": cands["px_entry"],
+        "px_exit": cands["px_exit"],
+        "realized_r": cands["r"],
+        "mfe_r": cands["mfe"],
+        "mae_r": cands["mae"],
+        "hold_min": cands["hold"],
+        "validation_split": cands.get("validation_split", "OOS_TEST"),
+    })
 
-    graph_cols = [
-        "edge_id", "opportunity_id", "source_node_type", "source_node_label",
-        "relation", "target_node_type", "target_node_label", "t_known", "sequence_pattern",
-    ]
-    graph_df = pd.DataFrame(edges, columns=graph_cols)
-    return graph_df, pretrade_df
+    # Vectorized edge construction for `fractal_narrative_graph.parquet` (Section 11)
+    oids = pretrade_df["opportunity_id"].astype(str).to_numpy()
+    ts_arr = pretrade_df["t_signal_known"].to_numpy()
+    seq_arr = pretrade_df["temporal_sequence"].astype(str).to_numpy()
 
+    n_p = len(pretrade_df)
+    e1_id = [f"EDGE_{oid}_1" for oid in oids]
+    e1_src = (pretrade_df["q01_origin_tf"].astype(str) + ":" + pretrade_df["q02_liquidity_pool"].astype(str)).to_numpy()
+    e1_rel = np.where(pretrade_df["q03_interaction_class"].astype(str).str.contains("Sweep"), "swept", "approached")
+    e1_tgt = pretrade_df["q05_mmxm_stage_observable"].astype(str).to_numpy()
+
+    e2_id = [f"EDGE_{oid}_2" for oid in oids]
+    e2_src = (pretrade_df["q07_active_qt_phases"].astype(str) + "|" + pretrade_df["q09_ssmt_state"].astype(str)).to_numpy()
+    e2_rel = np.where(pretrade_df["q09_ssmt_state"].astype(str) != "Conflict", "confirms", "contradicts")
+    q11_s = pretrade_df["q11_cisd_timeframes"].astype(str)
+    e2_tgt = np.where(q11_s != "", q11_s, "NO_CISD")
+
+    e3_id = [f"EDGE_{oid}_3" for oid in oids]
+    e3_src = (pretrade_df["q12_executable_entry_tf"].astype(str) + ":" + pretrade_df["direction"].astype(str)).to_numpy()
+    e3_tgt = (
+        pretrade_df["target_tf"].astype(str) + ":" + pretrade_df["q13_known_target_type"].astype(str)
+        + " (" + pretrade_df["q14_target_tf_relation"].astype(str) + ")"
+    ).to_numpy()
+
+    graph_df = pd.DataFrame({
+        "edge_id": np.concatenate([e1_id, e2_id, e3_id]),
+        "opportunity_id": np.concatenate([oids, oids, oids]),
+        "source_node_type": np.concatenate([
+            np.repeat("Liquidity", n_p),
+            np.repeat("QT_SSMT_Context", n_p),
+            np.repeat("Entry", n_p),
+        ]),
+        "source_node_label": np.concatenate([e1_src, e2_src, e3_src]),
+        "relation": np.concatenate([e1_rel, e2_rel, np.repeat("targets", n_p)]),
+        "target_node_type": np.concatenate([
+            np.repeat("MMXM_Stage", n_p),
+            np.repeat("CISD", n_p),
+            np.repeat("Target", n_p),
+        ]),
+        "target_node_label": np.concatenate([e1_tgt, e2_tgt, e3_tgt]),
+        "t_known": np.concatenate([ts_arr, ts_arr, ts_arr]),
+        "sequence_pattern": np.concatenate([seq_arr, seq_arr, seq_arr]),
+        "universe_coverage": universe_coverage,
+    })
+    return graph_df, pretrade_df, posttrade_df

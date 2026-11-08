@@ -175,7 +175,7 @@ def main() -> int:
     if args.full or args.v3 or missing_v3:
         print("[4/6] Executing ASTRA 6 V3 Universal Fractal Engine (astra6.engine_v3.run_v3_pipeline)...")
         from astra6.engine_v3 import run_v3_pipeline
-        run_v3_pipeline()
+        run_v3_pipeline(force_recompute=args.full)
     else:
         print("[4/6] All 28 Mandatory V3 Parquet tables + DuckDB present in data/results/.")
 
