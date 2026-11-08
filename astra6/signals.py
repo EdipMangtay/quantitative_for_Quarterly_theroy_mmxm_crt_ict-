@@ -83,10 +83,10 @@ def build_context(
     ).reset_index(drop=True)
     pw_tbl = period_levels(w_bars, "PW")
 
-    # True Multi-Timeframe CISD tables (M1, M3, M5, M15)
+    # True Multi-Timeframe CISD tables (M1, M3, M5, M15, M30, H1, H4)
     cisd_tables = {
         tf_c: extract_tf_cisd_events(panel, traded=traded, tf=tf_c, variant="v1")
-        for tf_c in ("M1", "M3", "M5", "M15")
+        for tf_c in ("M1", "M3", "M5", "M15", "M30", "H1", "H4")
     }
     cisd_v2_m1 = extract_tf_cisd_events(panel, traded=traded, tf="M1", variant="v2")
 
@@ -131,7 +131,7 @@ def build_context(
     }
 
 
-def extract_crt_events(ctx: dict, tf: str = "M15", anchor: str = "cal") -> pd.DataFrame:
+def extract_crt_events(ctx: dict, tf: str = "M15", anchor: str = "cal", max_bars: int | None = None) -> pd.DataFrame:
     """Scan one (tf, anchor) stream and return a flat table of sweep events
     (both directions) with all confirmation & early-entry indices attached."""
     panel = ctx["panel"]
@@ -140,6 +140,8 @@ def extract_crt_events(ctx: dict, tf: str = "M15", anchor: str = "cal") -> pd.Da
     idx = panel.index
     bars = resample(panel, traded, tf, anchor)
     bars = bars[bars["complete"]].reset_index(drop=True)
+    if max_bars is not None and len(bars) > max_bars:
+        bars = bars.iloc[-max_bars:].reset_index(drop=True)
     m = TF_MIN[tf]
     i0 = idx.searchsorted(bars["t_open"].to_numpy(), side="left")
     i1 = idx.searchsorted(bars["t_close"].to_numpy(), side="left")
@@ -150,7 +152,9 @@ def extract_crt_events(ctx: dict, tf: str = "M15", anchor: str = "cal") -> pd.Da
     Cref = np.roll(bars["c"].to_numpy(float), 1)
     prev_close = np.roll(bars["t_close"].to_numpy(), 1)
     gap_min = (bars["t_open"].to_numpy() - prev_close) / np.timedelta64(1, "m")
-    valid = (np.arange(len(bars)) > 0) & (gap_min <= 5) & (bars["n"].to_numpy() >= max(1, m // 2))
+    max_gap = 4320 if tf in ("D1", "W1") else 5
+    min_n = max(1, m // 4) if tf in ("D1", "W1") else max(1, m // 2)
+    valid = (np.arange(len(bars)) > 0) & (gap_min <= max_gap) & (bars["n"].to_numpy() >= min_n)
 
     ch = np.vstack([panel[f"{c}_h"].to_numpy(float) for c in comps])
     cl = np.vstack([panel[f"{c}_l"].to_numpy(float) for c in comps])

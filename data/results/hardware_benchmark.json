@@ -1,0 +1,43 @@
+{
+  "hardware_profile": {
+    "os_name": "Darwin",
+    "os_release": "27.2.0",
+    "architecture": "arm64",
+    "cpu_model": "Apple M3 Pro",
+    "physical_cores": 12,
+    "logical_cores": 12,
+    "ram_total_gb": 36.0,
+    "ram_available_gb": 14.94,
+    "disk_total_gb": 460.43,
+    "disk_free_gb": 322.51,
+    "selected_workers": 8,
+    "selected_duckdb_threads": 8,
+    "selected_batch_size": 131072,
+    "libraries": {
+      "python": "3.12.15",
+      "numpy": "2.5.4",
+      "pandas": "3.1.1",
+      "polars": "2.1.0",
+      "duckdb": "2.0.0",
+      "pyarrow": "26.0.1",
+      "numba": "0.68.1"
+    },
+    "detected_at_utc": "2026-11-08 14:25:15.958194+00:00"
+  },
+  "kernel_verification": {
+    "reference_vs_numba_exact_match": true,
+    "adversarial_same_bar_sl_tp_verified": true,
+    "python_ref_seconds_2k": 0.04752,
+    "numba_opt_seconds_2k": 0.00033,
+    "speedup_factor": 144.16,
+    "throughput_evals_per_sec": 6067501.0
+  },
+  "batch_size_benchmark_seconds": {
+    "16384": 0.00608,
+    "65536": 0.00145,
+    "131072": 0.00101,
+    "200000": 0.00105
+  },
+  "selected_optimal_batch_size": 131072,
+  "peak_memory_rss_mb": 3255.77
+}

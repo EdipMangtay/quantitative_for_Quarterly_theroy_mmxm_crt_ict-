@@ -1,0 +1,19 @@
+{
+  "total_reviewable_samples": 1000,
+  "categories_count": 10,
+  "counts_per_category": {
+    "01_CRT_EVENTS": 100,
+    "02_SSMT_EVENTS": 100,
+    "03_CISD_EVENTS": 100,
+    "04_MMXM_CANDIDATES": 100,
+    "05_ORIGINAL_CONSOLIDATIONS": 100,
+    "06_CROSS_TF_NARRATIVES": 100,
+    "07_LONG_TRADES": 100,
+    "08_SHORT_TRADES": 100,
+    "09_HIGHER_TF_TARGET_NARRATIVES": 100,
+    "10_LOWER_TF_TARGET_NARRATIVES": 100
+  },
+  "algorithmic_causality_audit_pass": true,
+  "human_discretionary_review_claimed": false,
+  "disclosure": "All 1,000 samples (10 categories x 100 examples across winners, losers, and invalidated setups) pass strict algorithmic causality verification. Human discretionary review is NOT fabricated and remains tracked via `human_review_status` and `human_disagreement_flag`."
+}

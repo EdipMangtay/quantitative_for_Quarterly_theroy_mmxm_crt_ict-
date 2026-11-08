@@ -1,0 +1,17 @@
+{
+  "handoff_version": "ASTRA6_V3_TO_V4_FROZEN_HANDOFF",
+  "generated_at_utc": "2026-11-08 14:24:10.402850+00:00",
+  "frozen_candidates_count": 10,
+  "execution_rules": {
+    "long_entry_quote": "Next-Bar Open Ask + 0.25 pts slippage",
+    "long_exit_quote": "Bid High/Low",
+    "short_entry_quote": "Next-Bar Open Bid - 0.25 pts slippage",
+    "short_exit_quote": "Ask High/Low",
+    "same_bar_sl_tp_policy": "Pessimistic (Stop-Loss evaluated before Take-Profit)"
+  },
+  "validation_limitations": [
+    "2021-2026 historical dataset has been explored across V1, V2, and V3.",
+    "After Holm-Bonferroni and Benjamini-Hochberg FDR multiple-testing correction across 64 core configurations and multi-timeframe grids, no broad unfiltered configuration demonstrates a statistically significant positive expectancy.",
+    "Narrow session-conditioned subsets (such as NY Open 09:30-10:30 with Micro SSMT + CISD) require untouched V4 forward validation."
+  ]
+}

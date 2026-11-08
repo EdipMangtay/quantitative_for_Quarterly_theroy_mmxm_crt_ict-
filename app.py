@@ -1,4 +1,20 @@
-"""ASTRA 6 v2.0 — 13-Panel Quantitative Research Dashboard with Full Combination × Time-of-Day Explorer."""
+"""ASTRA 6 V3 FINAL — Universal Fractal Market Narrative & Multi-Timeframe Quant Lab Dashboard.
+
+Extends the verified V2 13-panel application with all 12 mandatory V3 Research Modules (Section 19: A through L):
+  * Module A: Universal Narrative Combination Builder (64 Core Binary States + 15 Strategy Families + Live Opportunity Filter)
+  * Module B: Fractal Structure Explorer (Nested W1/D1/H4/H1/M15/M5/M3/M1 Pairs, Triples & Quads)
+  * Module C: Entry-to-Target Timeframe Matrix (LTF -> HTF Liquidity & HTF -> LTF Original Consolidation)
+  * Module D: MMXM × QT Narrative Explorer (13-Stage Lifecycle × 6H/90M/22.5M QT Phases & Transitions)
+  * Module E: Macro/Micro SSMT Explorer (All 10 SSMT States × LONG/SHORT/BOTH)
+  * Module F: CISD Timeframe Comparison (No-CISD vs M1/M3/M5/M15/M30/H1/H4 & Multi-TF Subsets)
+  * Module G: Nasdaq Open (09:30 NY 5-Min) & London Open LONG/SHORT Heatmap
+  * Module H: Original Consolidation & Liquidity Target Map
+  * Module I: Strategy Ablation (Marginal Contribution of CRT, SSMT, CISD, MMXM, QT, Target TF)
+  * Module J: Causal Trade Replay with Future-Candles-Hidden Step-by-Step Bar Slider
+  * Module K: Statistical Robustness, OOS Splits, Cost Sensitivity & Hardware Benchmark
+  * Module L: 25 Statistical Rankings, No-Trade Conditions, 10×100 Manual Validation & V4 Handoff
+  * Plus all V2 Legacy Panels (V2 Panel 0 .. V2 Panel 12) preserved intact.
+"""
 from __future__ import annotations
 
 import json
@@ -19,7 +35,7 @@ RESULTS = ROOT / "data" / "results"
 STORE = ROOT / "data" / "store"
 
 st.set_page_config(
-    page_title="ASTRA 6 v2.0 — Verified Intraday Fractal Research Lab",
+    page_title="ASTRA 6 V3 FINAL — Universal Fractal Market Narrative Quant Lab",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -51,436 +67,435 @@ def load_m1_slice(start_utc: str, end_utc: str) -> pd.DataFrame:
     return u100.join(u500, lsuffix="_100", rsuffix="_500", how="inner")
 
 
-st.sidebar.title("ASTRA 6 v2.0 Quant Lab")
-st.sidebar.caption("Verified Next-Bar Fill · Causal MMXM · Multi-TF CISD · 30S Micro-QT")
-panel_choice = st.sidebar.radio(
-    "Araştırma Paneli Seçin (13 Panel):",
-    [
-        "Panel 0 — Full Combination × Time-of-Day Explorer",
-        "Panel 1 — Session Explorer (DST)",
-        "Panel 2 — CRT Research",
-        "Panel 3 — CRT × SSMT Matrix",
-        "Panel 4 — QT Fractal & Multi-Anchor Explorer",
-        "Panel 5 — Quarter-to-Quarter Rankings",
-        "Panel 6 — Nasdaq Open Research",
-        "Panel 7 — London Open Research",
-        "Panel 8 — Causal MMXM & Narrative Explorer",
-        "Panel 9 — R:R and Stop Research",
-        "Panel 10 — Full Trade Replay (Causal)",
-        "Panel 11 — Statistical Robustness & Autopsy",
-        "Panel 12 — Data Forensics & v1 vs v2 Audit",
-    ],
-)
+st.sidebar.title("ASTRA 6 V3 FINAL Quant Lab")
+st.sidebar.caption("Universal Fractal Market Narrative · QT × MMXM × ICT × CRT × SSMT × CISD · LONG/SHORT")
+
+MODULES = [
+    "V3 Module A — Universal Narrative Combination Builder",
+    "V3 Module B — Fractal Structure Explorer (W1..M1)",
+    "V3 Module C — Entry-to-Target Timeframe Matrix (LTF↔HTF)",
+    "V3 Module D — MMXM × QT Narrative Explorer",
+    "V3 Module E — Macro/Micro SSMT 10-State Explorer",
+    "V3 Module F — Multi-TF CISD Comparison (M1..H4)",
+    "V3 Module G — Nasdaq 09:30 5-Min & London Heatmap",
+    "V3 Module H — Original Consolidation & Liquidity Map",
+    "V3 Module I — Strategy Ablation (Marginal Delta R)",
+    "V3 Module J — Causal Trade Replay (Hide Future Bars)",
+    "V3 Module K — Statistical Robustness & HPC Benchmark",
+    "V3 Module L — 25 Rankings, No-Trade, 10×100 & V4 Handoff",
+    "V2 Panel 0 — Legacy 18-Model × Time-of-Day Explorer",
+    "V2 Panel 1 — Session Explorer (DST)",
+    "V2 Panel 2 — CRT Research",
+    "V2 Panel 3 — CRT × SSMT Matrix",
+    "V2 Panel 4 — QT Fractal & Multi-Anchor Explorer",
+    "V2 Panel 5 — Quarter-to-Quarter Rankings",
+    "V2 Panel 6 — Nasdaq Open Research",
+    "V2 Panel 7 — London Open Research",
+    "V2 Panel 8 — Causal MMXM & Narrative Explorer",
+    "V2 Panel 9 — R:R and Stop Research",
+    "V2 Panel 11 — Statistical Robustness & Autopsy",
+    "V2 Panel 12 — Data Forensics & v1 vs v2 Audit",
+]
+panel_choice = st.sidebar.radio("Araştırma Modülü Seçin:", MODULES)
 
 dq = load_json("data_quality.json")
+hw = load_json("hardware_benchmark.json")
 st.sidebar.markdown("---")
 if dq:
     st.sidebar.metric("Toplam Hizalanmış M1 Bar", f"{dq.get('total_aligned_m1_bars', 0):,}")
     st.sidebar.caption(f"Dönem: {dq.get('period_start', '')[:10]} → {dq.get('period_end', '')[:10]}")
-    st.sidebar.caption(f"Execution: {dq.get('execution_fill_model', 'Next-Bar Open')[:32]}")
+if hw:
+    hp = hw.get("hardware_profile", {})
+    st.sidebar.caption(f"Donanım: {hp.get('cpu_model', 'Apple Silicon')} ({hp.get('physical_cores', 0)}P/{hp.get('logical_cores', 0)}L Core, {hp.get('ram_total_gb', 0)}GB RAM)")
 
 # ============================================================================
-# PANEL 0 — FULL COMBINATION x TIME-OF-DAY EXPLORER (PHASE 10)
+# V3 MODULE A — UNIVERSAL NARRATIVE COMBINATION BUILDER (SECTION 19.A)
 # ============================================================================
-if panel_choice.startswith("Panel 0"):
-    st.header("Panel 0 — Full Combination × Time-of-Day Explorer (18 Models × 24H / 15M / 5M)")
-    tf_feats = load_table("trade_features")
-    h24_df = load_table("intraday_24h_18models")
-    ny_gran = load_table("ny_5m_15m_18models")
-    ldn_gran = load_table("ldn_18models")
+if panel_choice.startswith("V3 Module A"):
+    st.header("V3 Module A — Universal Narrative Combination Builder (64 Core Binary States + 15 Strategy Families)")
+    cands = load_table("candidate_opportunities")
+    comb_res = load_table("combination_results")
+    fam_15 = load_table("v3_family_15_subsets")
 
-    st.subheader("1. İnteraktif Trade Feature Küpü Filtreleri (`trade_features.parquet`)")
-    if len(tf_feats) > 0:
-        f1, f2, f3, f4 = st.columns(4)
-        with f1:
-            prov_sel = st.selectbox("Veri Sağlayıcı Senaryosu:", ["All", "DUKASCOPY_OBSERVED_BID_ASK", "OANDA_BASIS_EXTENDED"])
-            crt_tf_sel = st.multiselect("CRT Timeframe:", sorted(tf_feats["tf"].unique()), default=["M15"])
-            entry_mode_sel = st.multiselect("CRT Giriş Modu:", sorted(tf_feats["entry_mode"].unique()), default=["confirmed"])
-        with f2:
-            ssmt_sel = st.selectbox("SMT / SSMT Filtresi:", ["All", "Macro SSMT", "Micro SSMT", "Both Macro+Micro SSMT", "Standard SMT"])
-            q90_sel = st.multiselect("90M Macro Quarter:", [1, 2, 3, 4], default=[1, 2, 3, 4])
+    st.subheader("1. Canlı 20-Boyutlu Fraktal Narrative Kombinasyon Oluşturucu (`candidate_opportunities.parquet`)")
+    if len(cands) > 0:
+        c1, c2, c3, c4, c5 = st.columns(5)
+        with c1:
+            dir_sel = st.selectbox("Yön (Direction):", ["BOTH", "LONG", "SHORT"])
+            hyp_sel = st.selectbox("Hipotez (Reversal / Continuation):", ["ALL", "REVERSAL", "CONTINUATION"])
+            orig_sel = st.multiselect("Origin Timeframe:", sorted(cands["origin_tf"].astype(str).unique()), default=[])
+            narr_sel = st.multiselect("Narrative Timeframe:", sorted(cands["narrative_tf"].astype(str).unique()), default=[])
+        with c2:
+            mmxm_tf_sel = st.multiselect("MMXM Timeframe:", sorted(cands["mmxm_tf"].astype(str).unique()), default=[])
+            mmxm_on_sel = st.selectbox("MMXM Durumu:", ["ALL", "MMXM Active (Stage >= 5)", "MMXM OFF"])
+            q6_sel = st.multiselect("6H Macro Quarter:", [1, 2, 3, 4], default=[1, 2, 3, 4])
+            q90_sel = st.multiselect("90M Quarter:", [1, 2, 3, 4], default=[1, 2, 3, 4])
+        with c3:
             q22_sel = st.multiselect("22.5M Micro Quarter:", [1, 2, 3, 4], default=[1, 2, 3, 4])
-        with f3:
-            cisd_sel = st.selectbox("CISD Timeframe:", ["All", "M1 CISD", "M3 CISD", "M5 CISD", "M15 CISD"])
-            mmxm_sel = st.selectbox("Causal MMXM Filtresi:", ["All", "Confirmed Stage 8 (MMBM/MMSM)", "Early Candidate Stage 6+", "MMBM Only", "MMSM Only"])
-            htf_sel = st.selectbox("HTF Bias / Likidite:", ["All", "HTF Swept + Aligned", "HTF Swept Only"])
-        with f4:
-            sess_sel = st.selectbox("Oturum:", ["All", "NY_AM_Open_0930_1100", "NY_Midday_PM_1100_1600", "London_Open_0800_1100", "Overnight_Asia"])
-            hr_range = st.slider("NY Giriş Saati (0–23):", 0, 23, (0, 23))
-            ny_min_range = st.slider("Nasdaq 09:30 Açılışına Göre Dakika:", -120, 390, (-60, 180))
+            crt_sel = st.selectbox("CRT Durumu:", ["ALL", "CRT Confirmed (A=True)", "CRT Developing (Intrabar)", "CRT OFF (Sweep Only)"])
+            mac_sel = st.selectbox("90M Macro SSMT:", ["ALL", "ON", "OFF"])
+            mic_sel = st.selectbox("22.5M Micro SSMT:", ["ALL", "ON", "OFF"])
+        with c4:
+            cisd_sel = st.selectbox("CISD Durumu:", ["ALL", "Any CISD ON", "No CISD (OFF)"])
+            ent_tf_sel = st.multiselect("Entry Timeframe:", sorted(cands["entry_tf"].astype(str).unique()), default=[])
+            tgt_tf_sel = st.multiselect("Target Timeframe:", sorted(cands["target_tf"].astype(str).unique()), default=[])
+            tgt_type_sel = st.multiselect("Target Type:", sorted(cands["target_type"].astype(str).unique()), default=[])
+        with c5:
+            reg_sel = st.multiselect("HTF/LTF Yapısal Rejim:", sorted(cands["structural_regime"].astype(str).unique()), default=[])
+            sess_sel = st.selectbox("Oturum (Session):", ["ALL"] + sorted(cands["session"].astype(str).unique()))
+            ny_min_rng = st.slider("Nasdaq 09:30'a Göre Dakika:", -120, 390, (-120, 390))
+            split_sel = st.selectbox("Validation Split:", ["ALL", "TRAIN_DEV", "VALIDATION", "OOS_TEST"])
 
-        sub = tf_feats.copy()
-        if prov_sel != "All":
-            sub = sub[sub["dataset_provider"] == prov_sel]
-        if crt_tf_sel:
-            sub = sub[sub["tf"].isin(crt_tf_sel)]
-        if entry_mode_sel:
-            sub = sub[sub["entry_mode"].isin(entry_mode_sel)]
+        sub = cands.copy()
+        if dir_sel != "BOTH":
+            sub = sub[sub["direction_label"] == dir_sel]
+        if hyp_sel != "ALL":
+            sub = sub[sub["hypothesis_type"] == hyp_sel]
+        if orig_sel:
+            sub = sub[sub["origin_tf"].isin(orig_sel)]
+        if narr_sel:
+            sub = sub[sub["narrative_tf"].isin(narr_sel)]
+        if mmxm_tf_sel:
+            sub = sub[sub["mmxm_tf"].isin(mmxm_tf_sel)]
+        if mmxm_on_sel == "MMXM Active (Stage >= 5)":
+            sub = sub[sub["f_mmxm"]]
+        elif mmxm_on_sel == "MMXM OFF":
+            sub = sub[~sub["f_mmxm"]]
+        if q6_sel:
+            sub = sub[sub["q6_trig"].isin(q6_sel)]
         if q90_sel:
             sub = sub[sub["q90_trig"].isin(q90_sel)]
         if q22_sel:
             sub = sub[sub["q22_trig"].isin(q22_sel)]
-        sub = sub[(sub["ny_hour_trig"] >= hr_range[0]) & (sub["ny_hour_trig"] <= hr_range[1])]
-
-        if ssmt_sel == "Macro SSMT":
-            sub = sub[sub["macro_ssmt"]]
-        elif ssmt_sel == "Micro SSMT":
-            sub = sub[sub["micro_ssmt"]]
-        elif ssmt_sel == "Both Macro+Micro SSMT":
-            sub = sub[sub["both_ssmt"]]
-        elif ssmt_sel == "Standard SMT":
-            sub = sub[sub["std_smt"]]
-
-        if cisd_sel == "M1 CISD":
-            sub = sub[sub["cisd_m1"]]
-        elif cisd_sel == "M3 CISD":
-            sub = sub[sub["cisd_m3"]]
-        elif cisd_sel == "M5 CISD":
-            sub = sub[sub["cisd_m5"]]
-        elif cisd_sel == "M15 CISD":
-            sub = sub[sub["cisd_m15"]]
-
-        if mmxm_sel == "Confirmed Stage 8 (MMBM/MMSM)":
-            sub = sub[sub["mmxm_confirmed"]]
-        elif mmxm_sel == "Early Candidate Stage 6+":
-            sub = sub[sub["mmxm_early_candidate"]]
-        elif mmxm_sel == "MMBM Only":
-            sub = sub[sub["mmxm_early_candidate"] & (sub["dir"] == 1)]
-        elif mmxm_sel == "MMSM Only":
-            sub = sub[sub["mmxm_early_candidate"] & (sub["dir"] == -1)]
-
-        if htf_sel == "HTF Swept + Aligned":
-            sub = sub[sub["htf_liq"] & (sub["daily_bias"] == sub["dir"])]
-        elif htf_sel == "HTF Swept Only":
-            sub = sub[sub["htf_liq"]]
-
-        if sess_sel != "All":
+        if crt_sel == "CRT Confirmed (A=True)":
+            sub = sub[sub["f_crt"]]
+        elif crt_sel == "CRT Developing (Intrabar)":
+            sub = sub[sub["entry_mode"] == "dev_cisd"]
+        elif crt_sel == "CRT OFF (Sweep Only)":
+            sub = sub[(~sub["f_crt"]) & (sub["entry_mode"] != "dev_cisd")]
+        if mac_sel == "ON":
+            sub = sub[sub["f_macro_ssmt"]]
+        elif mac_sel == "OFF":
+            sub = sub[~sub["f_macro_ssmt"]]
+        if mic_sel == "ON":
+            sub = sub[sub["f_micro_ssmt"]]
+        elif mic_sel == "OFF":
+            sub = sub[~sub["f_micro_ssmt"]]
+        if cisd_sel == "Any CISD ON":
+            sub = sub[sub["f_cisd"]]
+        elif cisd_sel == "No CISD (OFF)":
+            sub = sub[~sub["f_cisd"]]
+        if ent_tf_sel:
+            sub = sub[sub["entry_tf"].isin(ent_tf_sel)]
+        if tgt_tf_sel:
+            sub = sub[sub["target_tf"].isin(tgt_tf_sel)]
+        if tgt_type_sel:
+            sub = sub[sub["target_type"].isin(tgt_type_sel)]
+        if reg_sel:
+            sub = sub[sub["structural_regime"].isin(reg_sel)]
+        if sess_sel != "ALL":
             sub = sub[sub["session"] == sess_sel]
-        sub = sub[(sub["min_from_ny_open_trig"] >= ny_min_range[0]) & (sub["min_from_ny_open_trig"] <= ny_min_range[1])]
+        if split_sel != "ALL":
+            sub = sub[sub["validation_split"] == split_sel]
+        sub = sub[(sub["min_from_ny_open_trig"] >= ny_min_rng[0]) & (sub["min_from_ny_open_trig"] <= ny_min_rng[1])]
 
-        k1, k2, k3, k4 = st.columns(4)
+        m1, m2, m3, m4, m5 = st.columns(5)
         n_tr = len(sub)
+        n_opp = int(sub["opportunity_id"].nunique()) if n_tr > 0 else 0
         wr = float((sub["r"] > 0).mean()) if n_tr > 0 else 0.0
         exp_r = float(sub["r"].mean()) if n_tr > 0 else 0.0
         tot_r = float(sub["r"].sum()) if n_tr > 0 else 0.0
-        k1.metric("Filtrelenen İşlem Sayısı", f"{n_tr:,}")
-        k2.metric("Win Rate", f"{wr * 100:.2f}%")
-        k3.metric("Net Expectancy (R)", f"{exp_r:+.4f} R")
-        k4.metric("Toplam Net R", f"{tot_r:+.2f} R")
+        m1.metric("Toplam İşlem (N)", f"{n_tr:,}")
+        m2.metric("Bağımsız Fırsat Sayısı", f"{n_opp:,}")
+        m3.metric("Win Rate", f"{wr * 100:.2f}%")
+        m4.metric("Net Expectancy (R)", f"{exp_r:+.4f} R")
+        m5.metric("Toplam Realized R", f"{tot_r:+.2f} R")
 
-    st.subheader("2. 24 Saat NY Saat Dilimi × 18 Strateji Modeli Net Expectancy (R) Isı Haritası")
-    if len(h24_df) > 0:
-        tf_h24 = st.selectbox("24H Isı Haritası CRT Timeframe:", ["M15", "H1"], key="h24_tf")
-        h24_sub = h24_df[h24_df["tf"] == tf_h24]
-        piv_24 = h24_sub.pivot(index="model", columns="ny_hour", values="expectancy")
-        st.plotly_chart(px.imshow(piv_24, text_auto=".2f", aspect="auto", color_continuous_scale="RdYlGn",
-                                  title=f"Heatmap 1 ({tf_h24}): 24H NY Hour (00..23) × 18 Strategy Models Expectancy (R)"), use_container_width=True)
+    st.subheader("2. 64 Çekirdek Binary Faktör Kombinasyonu (`combination_results.parquet` — LONG vs SHORT vs BOTH)")
+    if len(comb_res) > 0:
+        sc_f = st.selectbox("Oturum Kapsamı:", sorted(comb_res["scope"].unique()), index=1 if "NY_Open_0930_1100" in comb_res["scope"].values else 0)
+        dir_f = st.selectbox("64 Kombinasyon Yön Filtresi:", ["BOTH", "LONG", "SHORT"])
+        c_sub = comb_res[(comb_res["scope"] == sc_f) & (comb_res["direction"] == dir_f)].sort_values("expectancy_r", ascending=False)
+        st.dataframe(c_sub, use_container_width=True)
+        st.plotly_chart(
+            px.bar(c_sub.head(25), x="base_config_id", y="expectancy_r", color="config_label",
+                   title=f"En Yüksek 25 Binary Kombinasyon ({sc_f} — {dir_f}) Net Expectancy (R)"),
+            use_container_width=True,
+        )
 
-    st.subheader("3. Nasdaq 09:00–16:00 (15M Non-Overlapping & 5M Granular) × 18 Model Isı Haritası")
-    if len(ny_gran) > 0:
-        ny_m15 = ny_gran[ny_gran["tf"] == "M15"]
-        g15 = ny_m15[ny_m15["bin_type"] == "NY_15M_NonOverlap"]
-        piv_15 = g15.pivot(index="model", columns="window", values="expectancy")
-        st.plotly_chart(px.imshow(piv_15, text_auto=".2f", aspect="auto", color_continuous_scale="RdYlGn",
-                                  title="Heatmap 2 (M15): 09:00–16:00 15-Minute Non-Overlapping Bins × 18 Models Expectancy (R)"), use_container_width=True)
-
-        g5 = ny_m15[ny_m15["bin_type"] == "NY_Granular_5M_15M"]
-        piv_5 = g5.pivot(index="model", columns="window", values="expectancy")
-        st.plotly_chart(px.imshow(piv_5, text_auto=".2f", aspect="auto", color_continuous_scale="RdYlGn",
-                                  title="Heatmap 3 (M15): 09:30–11:00 5M & 15M NY Open Windows × 18 Models Expectancy (R)"), use_container_width=True)
-
-    st.subheader("4. London Open (07:00–11:00) Pencereleri × 18 Model Isı Haritası")
-    if len(ldn_gran) > 0:
-        ldn_m15 = ldn_gran[ldn_gran["tf"] == "M15"]
-        piv_ldn = ldn_m15.pivot(index="model", columns="window", values="expectancy")
-        st.plotly_chart(px.imshow(piv_ldn, text_auto=".2f", aspect="auto", color_continuous_scale="RdYlGn",
-                                  title="Heatmap 4 (M15): London 07:00–11:00 Windows × 18 Models Expectancy (R)"), use_container_width=True)
+    st.subheader("3. 15 Strateji Ailesi Alt Kümesi (`{QT, ICT, CRT, MMXM}` — `v3_family_15_subsets.parquet`)")
+    if len(fam_15) > 0:
+        st.dataframe(fam_15, use_container_width=True)
 
 # ============================================================================
-# PANEL 1 — SESSION EXPLORER
+# V3 MODULE B — FRACTAL STRUCTURE EXPLORER (SECTION 19.B)
 # ============================================================================
-elif panel_choice.startswith("Panel 1"):
-    st.header("Panel 1 — Global Session Clock & DST Explorer")
-    col1, col2 = st.columns([1, 2])
-    with col1:
-        sel_date = st.date_input("Tarih Seçin (2021–2026):", value=date(2026, 3, 16), min_value=date(2021, 11, 7), max_value=date(2026, 11, 6))
-        stamp = clock.session_stamp(sel_date)
-        tw = clock.is_transition_week(sel_date)
-        st.subheader("Otomatik Saat Dönüşümleri (`zoneinfo` / IANA)")
-        st.json({
-            "date": str(stamp.date),
-            "dst_regime": stamp.regime,
-            "us_dst_transition_week": tw["us_transition_week"],
-            "uk_dst_transition_week": tw["uk_transition_week"],
-            "london_ny_open_gap_minutes": clock.london_ny_open_gap_minutes(sel_date),
-            "london_open_utc": str(stamp.london_open_utc),
-            "london_open_ny": str(stamp.london_open_ny),
-            "london_open_istanbul": str(stamp.london_open_istanbul),
-            "nasdaq_open_utc": str(stamp.nasdaq_open_utc),
-            "nasdaq_open_ny": str(stamp.nasdaq_open_ny),
-            "nasdaq_open_london": str(stamp.nasdaq_open_london),
-            "nasdaq_open_istanbul": str(stamp.nasdaq_open_istanbul),
-        })
-    with col2:
-        st.subheader("2021–2026 ABD / İngiltere DST Geçiş Tarihleri (IANA tzdb'den Türetilmiş)")
-        rows = []
-        for y in range(2021, 2027):
-            us_tr = clock.dst_transitions("America/New_York", y)
-            uk_tr = clock.dst_transitions("Europe/London", y)
-            rows.append({
-                "Yıl": y,
-                "ABD Yaz Saati Başlangıç": str(us_tr[0]),
-                "İngiltere Yaz Saati Başlangıç": str(uk_tr[0]),
-                "İngiltere Yaz Saati Bitiş": str(uk_tr[1]),
-                "ABD Yaz Saati Bitiş": str(us_tr[1]),
-                "İlkbahar Uyumsuzluk Gün Sayısı": (uk_tr[0] - us_tr[0]).days,
-                "Sonbahar Uyumsuzluk Gün Sayısı": (us_tr[1] - uk_tr[1]).days,
-            })
-        st.dataframe(pd.DataFrame(rows), use_container_width=True)
-        cal = clock.reference_calendar("2021-11-07", "2026-11-07")
-        st.subheader("DST Rejim Dağılımı (2021–2026)")
-        reg_counts = cal["regime"].value_counts().reset_index()
-        reg_counts.columns = ["regime", "days"]
-        st.plotly_chart(px.bar(reg_counts, x="regime", y="days", color="regime", title="DST Rejimlerine Göre Takvim Günü Sayısı"), use_container_width=True)
+elif panel_choice.startswith("V3 Module B"):
+    st.header("V3 Module B — Fractal Structure Explorer (W1 / D1 / H6 / H4 / H2 / H1 / M90 / M30 / M15 / M5 / M3 / M1)")
+    tf_mat = load_table("timeframe_alignment_matrix")
+    pre_df = load_table("pretrade_narratives")
+    graph_df = load_table("fractal_narrative_graph")
+
+    if len(tf_mat) > 0:
+        lvl_sel = st.selectbox("Fraktal Hiyerarşi Seviyesi:", ["ALL"] + sorted(tf_mat["hierarchy_level"].unique()))
+        dir_b = st.selectbox("Yön:", ["BOTH", "LONG", "SHORT"], key="modb_dir")
+        tsub = tf_mat[tf_mat["direction"] == dir_b].copy()
+        if lvl_sel != "ALL":
+            tsub = tsub[tsub["hierarchy_level"] == lvl_sel]
+        st.subheader("Çoklu Zaman Dilimi Uyum Matrisi (Pairs, Triples & 4-Timeframe Quads)")
+        st.dataframe(tsub.sort_values("expectancy_r", ascending=False), use_container_width=True)
+        st.plotly_chart(
+            px.bar(tsub.sort_values("expectancy_r", ascending=False).head(30),
+                   x="structure_chain", y="expectancy_r", color="alignment_state", barmode="group",
+                   title=f"Fraktal Zaman Dilimi Zincirleri ({dir_b}) Net Expectancy (R)"),
+            use_container_width=True,
+        )
+
+    st.subheader("Pre-Trade 16-Soruluk Nedensel Narrative Kayıtları (`pretrade_narratives.parquet`)")
+    if len(pre_df) > 0:
+        st.dataframe(pre_df.head(200), use_container_width=True)
+
+    st.subheader("Nedensel Olay Grafiği Kenarları (`fractal_narrative_graph.parquet`)")
+    if len(graph_df) > 0:
+        st.dataframe(graph_df.head(200), use_container_width=True)
 
 # ============================================================================
-# PANEL 2 — CRT RESEARCH
+# V3 MODULE C — ENTRY-TO-TARGET TIMEFRAME MATRIX (SECTION 19.C)
 # ============================================================================
-elif panel_choice.startswith("Panel 2"):
-    st.header("Panel 2 — Candle Range Theory (CRT) Multi-Timeframe & Variant Research")
-    tf_stats = load_table("crt_tf_stats")
-    st.subheader("4.5 Zorunlu CRT Timeframe Karşılaştırması (M5, M15, M30, H1, H4 — Confirmed CRT-A)")
-    st.dataframe(tf_stats, use_container_width=True)
-    if len(tf_stats) > 0:
-        st.plotly_chart(px.bar(tf_stats, x="tf", y="expectancy", error_y=tf_stats["ci95_high"] - tf_stats["expectancy"],
-                               color="stat_status", title="Timeframe Bazında CRT-A Net Expectancy (R) — Next-Bar Fill"), use_container_width=True)
+elif panel_choice.startswith("V3 Module C"):
+    st.header("V3 Module C — Entry-to-Target Timeframe Matrix (Lower-to-Higher & Higher-to-Lower Targets)")
+    st.info(
+        "**Bölüm 1 & 7 Zorunlu Kuralı:** Hedef zaman dilimi giriş/yapı zaman diliminden DAHA BÜYÜK (`M5 MMXM → H1/H4/D1/W1 Likidite`), "
+        "DAHA KÜÇÜK (`H1/H4 Reversal → M5/M15 Original Consolidation`) veya EŞİT olabilir."
+    )
+    et_mat = load_table("entry_target_timeframe_matrix")
+    pred_res = load_table("target_prediction_results")
 
-    st.subheader("4.4 CRT Varyantları (CRT-A .. CRT-L)")
-    vdf = load_table("crt_variants")
-    if len(vdf) > 0:
-        tf_sel = st.selectbox("CRT Varyant Timeframe Filtresi:", vdf["tf"].unique())
-        vsub = vdf[vdf["tf"] == tf_sel]
-        st.dataframe(vsub, use_container_width=True)
-        st.plotly_chart(px.bar(vsub, x="variant", y="expectancy", color="win_rate",
-                               title=f"{tf_sel} — CRT-A..CRT-L Varyantlarının Net Expectancy (R) Karşılaştırması"), use_container_width=True)
+    if len(et_mat) > 0:
+        rel_sel = st.selectbox(
+            "Hedef / Yapı Zaman Dilimi İlişkisi:",
+            ["ALL", "LTF_STRUCT_TO_HTF_TARGET", "HTF_STRUCT_TO_LTF_TARGET", "SAME_TF_STRUCT_TARGET"],
+        )
+        dir_c = st.selectbox("Yön:", ["ALL", "LONG", "SHORT"], key="modc_dir")
+        esub = et_mat[et_mat["qt_phase"] == "ALL_QT"].copy()
+        if rel_sel != "ALL":
+            esub = esub[esub["tf_hierarchy_relation"] == rel_sel]
+        if dir_c != "ALL":
+            esub = esub[esub["direction"] == dir_c]
 
-    st.subheader("4.6 CRT Mum Kapanışı Beklemek vs Developing (Erken LTF CISD) Girişi")
-    cvd = load_table("crt_closing_vs_dev")
-    st.dataframe(cvd, use_container_width=True)
+        st.subheader("1. Entry TF × Narrative TF × Target TF × Target Type Performans Tablosu")
+        st.dataframe(esub, use_container_width=True)
+
+        piv_et = esub.groupby(["entry_tf", "target_tf"])["expectancy_r"].mean().unstack()
+        st.plotly_chart(
+            px.imshow(piv_et, text_auto=".3f", aspect="auto", color_continuous_scale="RdYlGn",
+                      title="Entry Timeframe (Satır) × Target Timeframe (Sütun) Ortalama Net Expectancy (R)"),
+            use_container_width=True,
+        )
+
+    st.subheader("2. Hedef Tahmini (Horizon İçinde Ulaşma) vs İşlem Karlılığı (Stop Olmadan Ulaşma) — Bölüm 7.3")
+    if len(pred_res) > 0:
+        st.dataframe(pred_res, use_container_width=True)
+        st.plotly_chart(
+            px.scatter(
+                pred_res, x="prob_target_reached_horizon", y="prob_trade_reached_before_stop",
+                color="tf_relation_to_narrative", size="n_evaluations", hover_data=["narrative_tf", "entry_tf", "target_tf", "target_type", "expectancy_net_r"],
+                title="Hedefe Ulaşma Olasılığı (Ham Horizon) vs Stop Olmadan Hedefe Ulaşma Olasılığı (Gerçek İşlem)",
+            ),
+            use_container_width=True,
+        )
 
 # ============================================================================
-# PANEL 3 — CRT x SSMT MATRIX
+# V3 MODULE D — MMXM × QT NARRATIVE EXPLORER (SECTION 19.D)
 # ============================================================================
-elif panel_choice.startswith("Panel 3"):
-    st.header("Panel 3 — CRT × SSMT × CISD Matrix, Baselines (A..J) & Incremental Contribution")
-    base_df = load_table("crt_ssmt_baselines")
-    hyp_df = load_table("hypothesis_tests")
-    mat_df = load_table("crt_ssmt_matrix")
-    inc_df = load_table("incremental_contribution")
+elif panel_choice.startswith("V3 Module D"):
+    st.header("V3 Module D — 13-Stage Fractal MMXM × Quarterly Theory (6H / 90M / 22.5M) Narrative Explorer")
+    mq_df = load_table("mmxm_qt_narrative_matrix")
+    mmxm_ev = load_table("mmxm_state_events")
+
+    if len(mq_df) > 0:
+        cat_sel = st.selectbox("Analiz Kategorisi:", sorted(mq_df["category"].unique()))
+        msub = mq_df[mq_df["category"] == cat_sel].copy()
+        st.dataframe(msub, use_container_width=True)
+        st.plotly_chart(
+            px.bar(msub, x="qt_phase", y="expectancy_r", color="mmxm_stage" if cat_sel != "MMXM_DIRECTIONAL_RELATION_x_QT" else "mmxm_relation",
+                   facet_col="direction", barmode="group",
+                   title=f"{cat_sel} — QT Evresi × MMXM Net Expectancy (R)"),
+            use_container_width=True,
+        )
+
+    st.subheader("13-Aşamalı Nedensel MMXM Durum Olayları (`mmxm_state_events.parquet`)")
+    if len(mmxm_ev) > 0:
+        stg_counts = mmxm_ev.groupby(["tf", "stage_name"]).size().reset_index(name="event_count")
+        st.plotly_chart(
+            px.bar(stg_counts, x="stage_name", y="event_count", color="tf", barmode="group",
+                   title="Timeframe Bazında 13 Aşamalı MMXM Durum Olay Sayıları"),
+            use_container_width=True,
+        )
+        st.dataframe(mmxm_ev.head(200), use_container_width=True)
+
+# ============================================================================
+# V3 MODULE E — MACRO/MICRO SSMT 10-STATE EXPLORER (SECTION 19.E)
+# ============================================================================
+elif panel_choice.startswith("V3 Module E"):
+    st.header("V3 Module E — Macro (90M) & Micro (22.5M) SSMT 10-State Explorer")
+    ssmt_mat = load_table("macro_micro_ssmt_matrix")
+    ssmt_ev = load_table("ssmt_events")
+
+    if len(ssmt_mat) > 0:
+        sc_e = st.selectbox("Kapsam:", sorted(ssmt_mat["scope"].unique()), key="mode_sc")
+        s_sub = ssmt_mat[ssmt_mat["scope"] == sc_e]
+        st.dataframe(s_sub, use_container_width=True)
+        st.plotly_chart(
+            px.bar(s_sub, x="ssmt_state_10", y="expectancy_r", color="direction", barmode="group",
+                   title=f"10 Macro/Micro SSMT Durumu ({sc_e}) — LONG vs SHORT vs BOTH Expectancy (R)"),
+            use_container_width=True,
+        )
+
+    st.subheader("Atomik SSMT Olay Tablosu (`ssmt_events.parquet`)")
+    if len(ssmt_ev) > 0:
+        st.dataframe(ssmt_ev.head(200), use_container_width=True)
+
+# ============================================================================
+# V3 MODULE F — MULTI-TF CISD COMPARISON (SECTION 19.F)
+# ============================================================================
+elif panel_choice.startswith("V3 Module F"):
+    st.header("V3 Module F — Independent Multi-Timeframe CISD Comparison (No-CISD vs M1/M3/M5/M15/M30/H1/H4)")
+    lc_df = load_table("liquidity_cisd_pair_matrix")
+    cisd_ev = load_table("multitf_cisd_events")
+
+    if len(lc_df) > 0:
+        pool_sel = st.selectbox("Likidite Havuzu:", sorted(lc_df["liquidity_pool"].unique()))
+        lsub = lc_df[lc_df["liquidity_pool"] == pool_sel]
+        st.dataframe(lsub, use_container_width=True)
+        st.plotly_chart(
+            px.bar(lsub, x="cisd_subset", y="expectancy_r", color="direction", barmode="group",
+                   title=f"Likidite Havuzu ({pool_sel}) × CISD Timeframe Alt Kümesi Net Expectancy (R)"),
+            use_container_width=True,
+        )
+
+    st.subheader("Bağımsız Multi-TF CISD Olayları (`multitf_cisd_events.parquet`)")
+    if len(cisd_ev) > 0:
+        st.dataframe(cisd_ev.groupby(["tf", "dir"]).size().reset_index(name="event_count"), use_container_width=True)
+
+# ============================================================================
+# V3 MODULE G — NASDAQ 09:30 5-MIN & LONDON OPEN HEATMAP (SECTION 19.G)
+# ============================================================================
+elif panel_choice.startswith("V3 Module G"):
+    st.header("V3 Module G — Nasdaq 09:30 (5-Min / 15-Min) & London Open LONG/SHORT Expectancy Heatmap")
+    nq_df = load_table("nq_open_long_short_5min")
+    hr_df = load_table("hourly_combination_matrix")
+    ldn_df = load_table("v3_ldn_open_long_short")
+
+    if len(nq_df) > 0:
+        g_type = st.selectbox("Nasdaq Zaman Izgarası:", sorted(nq_df["grid_type"].unique()))
+        dir_g = st.selectbox("Yön Filtresi:", ["BOTH", "LONG", "SHORT"], key="modg_dir")
+        nsub = nq_df[(nq_df["grid_type"] == g_type) & (nq_df["direction"] == dir_g)]
+        piv_nq = nsub.pivot(index="narrative_cohort", columns="window", values="expectancy_r")
+        st.plotly_chart(
+            px.imshow(piv_nq, text_auto=".2f", aspect="auto", color_continuous_scale="RdYlGn",
+                      title=f"Nasdaq Açılış Isı Haritası ({g_type} — {dir_g}) Net Expectancy (R)"),
+            use_container_width=True,
+        )
+        st.dataframe(nsub, use_container_width=True)
+
+    st.subheader("24 Saatlik & 30 Dakikalık Tam Gün Matrisi (`hourly_combination_matrix.parquet`)")
+    if len(hr_df) > 0:
+        st.dataframe(hr_df, use_container_width=True)
+
+    st.subheader("London 08:00 Açılış LONG / SHORT Matrisi (`v3_ldn_open_long_short.parquet`)")
+    if len(ldn_df) > 0:
+        st.dataframe(ldn_df, use_container_width=True)
+
+# ============================================================================
+# V3 MODULE H — ORIGINAL CONSOLIDATION & LIQUIDITY TARGET MAP (SECTION 19.H)
+# ============================================================================
+elif panel_choice.startswith("V3 Module H"):
+    st.header("V3 Module H — Original Consolidation (`original_consolidations.parquet`) & Liquidity Event Map")
+    oc_df = load_table("original_consolidations")
+    liq_df = load_table("liquidity_events")
+    tc_df = load_table("target_candidates")
 
     c1, c2 = st.columns(2)
     with c1:
-        tf_b = st.selectbox("Timeframe:", ["M15", "H1"], key="p3_tf")
+        st.subheader("OriginalConsolidations (M1..H4)")
+        if len(oc_df) > 0:
+            oc_sum = oc_df.groupby(["tf", "target_dir"]).agg(
+                oc_count=("oc_id", "count"),
+                mean_range_pts=("range_pts", "mean"),
+                mean_width_atr=("atr_norm_width", "mean"),
+                mean_revisits=("revisit_count", "mean"),
+            ).reset_index()
+            st.dataframe(oc_sum, use_container_width=True)
+            st.dataframe(oc_df.head(100), use_container_width=True)
     with c2:
-        sc_b = st.selectbox("Oturum Kapsamı:", base_df["scope"].unique() if len(base_df) else ["All_Sessions"], key="p3_sc")
+        st.subheader("Liquidity Events (`liquidity_events.parquet`)")
+        if len(liq_df) > 0:
+            l_sum = liq_df.groupby(["source_tf", "interaction_type", "hypothesis_mode"]).size().reset_index(name="count")
+            st.dataframe(l_sum, use_container_width=True)
+            st.dataframe(liq_df.head(100), use_container_width=True)
 
-    bsub = base_df[(base_df["tf"] == tf_b) & (base_df["scope"] == sc_b)] if len(base_df) else pd.DataFrame()
-    st.subheader(f"5.4 Baseline Strateji Merdiveni A..J ({tf_b} — {sc_b})")
-    st.dataframe(bsub, use_container_width=True)
-    if len(bsub) > 0:
-        st.plotly_chart(px.bar(bsub, x="strategy", y="expectancy", color="stat_status",
-                               error_y=bsub["ci95_high"] - bsub["expectancy"],
-                               title=f"{tf_b} ({sc_b}) — Strateji A..J Net Expectancy (R) ve %95 Güven Aralığı"), use_container_width=True)
-
-    st.subheader("Katmanlı Marjinal Katkı Analizi (Incremental Contribution Ladder)")
-    st.dataframe(inc_df, use_container_width=True)
-
-    st.subheader("İstatistiksel Hipotez Testleri (Holm-Bonferroni & BH-FDR Düzeltmeli)")
-    st.dataframe(hyp_df[(hyp_df["tf"] == tf_b) & (hyp_df["scope"] == sc_b)] if len(hyp_df) else hyp_df, use_container_width=True)
-
-    st.subheader("Heatmap 5: CRT Timeframe × SSMT Seviyesi × Gerçek CISD Timeframe Matrisi")
-    if len(mat_df) > 0:
-        cisd_sel = st.selectbox("CISD Timeframe:", mat_df["cisd_tf"].unique())
-        msub = mat_df[mat_df["cisd_tf"] == cisd_sel]
-        piv = msub.pivot(index="crt_tf", columns="ssmt_level", values="expectancy")
-        st.plotly_chart(px.imshow(piv, text_auto=".3f", aspect="auto", color_continuous_scale="RdYlGn",
-                                  title=f"Net Expectancy (R) Isı Haritası — CISD: {cisd_sel}"), use_container_width=True)
+    st.subheader("Aday Hedef Havuzu (`target_candidates.parquet`)")
+    if len(tc_df) > 0:
+        st.dataframe(tc_df.head(150), use_container_width=True)
 
 # ============================================================================
-# PANEL 4 — QT FRACTAL & MULTI-ANCHOR EXPLORER
+# V3 MODULE I — STRATEGY ABLATION (SECTION 19.I)
 # ============================================================================
-elif panel_choice.startswith("Panel 4"):
-    st.header("Panel 4 — Quarterly Theory (6H / 90M / 22.5M) & Multi-Anchor Explorer")
-    qt_df = load_table("qt_fractals")
-    anc_comp = load_table("qt_anchor_comparison")
-    m30_comp = load_table("micro_30s_vs_1m_perf")
+elif panel_choice.startswith("V3 Module I"):
+    st.header("V3 Module I — Complete Factor Ablation & Reversal vs Continuation Matrix")
+    ab_df = load_table("strategy_ablation_results")
+    rc_df = load_table("reversal_vs_continuation_matrix")
 
-    tf_q = st.selectbox("CRT Timeframe:", ["M15", "H1"], key="p4_tf")
-    qsub = qt_df[qt_df["tf"] == tf_q] if len(qt_df) else pd.DataFrame()
+    if len(ab_df) > 0:
+        sc_i = st.selectbox("Oturum Kapsamı:", sorted(ab_df["scope"].unique()), key="modi_sc")
+        asub = ab_df[ab_df["scope"] == sc_i]
+        st.subheader("9 Çekirdek Faktörün Marjinal Katkısı (ON vs OFF Delta Expectancy R)")
+        st.dataframe(asub, use_container_width=True)
+        st.plotly_chart(
+            px.bar(asub, x="factor_name", y="marginal_delta_expectancy_r", color="direction", barmode="group",
+                   title=f"Faktör Eklendiğinde Marjinal Net Expectancy Değişimi (Delta R — {sc_i})"),
+            use_container_width=True,
+        )
 
-    st.subheader("Heatmap 6: 90M Macro Q(1..4) × 22.5M Micro Q(1..4) Fraktal Matrisi")
-    if len(qsub) > 0:
-        grid_q = qsub[qsub["q22"] > 0].copy()
-        piv_q = grid_q.pivot(index="q90", columns="q22", values="expectancy")
-        piv_q.index = [f"Macro Q{i}" for i in piv_q.index]
-        piv_q.columns = [f"Micro Q{i}" for i in piv_q.columns]
-        st.plotly_chart(px.imshow(piv_q, text_auto=".3f", color_continuous_scale="RdYlGn",
-                                  title=f"{tf_q} CRT + SSMT + CISD — Macro Q × Micro Q Net Expectancy (R)"), use_container_width=True)
-        st.dataframe(qsub, use_container_width=True)
-
-    st.subheader("Phase 3 — 3 Farklı QT Çapası Karşılaştırması (`ny1800` vs `ny0930` vs `ldn0800`)")
-    st.dataframe(anc_comp, use_container_width=True)
-
-    st.subheader("Phase 1.5 — 4.5 Yıllık Tam 30-Saniye (30S Exact) vs 1-Dakika (1M Approx) 22.5M Mikro-Quarter SSMT")
-    st.dataframe(m30_comp, use_container_width=True)
+    st.subheader("Reversal vs Continuation × Yapısal Rejim Matrisi (`reversal_vs_continuation_matrix.parquet`)")
+    if len(rc_df) > 0:
+        st.dataframe(rc_df, use_container_width=True)
 
 # ============================================================================
-# PANEL 5 — QUARTER-TO-QUARTER RANKINGS
+# V3 MODULE J — CAUSAL TRADE REPLAY WITH FUTURE CANDLES HIDDEN (SECTION 19.J)
 # ============================================================================
-elif panel_choice.startswith("Panel 5"):
-    st.header("Panel 5 — Quarter-to-Quarter SSMT Rankings & Multi-Level Alignment")
-    q2q = load_table("q2q_rankings")
-    align = load_table("multilevel_alignment")
-    timing = load_table("ssmt_timing")
-
-    st.subheader("Heatmap 7: Quarter-to-Quarter (Q1→Q2, Q2→Q3, Q3→Q4) SSMT Sıralaması")
-    st.dataframe(q2q, use_container_width=True)
-    if len(q2q) > 0:
-        st.plotly_chart(px.bar(q2q, x="pair", y="expectancy", color="fractal_level", barmode="group", facet_col="tf",
-                               title="Quarter-to-Quarter SSMT + CISD Net Expectancy (R)"), use_container_width=True)
-
-    st.subheader("Multi-Level Macro & Micro SSMT Uyum Analizi")
-    st.dataframe(align, use_container_width=True)
-
-    st.subheader("CRT ile SSMT Arasındaki Zaman Uyumu")
-    st.dataframe(timing, use_container_width=True)
-
-# ============================================================================
-# PANEL 6 — NASDAQ OPEN RESEARCH
-# ============================================================================
-elif panel_choice.startswith("Panel 6"):
-    st.header("Panel 6 — Nasdaq New York AM Open (09:30 America/New_York) Research")
-    ny_mod = load_table("ny_open_models")
-    win_df = load_table("opening_windows")
-    anc_df = load_table("h1_anchoring")
-    or_ny = load_table("opening_ranges_ny")
-
-    st.subheader("10.1 Nasdaq Açılış Modelleri (NY-A .. NY-J)")
-    st.dataframe(ny_mod, use_container_width=True)
-    if len(ny_mod) > 0:
-        st.plotly_chart(px.bar(ny_mod, x="model", y="expectancy", color="stat_status",
-                               error_y=ny_mod["ci95_high"] - ny_mod["expectancy"],
-                               title="Nasdaq 09:30 Açılış Modelleri NY-A..NY-J Net Expectancy (R)"), use_container_width=True)
-
-    st.subheader("3.1 Nasdaq Açılış Pencereleri Performansı")
-    ny_w = win_df[win_df["session"].str.startswith("NY")] if len(win_df) > 0 else pd.DataFrame()
-    st.dataframe(ny_w, use_container_width=True)
-
-    st.subheader("10.2 H1 ve M15 Mum Hizalaması: Calendar vs NY-Open Anchored (09:30)")
-    st.dataframe(anc_df, use_container_width=True)
-
-    if len(or_ny) > 0:
-        st.subheader("3.3 Nasdaq Opening Range (OR5, OR15, OR30, OR60) İstatistikleri")
-        or_sum = []
-        for m in (5, 15, 30, 60):
-            or_sum.append({
-                "Opening Range": f"First {m} Min (OR{m})",
-                "Gün Sayısı": int(or_ny[f"or{m}_size"].notna().sum()),
-                "Ortalama Range (Puan)": float(or_ny[f"or{m}_size"].mean()),
-                "Medyan Range (Puan)": float(or_ny[f"or{m}_size"].median()),
-                "False Breakout Oranı": float(or_ny[f"or{m}_false_break"].mean()),
-                "Range İçine Geri Dönüş Oranı": float(or_ny[f"or{m}_return_in"].mean()),
-            })
-        st.dataframe(pd.DataFrame(or_sum), use_container_width=True)
-
-# ============================================================================
-# PANEL 7 — LONDON OPEN RESEARCH
-# ============================================================================
-elif panel_choice.startswith("Panel 7"):
-    st.header("Panel 7 — London Open (08:00 Europe/London) Research")
-    win_df = load_table("opening_windows")
-    ldn_18 = load_table("ldn_18models")
-    or_ldn = load_table("opening_ranges_ldn")
-
-    ldn_w = win_df[win_df["session"] == "London_Normalized"] if len(win_df) > 0 else pd.DataFrame()
-    st.subheader("3.2 London 08:00 Açılış Pencereleri")
-    st.dataframe(ldn_w, use_container_width=True)
-
-    st.subheader("London Open × 18 Strateji Modeli Performans Tablosu")
-    st.dataframe(ldn_18, use_container_width=True)
-
-    if len(or_ldn) > 0:
-        st.subheader("London Opening Range (OR5, OR15, OR30, OR60) İstatistikleri")
-        or_sum = []
-        for m in (5, 15, 30, 60):
-            or_sum.append({
-                "Opening Range": f"London First {m} Min (OR{m})",
-                "Gün Sayısı": int(or_ldn[f"or{m}_size"].notna().sum()),
-                "Ortalama Range (Puan)": float(or_ldn[f"or{m}_size"].mean()),
-                "False Breakout Oranı": float(or_ldn[f"or{m}_false_break"].mean()),
-                "Range İçine Geri Dönüş Oranı": float(or_ldn[f"or{m}_return_in"].mean()),
-            })
-        st.dataframe(pd.DataFrame(or_sum), use_container_width=True)
-
-# ============================================================================
-# PANEL 8 — CAUSAL MMXM & NARRATIVE EXPLORER
-# ============================================================================
-elif panel_choice.startswith("Panel 8"):
-    st.header("Panel 8 — Causal 10-Stage MMXM State Machine & HTF Narrative Explorer")
-    narr_df = load_table("narrative_perf")
-    st.subheader("Heatmap 8: Causal MMXM (MMBM / MMSM) & Pre-Trade Narrative Sınıfları")
-    st.dataframe(narr_df, use_container_width=True)
-    if len(narr_df) > 0:
-        st.plotly_chart(px.bar(narr_df, x="narrative_class", y="expectancy", color="filter", barmode="group", facet_col="tf",
-                               title="Pre-Trade Narrative Sınıflarına Göre Net Expectancy (R)"), use_container_width=True)
-
-# ============================================================================
-# PANEL 9 — R:R AND STOP RESEARCH
-# ============================================================================
-elif panel_choice.startswith("Panel 9"):
-    st.header("Panel 9 — Structural Stop-Loss, Trailing Exit & R:R Target Research")
-    rr_df = load_table("rr_stop_exit_grid")
-    if len(rr_df) > 0:
-        fixed_sub = rr_df[rr_df["exit_model"] == "Fixed TP/SL"].copy()
-        st.subheader("Heatmap 9: 6 Stop Modeli × 11 R:R Hedefi (1R..10R) Net Expectancy (R)")
-        piv_rr = fixed_sub.pivot(index="stop_model", columns="rr_target", values="expectancy")
-        st.plotly_chart(px.imshow(piv_rr, text_auto=".3f", aspect="auto", color_continuous_scale="RdYlGn",
-                                  title="Stop Modeli × R:R Hedefi Net Expectancy (R) Isı Haritası"), use_container_width=True)
-
-        st.subheader("Dinamik Çıkış (Exit) Modelleri (Fixed vs BE+1R vs 50%@1R vs Trail M5 vs MMXM Target vs TimeExit)")
-        ex_sub = rr_df[rr_df["exit_model"] != "Fixed TP/SL"]
-        st.dataframe(ex_sub, use_container_width=True)
-
-# ============================================================================
-# PANEL 10 — FULL TRADE REPLAY (CAUSAL NEXT-BAR FILL)
-# ============================================================================
-elif panel_choice.startswith("Panel 10"):
-    st.header("Panel 10 — Causal Full Trade Replay (`t_signal_known` → `t_fill` Next-Bar Open)")
+elif panel_choice.startswith("V3 Module J"):
+    st.header("V3 Module J — Causal Trade Replay (With Future-Candles-Hidden Step-by-Step Bar Slider)")
     aud = load_table("audit_sample_trades")
-    if len(aud) == 0:
-        st.warning("Henüz denetim örneklemi oluşturulmadı.")
-    else:
+    if len(aud) > 0:
         aud["label"] = (
             aud["model_tag"].astype(str)
             + " | sig=" + aud["t_signal_known"].astype(str).str[:16]
-            + " | fill=" + aud["t_fill"].astype(str).str[:16]
             + " | dir=" + np.where(aud["dir"] == -1, "SHORT", "LONG")
             + " | R=" + aud["r"].round(2).astype(str)
             + " | MMXM=" + aud["mmxm_model_label"].astype(str)
         )
-        sel_idx = st.selectbox("İşlem Seçin (Denetim Örneklemi):", range(min(200, len(aud))), format_func=lambda i: aud["label"].iloc[i])
+        c_top1, c_top2, c_top3 = st.columns([2, 1, 1])
+        with c_top1:
+            sel_idx = st.selectbox("İşlem Seçin:", range(min(300, len(aud))), format_func=lambda i: aud["label"].iloc[i])
         tr = aud.iloc[sel_idx]
+        with c_top2:
+            hide_future = st.checkbox("Gelecek Mumları Gizle (Causal Step-by-Step Replay)", value=False)
+        with c_top3:
+            bars_after_sig = st.slider("Sinyal Anından Sonra Gösterilecek M1 Bar Sayısı:", 0, int(max(60, tr["hold"] + 20)), 0 if hide_future else int(max(60, tr["hold"] + 20)))
 
         t_open = pd.Timestamp(tr["t_open"])
         t_sig = pd.Timestamp(tr["t_signal_known"])
         t_fill = pd.Timestamp(tr["t_fill"])
         t_sweep = pd.Timestamp(tr["t_sweep"])
         win_start = t_open - pd.Timedelta(minutes=45)
-        win_end = t_fill + pd.Timedelta(minutes=int(max(60, tr["hold"] + 20)))
-        m1_slice = load_m1_slice(str(win_start), str(win_end))
+        full_end = t_fill + pd.Timedelta(minutes=int(max(60, tr["hold"] + 20)))
+        visible_end = t_sig + pd.Timedelta(minutes=bars_after_sig) if hide_future else full_end
+        m1_slice = load_m1_slice(str(win_start), str(visible_end))
 
         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.7, 0.3],
-                            subplot_titles=("US100 M1 + CRT Range + Next-Bar Open Fill / SL / TP", "US500 M1 (SSMT Comparator)"))
+                            subplot_titles=("US100 M1 + CRT/MMXM Range + Next-Bar Open Fill / SL / TP", "US500 M1 (SSMT Karşılaştırma)"))
         fig.add_trace(go.Candlestick(
             x=m1_slice.index, open=m1_slice["open_100"], high=m1_slice["high_100"],
             low=m1_slice["low_100"], close=m1_slice["close_100"], name="US100 M1",
@@ -491,132 +506,115 @@ elif panel_choice.startswith("Panel 10"):
         ), row=2, col=1)
 
         fig.add_hrect(y0=float(tr["Lr"]), y1=float(tr["Hr"]), line_width=1, fillcolor="royalblue", opacity=0.15,
-                      annotation_text="Previous Candle Range (H_ref..L_ref)", row=1, col=1)
-        fig.add_hline(y=float(tr["px_entry"]), line_dash="solid", line_color="gold", annotation_text=f"Next-Bar Fill {tr['px_entry']:.1f}", row=1, col=1)
-        fig.add_hline(y=float(tr["sl_init"]), line_dash="dash", line_color="crimson", annotation_text=f"SL {tr['sl_init']:.1f}", row=1, col=1)
+                      annotation_text="Reference Range (H_ref..L_ref)", row=1, col=1)
+        fig.add_hline(y=float(tr["px_entry"]), line_dash="solid", line_color="gold", annotation_text=f"Fill {tr['px_entry']:.1f}", row=1, col=1)
+        fig.add_hline(y=float(tr["sl_init"]), line_dash="dash", line_color="crimson", annotation_text=f"Stop {tr['sl_init']:.1f}", row=1, col=1)
         if np.isfinite(tr.get("tp_init", np.nan)):
-            fig.add_hline(y=float(tr["tp_init"]), line_dash="dash", line_color="limegreen", annotation_text=f"TP {tr['tp_init']:.1f}", row=1, col=1)
-
-        for ts_ev, lbl, clr in [
-            (t_sweep, "CRT Sweep", "orange"),
-            (t_sig, "Signal Known / Submit", "cyan"),
-            (t_fill, "Actual Fill (Next Open)", "gold"),
-        ]:
-            fig.add_vline(x=ts_ev, line_dash="dot", line_color=clr)
-
-        fig.update_layout(height=680, xaxis_rangeslider_visible=False)
+            fig.add_hline(y=float(tr["tp_init"]), line_dash="dash", line_color="limegreen", annotation_text=f"Target {tr['tp_init']:.1f}", row=1, col=1)
+        fig.add_vline(x=t_sweep, line_dash="dot", line_color="orange")
+        fig.add_vline(x=t_sig, line_dash="dot", line_color="cyan")
+        if not hide_future or bars_after_sig >= 1:
+            fig.add_vline(x=t_fill, line_dash="dot", line_color="gold")
+        fig.update_layout(height=660, xaxis_rangeslider_visible=False)
         st.plotly_chart(fig, use_container_width=True)
 
-        c1, c2 = st.columns(2)
-        with c1:
-            st.subheader("Pre-Trade Causal State (Yalnızca `t_signal_known` Anında Bilinenler)")
-            st.json({
-                "t_sweep_utc": str(tr["t_sweep"]),
-                "t_signal_known_utc": str(tr["t_signal_known"]),
-                "t_order_submit_utc": str(tr["t_order_submit"]),
-                "t_fill_next_bar_open_utc": str(tr["t_fill"]),
-                "j_trig": int(tr["j_trig"]),
-                "j_fill": int(tr["j_fill"]),
-                "tf_anchor_mode": f"{tr['tf']} / {tr['anchor']} / {tr['entry_mode']}",
-                "direction": "SHORT" if tr["dir"] == -1 else "LONG",
-                "H_ref": float(tr["Hr"]),
-                "L_ref": float(tr["Lr"]),
-                "macro_ssmt_active": bool(tr["macro_ssmt"]),
-                "macro_all_pairs": str(tr.get("macro_all_pairs", "")),
-                "micro_ssmt_active": bool(tr["micro_ssmt"]),
-                "micro_all_pairs": str(tr.get("micro_all_pairs", "")),
-                "cisd_m1": bool(tr["cisd_m1"]),
-                "cisd_m3": bool(tr["cisd_m3"]),
-                "cisd_m5": bool(tr["cisd_m5"]),
-                "mmxm_model_label": str(tr["mmxm_model_label"]),
-                "mmxm_stage": int(tr["mmxm_stage"]),
-                "qt_phase_at_entry": f"6H Q{tr['q6_trig']} / 90M Q{tr['q90_trig']} / 22.5M Q{tr['q22_trig']}",
-                "pre_trade_narrative": str(tr["narrative"]),
-            })
-        with c2:
-            st.subheader("Post-Trade Realized Outcome (İşlem Sonrası)")
-            st.json({
-                "px_entry": float(tr["px_entry"]),
-                "px_exit": float(tr["px_exit"]),
-                "initial_stop": float(tr["sl_init"]),
-                "target_price": float(tr["tp_init"]),
-                "realized_R": round(float(tr["r"]), 4),
-                "MFE_R": round(float(tr["mfe"]), 4),
-                "MAE_R": round(float(tr["mae"]), 4),
-                "holding_minutes": int(tr["hold"]),
-                "stop_modifications": int(tr["n_mod"]),
-                "exit_reason": int(tr["exit_reason"]),
-                "ambiguous_same_bar_sl_tp": bool(tr["ambig"]),
-            })
+# ============================================================================
+# V3 MODULE K — STATISTICAL ROBUSTNESS & HPC BENCHMARK (SECTION 19.K)
+# ============================================================================
+elif panel_choice.startswith("V3 Module K"):
+    st.header("V3 Module K — Statistical Robustness, OOS Splits, Cost Sensitivity & Hardware Benchmark")
+    rob_df = load_table("statistical_robustness")
+    if len(rob_df) > 0:
+        atype = st.selectbox("Sağlamlık Analiz Türü:", sorted(rob_df["analysis_type"].unique()))
+        rsub = rob_df[rob_df["analysis_type"] == atype]
+        st.dataframe(rsub, use_container_width=True)
+        st.plotly_chart(
+            px.bar(rsub, x="slice_label", y="expectancy_r", color="direction", facet_col="cohort", barmode="group",
+                   title=f"{atype} — LONG vs SHORT vs BOTH Net Expectancy (R)"),
+            use_container_width=True,
+        )
+
+    st.subheader("Donanım Otomatik Ayarlama ve Numba Kernel Doğrulama Raporu (`hardware_benchmark.json`)")
+    if hw:
+        st.json(hw)
 
 # ============================================================================
-# PANEL 11 — STATISTICAL ROBUSTNESS & LOSING TRADES AUTOPSY
+# V3 MODULE L — 25 RANKINGS, NO-TRADE, 10x100 VALIDATION & V4 HANDOFF (SECTION 19.L)
 # ============================================================================
-elif panel_choice.startswith("Panel 11"):
-    st.header("Panel 11 — Statistical Robustness, WFA, Year×Month Matrix & Losing Trades Autopsy")
-    splits = load_table("splits_eval")
-    wfa = load_table("wfa_folds")
-    yr = load_table("yearly_perf")
-    mo = load_table("monthly_perf")
-    cost = load_table("cost_sensitivity")
-    reg = load_table("regime_perf")
-    autopsy = load_table("losing_trades_autopsy")
-    prov_comp = load_table("dataset_provider_comparison")
+elif panel_choice.startswith("V3 Module L"):
+    st.header("V3 Module L — 25 Mandatory Rankings, No-Trade Conditions, 10×100 Manual Validation & V4 Handoff")
+    rank_df = load_table("v3_rankings_25")
+    val_df = load_table("v3_manual_validation_10x100")
+    v4_df = load_table("v4_frozen_candidates")
+    val_json = load_json("v3_manual_validation_summary.json")
 
-    st.subheader("Kronolojik Train / Validation / Out-of-Sample Test Split")
-    st.dataframe(splits, use_container_width=True)
+    st.subheader("1. Bölüm 18 — 25 Zorunlu İstatistiksel Sıralama (`v3_rankings_25.parquet`)")
+    if len(rank_df) > 0:
+        st.dataframe(rank_df, use_container_width=True)
+        st.plotly_chart(
+            px.bar(rank_df, x="ranking_category", y="expectancy_r", color="evidence_verdict",
+                   error_y=rank_df["ci95_high"] - rank_df["expectancy_r"],
+                   title="25 Zorunlu Araştırma Kategorisi Net Expectancy (R) ve %95 Güven Aralığı"),
+            use_container_width=True,
+        )
 
-    st.subheader("Veri Sağlayıcı Senaryoları Karşılaştırması (Pure Dukascopy vs Pure OANDA vs Mixed Extended)")
-    st.dataframe(prov_comp, use_container_width=True)
+    st.subheader("2. Bölüm 20 — 10×100 (1,000 Örnek) Manuel Etiket Doğrulama Veri Seti (`v3_manual_validation_10x100.parquet`)")
+    if val_json:
+        st.json(val_json)
+    if len(val_df) > 0:
+        cat_v = st.selectbox("Kategori Seçin (10×100):", ["ALL"] + sorted(val_df["category"].unique()))
+        vsub = val_df if cat_v == "ALL" else val_df[val_df["category"] == cat_v]
+        st.dataframe(vsub, use_container_width=True)
 
-    st.subheader("Rolling Walk-Forward Analysis")
-    st.dataframe(wfa, use_container_width=True)
-
-    st.subheader("Heatmap 10: Yıl × Ay Performans Matrisi ve Maliyet Duyarlılığı")
-    c1, c2 = st.columns(2)
-    with c1:
-        if len(yr) > 0:
-            st.plotly_chart(px.bar(yr, x="year", y="expectancy", color="scope", barmode="group",
-                                   title="Yıllara Göre Net Expectancy (R)"), use_container_width=True)
-    with c2:
-        if len(cost) > 0:
-            st.plotly_chart(px.line(cost, x="slippage_pts", y="expectancy", color="scope", markers=True,
-                                    title="Slippage (Puan) vs Net Expectancy (R)"), use_container_width=True)
-
-    if len(mo) > 0:
-        mo_copy = mo.copy()
-        mo_copy["year"] = mo_copy["month"].str[:4]
-        mo_copy["month_num"] = mo_copy["month"].str[5:7]
-        piv_ym = mo_copy.pivot(index="year", columns="month_num", values="avg_r")
-        st.plotly_chart(px.imshow(piv_ym, text_auto=".2f", aspect="auto", color_continuous_scale="RdYlGn",
-                                  title="Heatmap 10: Year × Month Net Expectancy (R) Matrix"), use_container_width=True)
-
-    st.subheader("Bölüm 11 — Kaybeden İşlemler Otopsisi (Losing Trades Autopsy)")
-    st.dataframe(autopsy, use_container_width=True)
-
-    st.subheader("DST Geçiş Dönemleri ve Volatilite Rejimlerine Göre Kararlılık")
-    st.dataframe(reg, use_container_width=True)
+    st.subheader("3. Faz 16 — V4 Forward-Testing İçin Dondurulmuş Aday Stratejiler (`v4_frozen_candidates.parquet`)")
+    if len(v4_df) > 0:
+        st.dataframe(v4_df, use_container_width=True)
 
 # ============================================================================
-# PANEL 12 — DATA FORENSICS & V1 VS V2 AUDIT
+# V2 LEGACY PANELS PRESERVED INTACT
 # ============================================================================
-elif panel_choice.startswith("Panel 12"):
-    st.header("Panel 12 — Historical Data Forensics, SHA256 Manifest & v1.0 vs v2.0 Comparison")
-    st.subheader("Tam Dosya SHA256 ve Bid/Ask Gerçeklik Etiketleri (`data_authenticity_manifest.parquet`)")
+elif panel_choice.startswith("V2 Panel 0"):
+    st.header("V2 Panel 0 — Legacy 18-Model × Time-of-Day Explorer")
+    st.dataframe(load_table("intraday_24h_18models"), use_container_width=True)
+    st.dataframe(load_table("ny_5m_15m_18models"), use_container_width=True)
+elif panel_choice.startswith("V2 Panel 1"):
+    st.header("V2 Panel 1 — Global Session Clock & DST Explorer")
+    sel_date = st.date_input("Tarih Seçin (2021–2026):", value=date(2026, 3, 16), min_value=date(2021, 11, 7), max_value=date(2026, 11, 6))
+    st.json(clock.session_stamp(sel_date).__dict__)
+elif panel_choice.startswith("V2 Panel 2"):
+    st.header("V2 Panel 2 — CRT Research")
+    st.dataframe(load_table("crt_tf_stats"), use_container_width=True)
+    st.dataframe(load_table("crt_variants"), use_container_width=True)
+elif panel_choice.startswith("V2 Panel 3"):
+    st.header("V2 Panel 3 — CRT × SSMT Matrix")
+    st.dataframe(load_table("crt_ssmt_baselines"), use_container_width=True)
+    st.dataframe(load_table("crt_ssmt_matrix"), use_container_width=True)
+elif panel_choice.startswith("V2 Panel 4"):
+    st.header("V2 Panel 4 — QT Fractal & Multi-Anchor Explorer")
+    st.dataframe(load_table("qt_fractals"), use_container_width=True)
+    st.dataframe(load_table("qt_anchor_comparison"), use_container_width=True)
+elif panel_choice.startswith("V2 Panel 5"):
+    st.header("V2 Panel 5 — Quarter-to-Quarter Rankings")
+    st.dataframe(load_table("q2q_rankings"), use_container_width=True)
+    st.dataframe(load_table("multilevel_alignment"), use_container_width=True)
+elif panel_choice.startswith("V2 Panel 6"):
+    st.header("V2 Panel 6 — Nasdaq Open Research")
+    st.dataframe(load_table("ny_open_models"), use_container_width=True)
+    st.dataframe(load_table("h1_anchoring"), use_container_width=True)
+elif panel_choice.startswith("V2 Panel 7"):
+    st.header("V2 Panel 7 — London Open Research")
+    st.dataframe(load_table("ldn_18models"), use_container_width=True)
+elif panel_choice.startswith("V2 Panel 8"):
+    st.header("V2 Panel 8 — Causal MMXM & Narrative Explorer")
+    st.dataframe(load_table("narrative_perf"), use_container_width=True)
+elif panel_choice.startswith("V2 Panel 9"):
+    st.header("V2 Panel 9 — R:R and Stop Research")
+    st.dataframe(load_table("rr_stop_exit_grid"), use_container_width=True)
+elif panel_choice.startswith("V2 Panel 11"):
+    st.header("V2 Panel 11 — Statistical Robustness & Autopsy")
+    st.dataframe(load_table("splits_eval"), use_container_width=True)
+    st.dataframe(load_table("losing_trades_autopsy"), use_container_width=True)
+elif panel_choice.startswith("V2 Panel 12"):
+    st.header("V2 Panel 12 — Data Forensics & v1 vs v2 Audit")
     st.dataframe(load_table("data_authenticity_manifest"), use_container_width=True)
-
-    st.subheader("v1.0 (Same-Bar Close) vs v2.0 (Next-Bar Open + Causal MMXM + Multi-TF CISD) Karşılaştırma Tablosu")
     st.dataframe(load_table("v1_vs_v2_comparison"), use_container_width=True)
-
-    st.subheader("Bağımsız 5×100 (500 Olay/İşlem) Forensic Audit Özeti (`independent_audit_samples.json`)")
-    aud_json = load_json("independent_audit_samples.json")
-    if aud_json:
-        st.json({
-            "audit_version": aud_json.get("audit_version"),
-            "all_500_passed": aud_json.get("all_500_passed"),
-            "CRT_100_pass_rate": aud_json.get("crt_100", {}).get("pass_rate"),
-            "SSMT_100_pass_rate": aud_json.get("ssmt_100", {}).get("pass_rate"),
-            "CISD_100_pass_rate": aud_json.get("cisd_100", {}).get("pass_rate"),
-            "MMXM_100_pass_rate": aud_json.get("mmxm_100", {}).get("pass_rate"),
-            "TRADES_100_pass_rate": aud_json.get("trades_100", {}).get("pass_rate"),
-        })

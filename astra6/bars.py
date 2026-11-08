@@ -34,7 +34,7 @@ IST = "Europe/Istanbul"
 
 # TF name -> minutes
 TF_MIN = {"M1": 1, "M2": 2, "M3": 3, "M5": 5, "M10": 10, "M15": 15, "M30": 30, "M45": 45,
-          "H1": 60, "M90": 90, "H4": 240, "H6": 360, "D1": 1440}
+          "H1": 60, "M90": 90, "H2": 120, "H4": 240, "H6": 360, "D1": 1440, "W1": 10080}
 
 # origin (NY wall-clock minute offset within the day) per candle anchor
 ANCHOR_ORIGIN_MIN = {"cal": 0, "ny930": 9 * 60 + 30, "ldn800": None}
@@ -138,7 +138,9 @@ def anchor_origin(tf: str, anchor: str) -> float:
         return 9 * 60 + 30
     if anchor in ("ldn800", "ldn0800"):
         return 8 * 60  # evaluated on London wall-clock when anchor is ldn800
-    if tf in ("H4", "H6", "M90", "D1"):
+    if tf == "W1":
+        return 3 * 1440 + CYCLE_ORIGIN  # Sunday 18:00 NY (1970-01-01 was Thursday)
+    if tf in ("H2", "H4", "H6", "M90", "D1"):
         return CYCLE_ORIGIN
     return 0
 

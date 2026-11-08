@@ -79,6 +79,40 @@ REQUIRED_RESULT_FILES = [
     "audit_sample_trades.parquet",
     "independent_audit_samples.json",
     "v1_vs_v2_comparison.parquet",
+    # V3 Mandatory 28 Parquet Tables + V3 Deliverables
+    "atomic_events.parquet",
+    "liquidity_events.parquet",
+    "crt_events.parquet",
+    "ssmt_events.parquet",
+    "multitf_cisd_events.parquet",
+    "original_consolidations.parquet",
+    "mmxm_state_events.parquet",
+    "fractal_narrative_graph.parquet",
+    "pretrade_narratives.parquet",
+    "candidate_opportunities.parquet",
+    "target_candidates.parquet",
+    "target_outcomes.parquet",
+    "all_valid_combinations.parquet",
+    "all_trades.parquet",
+    "long_trades.parquet",
+    "short_trades.parquet",
+    "combination_results.parquet",
+    "timeframe_alignment_matrix.parquet",
+    "entry_target_timeframe_matrix.parquet",
+    "mmxm_qt_narrative_matrix.parquet",
+    "macro_micro_ssmt_matrix.parquet",
+    "liquidity_cisd_pair_matrix.parquet",
+    "reversal_vs_continuation_matrix.parquet",
+    "nq_open_long_short_5min.parquet",
+    "hourly_combination_matrix.parquet",
+    "target_prediction_results.parquet",
+    "strategy_ablation_results.parquet",
+    "statistical_robustness.parquet",
+    "v3_rankings_25.parquet",
+    "v3_family_15_subsets.parquet",
+    "v3_ldn_open_long_short.parquet",
+    "v3_manual_validation_10x100.parquet",
+    "v4_frozen_candidates.parquet",
 ]
 
 
@@ -95,55 +129,63 @@ def _sha256_full(path: Path) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="ASTRA 6 v2.0 Reproducible Research Pipeline")
-    parser.add_argument("--full", action="store_true", help="Re-run full 5-year engine calculation from parquet store")
+    parser = argparse.ArgumentParser(description="ASTRA 6 v2.0 + v3.0 Reproducible Research Pipeline")
+    parser.add_argument("--full", action="store_true", help="Re-run full 5-year V2 + V3 engine calculation from parquet store")
+    parser.add_argument("--v3", action="store_true", help="Re-run full V3 Universal Fractal Engine calculation")
     parser.add_argument("--ingest", action="store_true", help="Re-run data ingestion if store files are missing")
     args = parser.parse_args()
 
     t0 = time.time()
     print("=" * 78)
-    print("ASTRA 6 v2.0 — VERIFIED INTRADAY FRACTAL RESEARCH LAB PIPELINE")
+    print("ASTRA 6 v2.0 + v3.0 — UNIVERSAL FRACTAL MARKET NARRATIVE & QUANT LAB PIPELINE")
     print("=" * 78)
 
     # 1. Verify Data Store
     missing_store = [f for f in REQUIRED_STORE_FILES if not (STORE / f).exists()]
     if missing_store:
         if args.ingest:
-            print(f"[1/5] Missing store files {missing_store}; running astra6.data.ingest_hf...")
+            print(f"[1/6] Missing store files {missing_store}; running astra6.data.ingest_hf...")
             subprocess.run([sys.executable, "-u", "-m", "astra6.data.ingest_hf"], cwd=ROOT, check=True)
         else:
             raise FileNotFoundError(f"Missing store files: {missing_store}. Run with --ingest.")
     else:
-        print(f"[1/5] Historical CFD Data Store verified ({len(REQUIRED_STORE_FILES)} core Parquet stores present).")
+        print(f"[1/6] Historical CFD Data Store verified ({len(REQUIRED_STORE_FILES)} core Parquet stores present).")
 
-    # 2. Run Research Engine if requested or if any result table is missing
-    missing_res = [
-        f for f in REQUIRED_RESULT_FILES
-        if f not in ("independent_audit_samples.json", "v1_vs_v2_comparison.parquet")
-        and not (RESULTS / f).exists()
-    ]
-    if args.full or missing_res:
-        print("[2/5] Executing Master Research Engine v2.0 (astra6.engine.run_all)...")
+    # 2. Run Research Engine v2.0 if requested or if any v2 result table is missing
+    if args.full or not (RESULTS / "trade_features.parquet").exists():
+        print("[2/6] Executing Master Research Engine v2.0 (astra6.engine.run_all)...")
         from astra6.engine import run_all
         run_all()
     else:
-        print(f"[2/5] Core engine result tables present in data/results/.")
+        print(f"[2/6] Core v2.0 engine result tables present in data/results/.")
 
     # 3. Run Independent 5x100 Forensic Audit & v1 vs v2 Comparison
     if args.full or not (RESULTS / "independent_audit_samples.json").exists():
-        print("[3/5] Running Independent 5x100 Forensic Audit (astra6.audit)...")
+        print("[3/6] Running Independent 5x100 Forensic Audit (astra6.audit)...")
         from astra6.audit import run_independent_audit
         run_independent_audit()
     else:
-        print("[3/5] Independent 5x100 Forensic Audit present.")
+        print("[3/6] Independent 5x100 Forensic Audit present.")
 
-    # 4. Build Turkish HTML & PDF Research Reports + Figures (100% Live-Computed)
-    print("[4/5] Generating Dynamic Turkish HTML & PDF Reports and Figures (astra6.report)...")
+    # 4. Run V3 Universal Fractal Engine if requested or if any V3 table is missing
+    missing_v3 = [
+        f for f in REQUIRED_RESULT_FILES[40:]
+        if not (RESULTS / f).exists()
+    ]
+    if args.full or args.v3 or missing_v3:
+        print("[4/6] Executing ASTRA 6 V3 Universal Fractal Engine (astra6.engine_v3.run_v3_pipeline)...")
+        from astra6.engine_v3 import run_v3_pipeline
+        run_v3_pipeline()
+    else:
+        print("[4/6] All 28 Mandatory V3 Parquet tables + DuckDB present in data/results/.")
+
+    # 5. Build Turkish HTML & PDF Research Reports + Figures (V2 + V3 100% Live-Computed)
+    print("[5/6] Generating Dynamic Turkish HTML & PDF Reports and Figures (V2 + V3)...")
     from astra6.report import build_all_reports
     rep_paths = build_all_reports()
 
-    # 5. Run Automated QA & DST Test Suites (10 Categories)
-    print("[5/5] Running Automated QA Suite (10 Categories) & Multi-Year DST Test Suite...")
+    # 6. Run Automated QA & DST Test Suites (V2 + V3)
+    print("[6/6] Running Automated QA Suite (V2 + V3) & Multi-Year DST Test Suite...")
     res = subprocess.run([sys.executable, "-m", "pytest", "-q", "tests/"], cwd=ROOT)
     if res.returncode != 0:
         print("[ERROR] QA Test Suite failed!")
@@ -151,7 +193,7 @@ def main() -> int:
 
     # Write Full-File SHA256 Reproducibility Manifest
     manifest = {
-        "version": "v2.0",
+        "version": "v3.0_final",
         "pipeline_completed_at_utc": str(datetime.now(timezone.utc)),
         "elapsed_seconds": round(time.time() - t0, 2),
         "store_files": {

@@ -228,51 +228,76 @@ def attach_true_cisd_to_signals(
     cisd_tables: dict[str, pd.DataFrame],
     max_lookback_m1: int = 30,
 ) -> pd.DataFrame:
-    """Attach true independent M1, M3, M5, M15 CISD flags and confirmation indices to signals.
+    """Attach true independent M1, M3, M5, M15, M30, H1, H4 CISD flags and confirmation indices to signals.
 
     A CISD on timeframe `tf` is valid for a signal with `(j_sweep, j_trig, dir)` iff:
       - `cisd.dir == sig.dir`
-      - `cisd.j_conf_m1 >= sig.j_sweep` (formed at or after the sweep)
-      - `cisd.j_conf_m1 <= sig.j_trig + ext_window` (known by trigger or confirmation window)
+      - `cisd.j_conf_m1 >= sig.j_sweep - tf_lookback` (formed at or after the sweep / structural window)
+      - `cisd.j_conf_m1 <= sig.j_trig` (strictly known at or before `t_signal_known` — never after!)
       - Not invalidated by `j_trig` (`j_inv_m1 < 0` or `j_inv_m1 > j_trig`)
     """
     if len(sig) == 0:
         return sig
     out = sig.copy()
     jt = out["j_trig"].to_numpy(np.int64)
-    jsw = np.maximum(out["j_sweep"].to_numpy(np.int64), out["j_open"].to_numpy(np.int64) - max_lookback_m1)
+    jsw_raw = np.maximum(out["j_sweep"].to_numpy(np.int64), out["j_open"].to_numpy(np.int64) - max_lookback_m1)
     sd = out["dir"].to_numpy(np.int8)
+
+    tf_max_age = {
+        "M1": 30,
+        "M3": 45,
+        "M5": 60,
+        "M15": 120,
+        "M30": 240,
+        "H1": 360,
+        "H4": 960,
+    }
 
     for tf_key, tbl in cisd_tables.items():
         col_flag = f"cisd_{tf_key.lower()}"
         col_j = f"j_cisd_{tf_key.lower()}"
         col_lvl = f"lvl_cisd_{tf_key.lower()}"
+        col_opp = f"cisd_opp_{tf_key.lower()}"
+        col_exp = f"cisd_exp_{tf_key.lower()}"
         n = len(out)
         flags = np.zeros(n, dtype=bool)
+        opp_flags = np.zeros(n, dtype=bool)
+        exp_flags = np.zeros(n, dtype=bool)
         j_arr = np.full(n, -1, dtype=np.int64)
         lvl_arr = np.full(n, np.nan, dtype=np.float64)
+        max_age = tf_max_age.get(tf_key.upper(), 60)
         if len(tbl) > 0:
             jc = tbl["j_conf_m1"].to_numpy(np.int64)
             ji = tbl["j_inv_m1"].to_numpy(np.int64)
             dr = tbl["dir"].to_numpy(np.int8)
             ro = tbl["ref_open"].to_numpy(np.float64)
             for i in range(n):
-                # Latest CISD confirmed at or before jt[i] and after jsw[i] - 5
+                min_j = min(jsw_raw[i] - 5, jt[i] - max_age)
                 k = np.searchsorted(jc, jt[i], side="right") - 1
                 steps = 0
-                while k >= 0 and steps < 60:
-                    if jc[k] < jsw[i] - 5:
+                while k >= 0 and steps < 80:
+                    if jc[k] < min_j:
                         break
-                    if dr[k] == sd[i] and (ji[k] < 0 or ji[k] > jt[i]):
-                        flags[i] = True
-                        j_arr[i] = jc[k]
-                        lvl_arr[i] = ro[k]
+                    if dr[k] == sd[i]:
+                        if ji[k] < 0 or ji[k] > jt[i]:
+                            if not flags[i]:
+                                flags[i] = True
+                                j_arr[i] = jc[k]
+                                lvl_arr[i] = ro[k]
+                        else:
+                            exp_flags[i] = True
+                    else:
+                        if ji[k] < 0 or ji[k] > jt[i]:
+                            opp_flags[i] = True
+                    if flags[i] and opp_flags[i]:
                         break
                     k -= 1
                     steps += 1
         out[col_flag] = flags
         out[col_j] = j_arr
         out[col_lvl] = lvl_arr
+        out[col_opp] = opp_flags
+        out[col_exp] = exp_flags
 
     # Combine M1 scan_crt intrabar CISD with standalone M1 CISD
     out["cisd_m1"] = out["has_cisd"] | out.get("cisd_m1", False)

@@ -2,6 +2,8 @@ data/raw/
 data/store/
 data/hf_cache/
 data/results/trade_features.parquet
+data/results/target_candidates.parquet
+data/results/target_outcomes.parquet
 .venv/
 __pycache__/
 *.pyc

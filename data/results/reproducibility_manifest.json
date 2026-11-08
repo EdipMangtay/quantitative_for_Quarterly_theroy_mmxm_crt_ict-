@@ -1,7 +1,7 @@
 {
-  "version": "v2.0",
-  "pipeline_completed_at_utc": "2026-11-08 13:11:58.052049+00:00",
-  "elapsed_seconds": 4.92,
+  "version": "v3.0_final",
+  "pipeline_completed_at_utc": "2026-11-08 14:25:16.455178+00:00",
+  "elapsed_seconds": 6.68,
   "store_files": {
     "US100_BID_M1.parquet": {
       "size_bytes": 35145678,
@@ -220,6 +220,138 @@
     "v1_vs_v2_comparison.parquet": {
       "size_bytes": 14735,
       "sha256_full": "ecd602cda4cc6ff1475d59cdd7d73cdb47d23a86d40809bb6eb24885b98ab54f"
+    },
+    "atomic_events.parquet": {
+      "size_bytes": 27865530,
+      "sha256_full": "1ecf36af145e61eafb271eefaeeac0547fafb1f3262e24ec3b318893a05936ee"
+    },
+    "liquidity_events.parquet": {
+      "size_bytes": 24028255,
+      "sha256_full": "679516adbe35c3d62544ce9d02d3113dafa6f8116d2c33b776f4f7f003f23221"
+    },
+    "crt_events.parquet": {
+      "size_bytes": 65954484,
+      "sha256_full": "042292728447ae958375a7f5ccade77b11ef1667c3a5ee5da59b3af60788fa46"
+    },
+    "ssmt_events.parquet": {
+      "size_bytes": 19132435,
+      "sha256_full": "0ddcdc6b818f9fa391cce3f1d7e3629c18337d001ea56845e73b740793835aa2"
+    },
+    "multitf_cisd_events.parquet": {
+      "size_bytes": 26967192,
+      "sha256_full": "dcb32cadd8b41682c90f1bfc806d003bf57dc9b619909291ca70a45e1afb3f87"
+    },
+    "original_consolidations.parquet": {
+      "size_bytes": 14616265,
+      "sha256_full": "5f394368e86a94d18b476988abd47e00b597fc2b95ec394c4d8ec207f4ecf7f8"
+    },
+    "mmxm_state_events.parquet": {
+      "size_bytes": 9606151,
+      "sha256_full": "478437f7181c1714d1a2760ee95dbf6fbcb679528fc1bbc4f6260bd9c9855a14"
+    },
+    "fractal_narrative_graph.parquet": {
+      "size_bytes": 1087488,
+      "sha256_full": "950a8673ae2c239716be869d978779805ce3e2398b2a2524f8bbba721b50376f"
+    },
+    "pretrade_narratives.parquet": {
+      "size_bytes": 16543839,
+      "sha256_full": "c963a0df67dabd293fb890dfcd863b448c067d1723cadf1e38a55b2fab24afab"
+    },
+    "candidate_opportunities.parquet": {
+      "size_bytes": 51736787,
+      "sha256_full": "9ba37af72b4c61f469fee7e6f2024b1a8f9fe7d0a75fb042134f659e33db1bc5"
+    },
+    "target_candidates.parquet": {
+      "size_bytes": 193608235,
+      "sha256_full": "c93c8f1b600c83e4756e7a050b890cf53b7bc5a1558383fa326701def9f6ce23"
+    },
+    "target_outcomes.parquet": {
+      "size_bytes": 103795055,
+      "sha256_full": "87fc9b96b05bd7ec54f5a726fc5157ef50d7c052c44fffdeddd7856d4e17d35f"
+    },
+    "all_valid_combinations.parquet": {
+      "size_bytes": 15089,
+      "sha256_full": "cf64e049854f240aa7e9a978d61e1e1ece5020d36b010bd98de0150d72bea2b4"
+    },
+    "all_trades.parquet": {
+      "size_bytes": 56169183,
+      "sha256_full": "007c6ff5619325f0962bf952ba25bfd8404f1547846a96d12b31f027917ddf27"
+    },
+    "long_trades.parquet": {
+      "size_bytes": 27861636,
+      "sha256_full": "db64dcd9d695e979dc6d466856bd914b5bd55c023f458092a646744cc11dc159"
+    },
+    "short_trades.parquet": {
+      "size_bytes": 29800100,
+      "sha256_full": "767346d09484a61273ca4751720dee2bb762475a75699d5ec2cb42c2ae54b080"
+    },
+    "combination_results.parquet": {
+      "size_bytes": 77330,
+      "sha256_full": "18fbccb5e1ae9baadc7833b2841e0590ff2b30462f8c81284a1756619eb5df88"
+    },
+    "timeframe_alignment_matrix.parquet": {
+      "size_bytes": 56785,
+      "sha256_full": "4dd8d0ec6f1f29b49e69c88e3f6af1fe8e71e33f529f32f98f23e6456136b406"
+    },
+    "entry_target_timeframe_matrix.parquet": {
+      "size_bytes": 99088,
+      "sha256_full": "e023b247428025e4604637641ff85e93e432d167ef3606c716607912184efb49"
+    },
+    "mmxm_qt_narrative_matrix.parquet": {
+      "size_bytes": 40842,
+      "sha256_full": "2ab7a4b1fd90de05a6ad4c40c62dd30128e8e7691720bf6ecbc288d8c72df6dc"
+    },
+    "macro_micro_ssmt_matrix.parquet": {
+      "size_bytes": 19951,
+      "sha256_full": "85c92fc845390406f628d8a546558cf9565e08b8f4c59e0a7013288612aa1d11"
+    },
+    "liquidity_cisd_pair_matrix.parquet": {
+      "size_bytes": 45192,
+      "sha256_full": "499a6d109b2f482a128290772a237cf5054ec61f18e2b148a5eeb7fc2a703ae3"
+    },
+    "reversal_vs_continuation_matrix.parquet": {
+      "size_bytes": 46784,
+      "sha256_full": "aab82fa43e5c6bd7226b5895f003631ba33983f9fc78a9d8514c38b54cfbc2d8"
+    },
+    "nq_open_long_short_5min.parquet": {
+      "size_bytes": 82465,
+      "sha256_full": "2ff920ee851b53de18b68caf36eed9f9cdef7af6c2d7c28b02eb31cc156571d9"
+    },
+    "hourly_combination_matrix.parquet": {
+      "size_bytes": 95193,
+      "sha256_full": "cd6b7f20a3200435568e98f80b267a3da245259a2068f0e2159fd06e98cfa86f"
+    },
+    "target_prediction_results.parquet": {
+      "size_bytes": 50442,
+      "sha256_full": "0fcc6c7bbcd7c88f1d4ec7b8ca12392b9d8a78437bfc9f2185430e1ce889181e"
+    },
+    "strategy_ablation_results.parquet": {
+      "size_bytes": 15738,
+      "sha256_full": "7d0cf9d40b3a710d83c5b0b1aa80f958abc667ebb58deb774f8d6e3df2051e06"
+    },
+    "statistical_robustness.parquet": {
+      "size_bytes": 32748,
+      "sha256_full": "0ac08542f567c00d99adf41f0ee8bb8344751dc9c2cdc63e6c68352410944efe"
+    },
+    "v3_rankings_25.parquet": {
+      "size_bytes": 18382,
+      "sha256_full": "b8eff1f7ff11accac05fe62cd679f10bb355ab31737bed0bc7ac99e53aff0a3e"
+    },
+    "v3_family_15_subsets.parquet": {
+      "size_bytes": 31160,
+      "sha256_full": "192fc37e99773f57136990295adac5d1b39ce921c3c685873a156fb264849844"
+    },
+    "v3_ldn_open_long_short.parquet": {
+      "size_bytes": 40916,
+      "sha256_full": "ffbf7f8b1a0d50ea25fc8d92d85fb80d81f3c96aefdb7248b3683375172e258d"
+    },
+    "v3_manual_validation_10x100.parquet": {
+      "size_bytes": 55506,
+      "sha256_full": "b221335f35b30c3cb626f35c63be28155471413d9c677751b41aa53976de46c3"
+    },
+    "v4_frozen_candidates.parquet": {
+      "size_bytes": 18447,
+      "sha256_full": "c577342ed8c04f6a9a6a2132576883e45c72105f8f2f8267df344fc03a6edb41"
     }
   },
   "reports": {
@@ -232,6 +364,13 @@
     "fig5": "reports/figures/fig5_q2q_rankings.png",
     "fig6": "reports/figures/fig6_rr_stop_heatmap.png",
     "fig7": "reports/figures/fig7_oos_wfa_cost.png",
-    "fig8": "reports/figures/fig8_trade_replay.png"
+    "fig8": "reports/figures/fig8_trade_replay.png",
+    "v3_html": "reports/ASTRA6_V3_Universal_Fractal_Raporu.html",
+    "v3_pdf": "reports/ASTRA6_V3_Universal_Fractal_Raporu.pdf",
+    "v3_fig1": "reports/figures/v3_fig1_64combos_long_short.png",
+    "v3_fig2": "reports/figures/v3_fig2_entry_target_matrix.png",
+    "v3_fig3": "reports/figures/v3_fig3_nq_open_5m_long_short.png",
+    "v3_fig4": "reports/figures/v3_fig4_ablation_delta_r.png",
+    "v3_fig5": "reports/figures/v3_fig5_25_rankings.png"
   }
 }

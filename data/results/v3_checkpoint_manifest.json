@@ -1,0 +1,232 @@
+{
+  "project": "ASTRA 6 \u2014 MASTER PROMPT V3 FINAL",
+  "version": "v3.0",
+  "created_at_utc": "2026-11-08 13:54:35.222267+00:00",
+  "phases": {
+    "PHASE_01": {
+      "phase_number": 1,
+      "phase_name": "V2_HANDOFF_AND_HPC_AUTOTUNE",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-08 14:22:32.099982+00:00",
+      "peak_rss_mb": 282.41,
+      "details": {
+        "v2_version": "v2.0 \u2014 Verified Intraday Fractal Research Lab",
+        "v2_audit_pass": true,
+        "cpu_model": "Apple M3 Pro",
+        "selected_workers": 8,
+        "selected_batch_size": 200000,
+        "kernel_exact_match": true
+      }
+    },
+    "PHASE_03": {
+      "phase_number": 3,
+      "phase_name": "FULL_STRUCTURAL_AND_ATOMIC_EVENTS",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-08 14:22:46.820536+00:00",
+      "peak_rss_mb": 3162.14,
+      "details": {
+        "crt_events": 815053,
+        "ssmt_events": 440838,
+        "multitf_cisd_events": 394880,
+        "original_consolidations": 159180,
+        "mmxm_state_events": 316173,
+        "liquidity_events": 641776,
+        "atomic_events_total": 924513
+      }
+    },
+    "PHASE_04": {
+      "phase_number": 4,
+      "phase_name": "ORIGINAL_CONSOLIDATION_ENGINE",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-08 14:22:46.822004+00:00",
+      "peak_rss_mb": 3162.16,
+      "details": {
+        "total_ocs": 159180,
+        "timeframes": [
+          "H1",
+          "H4",
+          "M1",
+          "M15",
+          "M3",
+          "M30",
+          "M5"
+        ]
+      }
+    },
+    "PHASE_05": {
+      "phase_number": 5,
+      "phase_name": "CROSS_TIMEFRAME_TARGET_GRAPH",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-08 14:23:29.472226+00:00",
+      "peak_rss_mb": 11625.77,
+      "details": {
+        "target_candidates_count": 3424568,
+        "target_outcomes_count": 3424568,
+        "target_prediction_cells": 588
+      }
+    },
+    "PHASE_06": {
+      "phase_number": 6,
+      "phase_name": "UNIFIED_MMXM_QT_NARRATIVE",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-08 14:23:29.478816+00:00",
+      "peak_rss_mb": 11625.77,
+      "details": {
+        "narrative_graph_edges": 60808,
+        "pretrade_narratives": 425634,
+        "all_trades": 711903,
+        "long_trades": 346436,
+        "short_trades": 365467
+      }
+    },
+    "PHASE_07": {
+      "phase_number": 7,
+      "phase_name": "FACTORIAL_COMBINATIONS_64_AND_15",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-08 14:23:59.414012+00:00",
+      "peak_rss_mb": 11757.53,
+      "details": {
+        "valid_combinations_registry": 243,
+        "combination_results_rows": 384,
+        "family_15_subsets_rows": 90
+      }
+    },
+    "PHASE_08": {
+      "phase_number": 8,
+      "phase_name": "LONG_SHORT_SIMULATION_AND_ABLATION",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-08 14:23:59.414455+00:00",
+      "peak_rss_mb": 11757.53,
+      "details": {
+        "timeframe_alignment_rows": 288,
+        "entry_target_matrix_rows": 1568,
+        "ablation_rows": 54
+      }
+    },
+    "PHASE_09": {
+      "phase_number": 9,
+      "phase_name": "SHORT_PERIOD_CORRECTNESS_VERIFICATION",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-08 14:23:59.414981+00:00",
+      "peak_rss_mb": 11757.53,
+      "details": {
+        "verified_64_states_non_empty": 192
+      }
+    },
+    "PHASE_10": {
+      "phase_number": 10,
+      "phase_name": "FULL_AVAILABLE_HISTORY_EXECUTION",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-08 14:23:59.415172+00:00",
+      "peak_rss_mb": 11757.53,
+      "details": {
+        "total_opportunities_evaluated": 711903
+      }
+    },
+    "PHASE_11": {
+      "phase_number": 11,
+      "phase_name": "NASDAQ_AND_LONDON_INTRADAY_MATRICES",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-08 14:24:07.237147+00:00",
+      "peak_rss_mb": 11757.53,
+      "details": {
+        "nq_open_5min_rows": 714,
+        "hourly_matrix_rows": 648,
+        "ldn_open_rows": 189
+      }
+    },
+    "PHASE_12": {
+      "phase_number": 12,
+      "phase_name": "STATISTICAL_ROBUSTNESS_AND_25_RANKINGS",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-08 14:24:09.689888+00:00",
+      "peak_rss_mb": 11757.53,
+      "details": {
+        "robustness_rows": 135,
+        "rankings_count": 25
+      }
+    },
+    "PHASE_15": {
+      "phase_number": 15,
+      "phase_name": "INDEPENDENT_QA_AND_10x100_MANUAL_VALIDATION",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-08 14:24:10.444440+00:00",
+      "peak_rss_mb": 11757.53,
+      "details": {
+        "total_reviewable_samples": 1000,
+        "categories_count": 10,
+        "counts_per_category": {
+          "01_CRT_EVENTS": 100,
+          "02_SSMT_EVENTS": 100,
+          "03_CISD_EVENTS": 100,
+          "04_MMXM_CANDIDATES": 100,
+          "05_ORIGINAL_CONSOLIDATIONS": 100,
+          "06_CROSS_TF_NARRATIVES": 100,
+          "07_LONG_TRADES": 100,
+          "08_SHORT_TRADES": 100,
+          "09_HIGHER_TF_TARGET_NARRATIVES": 100,
+          "10_LOWER_TF_TARGET_NARRATIVES": 100
+        },
+        "algorithmic_causality_audit_pass": true,
+        "human_discretionary_review_claimed": false,
+        "disclosure": "All 1,000 samples (10 categories x 100 examples across winners, losers, and invalidated setups) pass strict algorithmic causality verification. Human discretionary review is NOT fabricated and remains tracked via `human_review_status` and `human_disagreement_flag`."
+      }
+    },
+    "PHASE_16": {
+      "phase_number": 16,
+      "phase_name": "V4_FORWARD_TESTING_HANDOFF_AND_DUCKDB",
+      "status": "COMPLETED",
+      "completed_at_utc": "2026-11-08 14:24:10.444824+00:00",
+      "peak_rss_mb": 11757.53,
+      "details": {
+        "v4_frozen_candidates": 10,
+        "duckdb_path": "data/results/astra6_v3.duckdb",
+        "elapsed_seconds": 98.5
+      }
+    }
+  },
+  "hardware_summary": {
+    "hardware_profile": {
+      "os_name": "Darwin",
+      "os_release": "27.2.0",
+      "architecture": "arm64",
+      "cpu_model": "Apple M3 Pro",
+      "physical_cores": 12,
+      "logical_cores": 12,
+      "ram_total_gb": 36.0,
+      "ram_available_gb": 18.91,
+      "disk_total_gb": 460.43,
+      "disk_free_gb": 322.5,
+      "selected_workers": 8,
+      "selected_duckdb_threads": 8,
+      "selected_batch_size": 200000,
+      "libraries": {
+        "python": "3.12.15",
+        "numpy": "2.5.4",
+        "pandas": "3.1.1",
+        "polars": "2.1.0",
+        "duckdb": "2.0.0",
+        "pyarrow": "26.0.1",
+        "numba": "0.68.1"
+      },
+      "detected_at_utc": "2026-11-08 14:22:31.965931+00:00"
+    },
+    "kernel_verification": {
+      "reference_vs_numba_exact_match": true,
+      "adversarial_same_bar_sl_tp_verified": true,
+      "python_ref_seconds_2k": 0.046606,
+      "numba_opt_seconds_2k": 0.000334,
+      "speedup_factor": 139.45,
+      "throughput_evals_per_sec": 5984297.2
+    },
+    "batch_size_benchmark_seconds": {
+      "16384": 0.00615,
+      "65536": 0.0019,
+      "131072": 0.00098,
+      "200000": 0.00074
+    },
+    "selected_optimal_batch_size": 200000,
+    "peak_memory_rss_mb": 282.31
+  },
+  "updated_at_utc": "2026-11-08 14:24:10.444831+00:00"
+}

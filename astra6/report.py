@@ -871,7 +871,12 @@ def build_all_reports() -> dict[str, Path]:
     pdf_path = generate_pdf_report(figs)
     print(f"[report v2.0] Generated HTML report: {html_path} ({html_path.stat().st_size:,} bytes)")
     print(f"[report v2.0] Generated PDF report : {pdf_path} ({pdf_path.stat().st_size:,} bytes)")
-    return {"html": html_path, "pdf": pdf_path, **figs}
+    out = {"html": html_path, "pdf": pdf_path, **figs}
+    if (RESULTS / "v3_rankings_25.parquet").exists():
+        from astra6.report_v3 import build_v3_reports
+        v3_out = build_v3_reports()
+        out.update(v3_out)
+    return out
 
 
 if __name__ == "__main__":
