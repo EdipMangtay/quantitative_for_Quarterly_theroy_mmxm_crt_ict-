@@ -47,6 +47,10 @@ ASTRA 6 is a rigorous, high-performance quantitative research lab and backtestin
 
 ## 🛠️ Quick Start
 
+### 📦 Full Project & Dataset Archive (Direct Download)
+Tüm ham/işlenmiş veri setlerini (`data/store/`, `data/raw/`, `data/hf_cache/`), hazır sanal ortamı (`.venv`) ve tüm raporları içeren eksiksiz 1.2 GB arşiv dosyasını doğrudan indirebilirsiniz:
+- **İndirme Bağlantısı**: [qt_test_full_project.zip (v1.0.0 Release)](https://github.com/EdipMangtay/Quantetive_for_-Quarterly_theroy_mmxm_crt_ict-/releases/download/v1.0.0/qt_test_full_project.zip)
+
 ### 1. Requirements & Setup
 
 This project uses [`uv`](https://github.com/astral-sh/uv) for fast, deterministic dependency management (Python >= 3.12).
@@ -87,3 +91,4 @@ uv run pytest tests/
 ## 📜 License
 
 MIT License. See [LICENSE](LICENSE) for details.
+
