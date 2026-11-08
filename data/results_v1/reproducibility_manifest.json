@@ -1,0 +1,130 @@
+{
+  "pipeline_completed_at_utc": "2026-11-08 11:40:25.254698+00:00",
+  "elapsed_seconds": 3.75,
+  "store_files": {
+    "US100_BID_M1.parquet": {
+      "size_bytes": 35145678,
+      "sha256_head": "a852287511b2a466"
+    },
+    "US100_ASK_M1.parquet": {
+      "size_bytes": 31760284,
+      "sha256_head": "a852287511b2a466"
+    },
+    "US500_BID_M1.parquet": {
+      "size_bytes": 30184845,
+      "sha256_head": "06d31a6660613127"
+    },
+    "US500_ASK_M1.parquet": {
+      "size_bytes": 28253814,
+      "sha256_head": "06d31a6660613127"
+    },
+    "US30_BID_M1.parquet": {
+      "size_bytes": 22917524,
+      "sha256_head": "29a29e56b7c0b0d7"
+    },
+    "US30_ASK_M1.parquet": {
+      "size_bytes": 20707260,
+      "sha256_head": "29a29e56b7c0b0d7"
+    },
+    "DUKA_US100_30S.parquet": {
+      "size_bytes": 107838866,
+      "sha256_head": "37cfa505be5313d7"
+    },
+    "DUKA_US500_30S.parquet": {
+      "size_bytes": 90144706,
+      "sha256_head": "c7bd28e10aad0f6c"
+    }
+  },
+  "result_files": {
+    "data_quality.json": {
+      "size_bytes": 755
+    },
+    "tf_summary.parquet": {
+      "size_bytes": 4686
+    },
+    "crt_tf_stats.parquet": {
+      "size_bytes": 18465
+    },
+    "crt_variants.parquet": {
+      "size_bytes": 18751
+    },
+    "crt_closing_vs_dev.parquet": {
+      "size_bytes": 15757
+    },
+    "crt_ssmt_baselines.parquet": {
+      "size_bytes": 21886
+    },
+    "hypothesis_tests.parquet": {
+      "size_bytes": 15126
+    },
+    "ssmt_timing.parquet": {
+      "size_bytes": 14921
+    },
+    "crt_ssmt_matrix.parquet": {
+      "size_bytes": 26071
+    },
+    "qt_fractals.parquet": {
+      "size_bytes": 20134
+    },
+    "q2q_rankings.parquet": {
+      "size_bytes": 16192
+    },
+    "multilevel_alignment.parquet": {
+      "size_bytes": 15066
+    },
+    "narrative_perf.parquet": {
+      "size_bytes": 16125
+    },
+    "opening_windows.parquet": {
+      "size_bytes": 17478
+    },
+    "opening_ranges_ny.parquet": {
+      "size_bytes": 174124
+    },
+    "opening_ranges_ldn.parquet": {
+      "size_bytes": 173347
+    },
+    "ny_open_models.parquet": {
+      "size_bytes": 13049
+    },
+    "h1_anchoring.parquet": {
+      "size_bytes": 14553
+    },
+    "rr_stop_exit_grid.parquet": {
+      "size_bytes": 20096
+    },
+    "splits_eval.parquet": {
+      "size_bytes": 13714
+    },
+    "wfa_folds.parquet": {
+      "size_bytes": 8220
+    },
+    "yearly_perf.parquet": {
+      "size_bytes": 14452
+    },
+    "monthly_perf.parquet": {
+      "size_bytes": 5510
+    },
+    "cost_sensitivity.parquet": {
+      "size_bytes": 13509
+    },
+    "regime_perf.parquet": {
+      "size_bytes": 12818
+    },
+    "audit_sample_trades.parquet": {
+      "size_bytes": 367896
+    }
+  },
+  "reports": {
+    "html": "reports/ASTRA6_Arastirma_Raporu.html",
+    "pdf": "reports/ASTRA6_Arastirma_Raporu.pdf",
+    "fig1": "reports/figures/fig1_crt_tf_expectancy.png",
+    "fig2": "reports/figures/fig2_baselines_ny_open.png",
+    "fig3": "reports/figures/fig3_ny_open_models.png",
+    "fig4": "reports/figures/fig4_qt_macro_micro_heatmap.png",
+    "fig5": "reports/figures/fig5_q2q_rankings.png",
+    "fig6": "reports/figures/fig6_rr_stop_heatmap.png",
+    "fig7": "reports/figures/fig7_oos_wfa_cost.png",
+    "fig8": "reports/figures/fig8_trade_replay.png"
+  }
+}

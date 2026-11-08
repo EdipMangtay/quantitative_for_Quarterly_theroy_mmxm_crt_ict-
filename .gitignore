@@ -1,6 +1,7 @@
 data/raw/
 data/store/
 data/hf_cache/
+data/results/trade_features.parquet
 .venv/
 __pycache__/
 *.pyc

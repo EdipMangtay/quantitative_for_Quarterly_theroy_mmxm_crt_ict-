@@ -1,94 +1,70 @@
-# ASTRA 6 — Quantitative Framework for Quarterly Theory, MMXM, CRT & ICT
+# ASTRA 6 — Fractal QT + ICT + MMXM + CRT + SSMT + CISD Quantitative Research Lab
 
-ASTRA 6 is a rigorous, high-performance quantitative research lab and backtesting pipeline designed to validate and operationalize Price Action / ICT concepts:
-- **Quarterly Theory (QT)**: Multi-timeframe fractals, 90-minute cycle decomposition, Q1–Q4 accumulation/manipulation/distribution/reversal phases.
-- **MMXM (Market Maker Models)**: Market Maker Buy/Sell Models, consolidation profiles, and smart money reversal footprints.
-- **CRT (Candle Range Theory)**: High-resolution candle range dynamics, closing vs. deviation analysis.
-- **ICT (Inner Circle Trader)**: Fair Value Gaps (FVG), Liquidity Sweeps, Order Blocks, Breakers, and CISD (Change in State of Delivery).
-- **SSMT / SMT Divergences**: Correlated asset divergence tracking across US100 (Nasdaq), US500 (S&P 500), and US30 (Dow).
+Gerçek tarihsel **US100, US500 ve US30** CFD kotasyonları (`7 Kasım 2021 – 7 Kasım 2026`, `1,677,731` hizalanmış M1 bar ve `6,063,038` Dukascopy 30-saniyelik bar) üzerinde **Quarterly Theory (6H / 90M / 22.5M) + Candle Range Theory (CRT-A..L) + Sequential SMT (SSMT) + CISD + ICT Likidite Süpürmeleri + MMXM + HTF Narrative** kombinasyonlarını kesin nedensellik (*strict causality / zero look-ahead*) ilkesiyle test eden kantitatif araştırma sistemi.
 
 ---
 
-## 🚀 Key Features
+## 📄 Araştırma Raporları
 
-- **High-Performance Architecture**: Polars, DuckDB, NumPy, Numba, and PyArrow for ultra-fast processing of tick, 30-second, and 1-minute order book & bar data.
-- **DST & Exchange Clock Engine**: Strict handling of New York session times, London fixing, DST transitions, and cash open macros.
-- **Reproducible Research Pipeline**: Single-command runner (`run_pipeline.py`) validating results with reproducible manifests.
-- **12-Panel Interactive Streamlit Dashboard**: Full quantitative exploration suite (`app.py`) powered by Plotly for visualizing regimes, opening ranges, SMT matrices, and trade replays.
-- **Comprehensive Quality Assurance**: Strict pytest suites covering clock synchronization, regime detection, and backtesting fidelity.
+- 📕 **PDF Araştırma Raporu (10 Sayfa, Grafik & Tablolu):** [`reports/ASTRA6_Arastirma_Raporu.pdf`](reports/ASTRA6_Arastirma_Raporu.pdf)
+- 🌐 **HTML Araştırma Raporu (Tam Tablolu):** [`reports/ASTRA6_Arastirma_Raporu.html`](reports/ASTRA6_Arastirma_Raporu.html)
+- 📊 **26 Sonuç Tablosu (Parquet & JSON):** [`data/results/`](data/results/)
 
 ---
 
-## 📁 Repository Structure
+## 📈 Temel Görsel Bulgular
 
-```
-├── astra6/                 # Core research engine & analytics modules
-│   ├── bars.py             # Bar construction & tick aggregation
-│   ├── clock.py            # NY/London exchange calendars & session timings
-│   ├── crt.py              # Candle Range Theory models
-│   ├── engine.py           # Multi-asset quantitative engine
-│   ├── ict.py              # ICT constructs (FVG, sweeps, CISD, order blocks)
-│   ├── opening.py          # Opening range macros & killzones
-│   ├── report.py           # Automated HTML/PDF research report generator
-│   ├── signals.py          # Signal generation & trade mechanics
-│   ├── sim.py              # Execution simulator & cost sensitivity
-│   ├── smt.py              # Multi-asset SMT divergence matrix
-│   ├── stats.py            # Expectancy, bootstrap, and hypothesis tests
-│   └── data/               # Data ingestion & normalization routines
-├── app.py                  # 12-Panel Streamlit quantitative dashboard
-├── run_pipeline.py         # End-to-end reproducible research pipeline runner
-├── reports/                # Generated research reports & figures
-├── data/
-│   └── results/            # Computed analytical matrices & experiment results
-└── tests/                  # Unit tests & verification suites
-```
+### 1. CRT Timeframe Bazında Net Expectancy (R) ve MFE Reversal Olasılıkları
+![CRT Timeframe Expectancy](reports/figures/fig1_crt_tf_expectancy.png)
+
+### 2. Nasdaq NY Open (`09:30–11:00`) Baseline Stratejileri (`A..J`)
+![Baselines NY Open](reports/figures/fig2_baselines_ny_open.png)
+
+### 3. Nasdaq 09:30 Açılış Modelleri (`NY-A .. NY-J`)
+![NY Open Models](reports/figures/fig3_ny_open_models.png)
+
+### 4. Quarterly Theory `Macro Q(1..4) × Micro Q(1..4)` Isı Haritası
+![QT Macro Micro Heatmap](reports/figures/fig4_qt_macro_micro_heatmap.png)
+
+### 5. Quarter-to-Quarter (`Q1→Q2 .. Prev Q4→Curr Q1`) SSMT Geçiş Sıralaması
+![Q2Q Rankings](reports/figures/fig5_q2q_rankings.png)
+
+### 6. 5 Yapısal Stop-Loss Modeli × 11 R:R Hedefi Isı Haritası
+![Stop Loss RR Heatmap](reports/figures/fig6_rr_stop_heatmap.png)
+
+### 7. Yıllara Göre Performans (`2021–2026`) ve Slippage Duyarlılığı
+![OOS WFA Cost](reports/figures/fig7_oos_wfa_cost.png)
+
+### 8. Örnek İşlem Denetimi (Full Trade Replay: US100 CRT + US500 SSMT + CISD)
+![Trade Replay](reports/figures/fig8_trade_replay.png)
 
 ---
 
-## 🛠️ Quick Start
-
-### 📦 Full Project & Dataset Archive (Direct Download)
-Tüm ham/işlenmiş veri setlerini (`data/store/`, `data/raw/`, `data/hf_cache/`), hazır sanal ortamı (`.venv`) ve tüm raporları içeren eksiksiz 1.2 GB arşiv dosyasını doğrudan indirebilirsiniz:
-- **İndirme Bağlantısı**: [qt_test_full_project.zip (v1.0.0 Release)](https://github.com/EdipMangtay/Quantetive_for_-Quarterly_theroy_mmxm_crt_ict-/releases/download/v1.0.0/qt_test_full_project.zip)
-
-### 1. Requirements & Setup
-
-This project uses [`uv`](https://github.com/astral-sh/uv) for fast, deterministic dependency management (Python >= 3.12).
+## 🚀 Kurulum ve Çalıştırma
 
 ```bash
-# Clone the repository
-git clone https://github.com/EdipMangtay/Quantetive_for_-Quarterly_theroy_mmxm_crt_ict-.git
-cd Quantetive_for_-Quarterly_theroy_mmxm_crt_ict-
-
-# Install dependencies with uv
+# 1. Bağımlılıkları kurun (uv ile)
 uv sync
-```
 
-### 2. Run the Interactive Dashboard
+# 2. (İlk kurulumda) 5-yıllık tarihsel CFD veri ambarını indirin ve oluşturun (~532 MB)
+uv run python run_pipeline.py --ingest
 
-```bash
+# 3. Tek komutla doğrulama, rapor üretimi ve 2,573 QA/DST testini çalıştırın
+uv run python run_pipeline.py
+
+# 4. Tüm 5-yıllık araştırma motorunu baştan hesaplamak için
+uv run python run_pipeline.py --full
+
+# 5. 12 Panelli İnteraktif Streamlit + Plotly Dashboard'u başlatın
 uv run streamlit run app.py
 ```
 
-### 3. Run the Research Pipeline
-
-```bash
-# Verification & QA test suite
-uv run python run_pipeline.py
-
-# Full re-computation pipeline
-uv run python run_pipeline.py --full
-```
-
-### 4. Run Tests
-
-```bash
-uv run pytest tests/
-```
-
 ---
 
-## 📜 License
+## 🧪 Otomatik QA & DST Doğrulama Paketi (`2,573 / 2,573 PASSED`)
 
-MIT License. See [LICENSE](LICENSE) for details.
-
+```bash
+uv run pytest -q
+```
+- `tests/test_clock_dst.py`: `zoneinfo` (IANA tzdb) tabanlı `2,563` çok-yıllı ABD/İngiltere DST geçiş ve oturum saati testi.
+- `tests/test_qa_suite.py`: Test A – Test L (Look-ahead yasağı, mum kapanışı kuralı, 3-endeks SSMT simetrisi, kötümser SL/TP muhasebesi, tekrar üretilebilirlik).

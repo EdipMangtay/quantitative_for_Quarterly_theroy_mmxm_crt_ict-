@@ -1,13 +1,11 @@
-"""Opening Session & Opening Range Research Engine (Sections 3, 10, 11).
+"""Phase 6 — Full Intraday Time-of-Day, Opening Session & 18-Model Matrix Engine.
 
 Strictly causal rules:
 * An Opening Range (OR5, OR15, OR30, OR60) has a *completed* High/Low/Midpoint
-   ONLY at or after ``t_open + duration``.
-* Before ``t_open + duration`` only the *running* high/low since ``t_open`` is
-  observable, stored in separate columns ``run_or_h``, ``run_or_l``.
-* Calendar-aligned H1 (09:00–10:00 NY) and NY-open-anchored H1 (09:30–10:30 NY)
-  are kept strictly separate; a 09:30–10:30 H1 candle is never marked confirmed
-  before 10:30 NY.
+  ONLY at or after `t_open + duration`.
+* Non-overlapping 5M, 15M, 30M, and 60M intraday bins are kept strictly separate
+  from overlapping summary windows so statistical hypothesis tests only operate
+  on non-overlapping independent bins.
 """
 from __future__ import annotations
 
@@ -16,6 +14,7 @@ import pandas as pd
 
 from .clock import LDN, NY
 
+# Legacy / Section 3.1 summary windows
 NY_WINDOWS: list[tuple[str, int, int]] = [
     ("08:30-09:00", -60, -30),
     ("09:00-09:15", -30, -15),
@@ -26,6 +25,48 @@ NY_WINDOWS: list[tuple[str, int, int]] = [
     ("09:30-10:30", 0, 60),
     ("10:00-11:00", 30, 90),
     ("11:00-12:00", 90, 150),
+]
+
+# Phase 6.2 Mandatory Non-Overlapping Granular NY Session Windows (09:00 - 16:00 NY)
+NY_V2_GRANULAR_WINDOWS: list[tuple[str, int, int]] = [
+    ("09:00-09:15", -30, -15),
+    ("09:15-09:30", -15, 0),
+    ("09:30-09:35", 0, 5),
+    ("09:35-09:40", 5, 10),
+    ("09:40-09:45", 10, 15),
+    ("09:45-09:50", 15, 20),
+    ("09:50-09:55", 20, 25),
+    ("09:55-10:00", 25, 30),
+    ("10:00-10:05", 30, 35),
+    ("10:05-10:10", 35, 40),
+    ("10:10-10:15", 40, 45),
+    ("10:15-10:30", 45, 60),
+    ("10:30-10:45", 60, 75),
+    ("10:45-11:00", 75, 90),
+    ("11:00-11:30", 90, 120),
+    ("11:30-12:00", 120, 150),
+    ("12:00-13:00", 150, 210),
+    ("13:00-14:00", 210, 270),
+    ("14:00-15:00", 270, 330),
+    ("15:00-16:00", 330, 390),
+]
+
+# Non-Overlapping 15-Minute NY AM/PM Bins for Direct Question Answering (09:00 - 12:00 + Afternoon)
+NY_15M_BINS: list[tuple[str, int, int]] = [
+    ("09:00-09:15", -30, -15),
+    ("09:15-09:30", -15, 0),
+    ("09:30-09:45", 0, 15),
+    ("09:45-10:00", 15, 30),
+    ("10:00-10:15", 30, 45),
+    ("10:15-10:30", 45, 60),
+    ("10:30-10:45", 60, 75),
+    ("10:45-11:00", 75, 90),
+    ("11:00-11:30", 90, 120),
+    ("11:30-12:00", 120, 150),
+    ("12:00-13:00", 150, 210),
+    ("13:00-14:00", 210, 270),
+    ("14:00-15:00", 270, 330),
+    ("15:00-16:00", 330, 390),
 ]
 
 NY_NORM_WINDOWS: list[tuple[str, int, int]] = [
@@ -47,17 +88,15 @@ LDN_NORM_WINDOWS: list[tuple[str, int, int]] = [
     ("LDN +15..+30m", 15, 30),
     ("LDN +30..+60m", 30, 60),
     ("LDN +60..+90m", 60, 90),
+    ("LDN +90..+120m", 90, 120),
+    ("LDN +120..+180m", 120, 180),
 ]
 
 OR_MINUTES = (5, 15, 30, 60)
 
 
 def compute_opening_ranges(panel: pd.DataFrame, traded: str = "US100", session: str = "NY") -> pd.DataFrame:
-    """Compute completed and running Opening Ranges (5m, 15m, 30m, 60m) per day.
-
-    Returns a daily summary table AND attaches causal OR columns onto the M1
-    index when requested via ``attach_opening_ranges``.
-    """
+    """Compute completed and running Opening Ranges (5m, 15m, 30m, 60m) per day."""
     idx = panel.index
     if session == "NY":
         loc = idx.tz_convert(NY)
@@ -99,7 +138,6 @@ def compute_opening_ranges(panel: pd.DataFrame, traded: str = "US100", session: 
             rec[f"or{m}_l"] = orl
             rec[f"or{m}_mid"] = orm
             rec[f"or{m}_size"] = ors
-            # Post-OR action (strictly after minute m, up to +120m from open)
             after = (r >= m) & (r < 120)
             if after.any():
                 ah = gh[after]
@@ -107,7 +145,6 @@ def compute_opening_ranges(panel: pd.DataFrame, traded: str = "US100", session: 
                 ac = gc[after]
                 sw_up = bool((ah > orh).any())
                 sw_dn = bool((al < orl).any())
-                # False breakout + return into range
                 fb_up = bool(((ah > orh) & (ac <= orh)).any())
                 fb_dn = bool(((al < orl) & (ac >= orl)).any())
                 rec[f"or{m}_sweep"] = "both" if (sw_up and sw_dn) else ("high" if sw_up else ("low" if sw_dn else "none"))
@@ -122,10 +159,8 @@ def compute_opening_ranges(panel: pd.DataFrame, traded: str = "US100", session: 
 
 
 def attach_causal_or_to_signals(sig: pd.DataFrame, or_daily: pd.DataFrame, session: str = "NY") -> pd.DataFrame:
-    """Attach OR5 and OR15 levels to signals ONLY when the signal trigger time
-    is at or after the OR completion minute (rel >= 5 for OR5, rel >= 15 for OR15).
-    Before completion, the completed OR columns are strictly NaN (no look-ahead).
-    """
+    """Attach OR5, OR15, OR30 levels to signals ONLY when the signal confirmation time
+    is at or after the OR completion minute (no look-ahead)."""
     if len(sig) == 0 or len(or_daily) == 0:
         return sig
     out = sig.copy()
@@ -141,7 +176,8 @@ def attach_causal_or_to_signals(sig: pd.DataFrame, or_daily: pd.DataFrame, sessi
             continue
         raw_h = sig_dates.map(or_map[f"or{m}_h"]).to_numpy(float)
         raw_l = sig_dates.map(or_map[f"or{m}_l"]).to_numpy(float)
-        known = out[rel_col].to_numpy(float) >= m
+        # Signal confirmed at close of j_trig (= rel + 1 minute elapsed since open)
+        known = (out[rel_col].to_numpy(float) + 1.0) >= m
         out[col_h] = np.where(known, raw_h, np.nan)
         out[col_l] = np.where(known, raw_l, np.nan)
         out[col_sw] = np.where(
@@ -152,12 +188,51 @@ def attach_causal_or_to_signals(sig: pd.DataFrame, or_daily: pd.DataFrame, sessi
     return out
 
 
-def classify_ny_open_models(sig: pd.DataFrame) -> dict[str, pd.Series]:
-    """Boolean masks for Section 10.1 Models NY-A through NY-J on a candidate table.
+def classify_18_models(sig: pd.DataFrame) -> dict[str, pd.Series]:
+    """Return boolean masks for all 18 mandatory strategy models (Phase 6.4).
 
-    Focused on the NY AM opening window (09:30–11:00 NY, i.e. 0 <= min_from_ny_open <= 90).
+    Valid for any timeframe/session slice of the candidate table `sig`.
     """
-    in_ny = (sig["min_from_ny_open_trig"] >= 0) & (sig["min_from_ny_open_trig"] <= 90)
+    is_conf = sig["entry_mode"].isin(["confirmed", "confirmed_cisd"])
+    is_dev = sig["entry_mode"] == "dev_cisd"
+    crt_a = is_conf & sig["A"]
+    crt_or_dev = crt_a | is_dev
+    one_side_sw = sig["sw"] & ~sig["ot"]
+    has_cisd = sig["has_cisd"] | sig.get("cisd_m1", False) | sig.get("cisd_m3", False) | sig.get("cisd_m5", False)
+    has_fvg = sig["has_disp"] | np.where(
+        sig["dir"] == 1,
+        sig.get("m5_bull_fvg", pd.Series(False, index=sig.index)).fillna(False),
+        sig.get("m5_bear_fvg", pd.Series(False, index=sig.index)).fillna(False),
+    )
+    mmxm_ok = sig.get("mmxm_early_candidate", sig["mmxm"]).fillna(False)
+    qt_ok = sig["q90_trig"].isin([2, 3]) | sig["q22_trig"].isin([2, 3])
+    htf_ok = (sig["htf_liq"] | sig["pd_zone_ok"]) & (sig["narrative"] != "contradictory")
+
+    return {
+        "M01. Liquidity Sweep Only": is_conf & one_side_sw,
+        "M02. CRT Only": crt_a,
+        "M03. CRT + Standard SMT": crt_a & sig["std_smt"],
+        "M04. CRT + 90M SSMT": crt_a & sig["macro_ssmt"],
+        "M05. CRT + 22.5M SSMT": crt_a & sig["micro_ssmt"],
+        "M06. CRT + CISD": crt_or_dev & has_cisd,
+        "M07. CRT + SSMT + CISD": crt_or_dev & sig["any_ssmt"] & has_cisd,
+        "M08. CRT + SSMT + CISD + FVG": crt_or_dev & sig["any_ssmt"] & has_cisd & has_fvg,
+        "M09. ICT Sweep + CISD": is_dev & one_side_sw & has_cisd,
+        "M10. ICT Sweep + MMXM": crt_or_dev & one_side_sw & mmxm_ok,
+        "M11. ICT Sweep + MMXM + QT": crt_or_dev & one_side_sw & mmxm_ok & qt_ok,
+        "M12. CRT + MMXM": crt_a & mmxm_ok,
+        "M13. CRT + MMXM + SSMT": crt_a & mmxm_ok & sig["any_ssmt"],
+        "M14. CRT + MMXM + SSMT + CISD": crt_or_dev & mmxm_ok & sig["any_ssmt"] & has_cisd,
+        "M15. CRT + Macro SSMT + Micro SSMT": crt_a & sig["both_ssmt"],
+        "M16. CRT + Macro SSMT + Micro SSMT + CISD": crt_or_dev & sig["both_ssmt"] & has_cisd,
+        "M17. HTF Narrative + CRT + SSMT": crt_a & sig["any_ssmt"] & htf_ok,
+        "M18. HTF Narrative + CRT + SSMT + CISD + MMXM": crt_or_dev & sig["any_ssmt"] & has_cisd & mmxm_ok & htf_ok,
+    }
+
+
+def classify_ny_open_models(sig: pd.DataFrame) -> dict[str, pd.Series]:
+    """Boolean masks for Section 10.1 Models NY-A through NY-J on a candidate table."""
+    in_ny = (sig["min_from_ny_open_trig"] >= 0) & (sig["min_from_ny_open_trig"] < 90)
     is_m15 = sig["tf"] == "M15"
     is_h1 = sig["tf"] == "H1"
     is_conf = sig["entry_mode"].isin(["confirmed", "confirmed_cisd"])
@@ -183,4 +258,3 @@ def classify_ny_open_models(sig: pd.DataFrame) -> dict[str, pd.Series]:
             & (sig["narrative"] != "contradictory")
         ),
     }
-
