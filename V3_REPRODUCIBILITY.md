@@ -143,3 +143,4 @@ uv run pytest -v tests/test_v3_fractal_qa.py
 open reports/ASTRA6_V3_Universal_Fractal_Raporu.html
 open reports/ASTRA6_V3_Universal_Fractal_Raporu.pdf
 ```
+

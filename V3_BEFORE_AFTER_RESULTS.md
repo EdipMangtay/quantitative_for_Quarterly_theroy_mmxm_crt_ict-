@@ -168,3 +168,4 @@ Algoritmik sıralama motoru (`_select_genuine_25_rankings`) tarafından bağıms
 1. **Hiçbir Kârlılık Sonucu Korunmaya Çalışılmamıştır:** Bağımsız adli denetimin temel talimatına harfiyen uyulmuş; hatalı pozitif kenar üreten sızıntılar temizlendiğinde ortaya çıkan tüm negatif değerler dürüstçe tablolara yansıtılmıştır.
 2. **Day-Clustered SE ve FDR Düzeltmesi:** Finansal zaman serilerinde gün içi işlemlerin bağımsız varsayılması standart hatayı yapay olarak 3 ila 5 kat küçük göstermektedir. Liang-Zeger kümelenmiş standart hata ve Benjamini-Hochberg FDR uygulandığında, test edilen 64 çekirdek faktör ve yüzlerce varyantın hiçbirinde sıfır hipotezi ($H_0: \mathbb{E}[R] \le 0$) reddedilememiştir ($q > 0.05$).
 3. **V4 Aşamasının Önemi:** 2021–2026 CFD verisi V1, V2 ve V3 boyunca keşfedildiği için, hiçbir in-sample veya split sonucu nihai alpha sayılamaz. Tüm dondurulmuş parametreler V4'te 2026 sonrası gerçek canlı/forward veride test edilmelidir.
+

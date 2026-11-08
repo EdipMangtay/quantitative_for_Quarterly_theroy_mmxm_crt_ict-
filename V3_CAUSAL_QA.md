@@ -248,3 +248,4 @@ Bölüm 20 uyarınca oluşturulan `v3_manual_validation_10x100.parquet` veri set
 ```
 
 **Adli Beyan:** 1.000 örneğin tamamı algoritmik nedensellik testinden başarıyla geçmiştir. İnsan gözüyle diskresyonel onay verilmiş gibi sahte etiketleme yapılmamış; `human_review_status = PENDING_DISCRETIONARY_HUMAN_REVIEW` olarak dürüstçe bırakılmıştır.
+

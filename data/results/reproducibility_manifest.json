@@ -1,7 +1,7 @@
 {
   "version": "v3.0_final",
-  "pipeline_completed_at_utc": "2026-11-08 15:46:02.750972+00:00",
-  "elapsed_seconds": 7.69,
+  "pipeline_completed_at_utc": "2026-11-08 16:10:49.049464+00:00",
+  "elapsed_seconds": 7.92,
   "store_files": {
     "US100_BID_M1.parquet": {
       "size_bytes": 35145678,
