@@ -2,8 +2,8 @@
 
 Conventions
 -----------
-* Every bar is labelled by its **start** time (UTC) and carries ``t_close``
-  (start + duration).  A bar's OHLC is *only known at t_close*.
+* Quote timestamps are UTC minute opens. A minute's OHLC is known one minute
+  later. Higher-timeframe boundaries are scheduled in the anchor's timezone.
 * Intraday buckets are computed on **New York wall-clock** time so that 6H /
   90M / 22.5M quarters and H4/Daily candles follow DST automatically.
 * Anchors:
@@ -150,35 +150,86 @@ def wall_to_utc(wall_min: np.ndarray, tz_name: str = NY) -> pd.DatetimeIndex:
     return naive.tz_localize(tz_name, ambiguous="NaT", nonexistent="shift_forward").tz_convert("UTC")
 
 
-def resample(panel: pd.DataFrame, alias: str, tf: str, anchor: str = "cal") -> pd.DataFrame:
-    """OHLC bars for one symbol (BID) with start/close timestamps.
+def resample(
+    panel: pd.DataFrame, alias: str, tf: str, anchor: str = "cal",
+    *, as_of: pd.Timestamp | None = None,
+) -> pd.DataFrame:
+    """Aggregate observed M1 Bid quotes using a clock watermark.
 
-    Only buckets that are entirely in the past at t_close are emitted; the last
-    (possibly incomplete) bucket is flagged ``complete=False``.
+    `is_closed` and `available_at` describe the final observed aggregate.
+    `is_complete` requires an observation for every scheduled minute. Without
+    a quote calendar, a closure and a feed outage are both unverified coverage.
+    The legacy `complete` column retains its finalized-aggregate meaning.
     """
+    if anchor not in ("cal", "ny930", "ny0930", "ldn800", "ldn0800"):
+        raise ValueError(f"Unknown candle anchor: {anchor}")
     m = TF_MIN[tf]
     tz_use = LDN if anchor in ("ldn800", "ldn0800") else NY
-    wall = ldn_wall_minutes(panel.index) if tz_use == LDN else ny_wall_minutes(panel.index)
-    b = bucket_start_wall(wall, m, anchor_origin(tf, anchor))
+    idx = panel.index
+    if not isinstance(idx, pd.DatetimeIndex) or idx.tz is None:
+        raise ValueError("M1 panel requires a timezone-aware DatetimeIndex")
+    if not idx.is_monotonic_increasing or not idx.is_unique or idx.hasnans:
+        raise ValueError("M1 timestamps must be sorted, unique and present")
+    idx = idx.tz_convert("UTC")
+    minute = pd.Timedelta(minutes=1)
+    if not (idx == idx.floor("min")).all():
+        raise ValueError("M1 timestamps must be aligned to UTC minute opens")
+    watermark = pd.Timestamp(as_of) if as_of is not None else (
+        idx[-1] + minute if len(idx) else pd.NaT
+    )
+    if pd.notna(watermark) and watermark.tzinfo is None:
+        raise ValueError("as_of must be timezone-aware")
+    visible = idx + minute <= watermark
+    idx = idx[visible]
+
+    if not len(idx) or m == 1:
+        starts, ends = idx, idx + minute
+    else:
+        local = idx.tz_convert(tz_use).tz_localize(None)
+        wall = local.as_unit("s").asi8 // 60
+        origin = anchor_origin(tf, anchor)
+        left = int(bucket_start_wall(wall.min(), m, origin)) - m
+        right = int(bucket_start_wall(wall.max(), m, origin)) + 2 * m
+        boundaries = pd.date_range(
+            pd.to_datetime(left, unit="m"), pd.to_datetime(right, unit="m"),
+            freq=pd.Timedelta(minutes=m),
+        )
+        # Include both occurrences of repeated local boundaries. Nonexistent
+        # boundaries move to the first real instant and may coincide there.
+        early = boundaries.tz_localize(tz_use, ambiguous=True, nonexistent="shift_forward")
+        late = boundaries.tz_localize(tz_use, ambiguous=False, nonexistent="shift_forward")
+        utc = early.union(late).unique().sort_values().tz_convert("UTC")
+        buckets = utc.searchsorted(idx, side="right") - 1
+        starts, ends = utc[buckets], utc[buckets + 1]
+
     g = pd.DataFrame({
-        "b": b, "o": panel[f"{alias}_o"].to_numpy(), "h": panel[f"{alias}_h"].to_numpy(),
-        "l": panel[f"{alias}_l"].to_numpy(), "c": panel[f"{alias}_c"].to_numpy(),
-        "ts": panel.index,
+        "bucket_start": starts, "scheduled_bucket_end": ends, "ts": idx,
+        **{side: panel[f"{alias}_{side}"].to_numpy()[visible] for side in ("o", "h", "l", "c")},
     })
-    agg = g.groupby("b", sort=True).agg(o=("o", "first"), h=("h", "max"), l=("l", "min"),
-                                         c=("c", "last"), ts_first=("ts", "first"),
-                                         ts_last=("ts", "last"), n=("o", "size"))
-    agg = agg.reset_index()
-    agg["t_open"] = wall_to_utc(agg["b"].to_numpy(), tz_use)
-    agg["t_close"] = agg["t_open"] + pd.to_timedelta(m, unit="m")
-    # fall back for ambiguous DST hours
-    bad = agg["t_open"].isna()
-    agg.loc[bad, "t_open"] = agg.loc[bad, "ts_first"]
-    agg.loc[bad, "t_close"] = agg.loc[bad, "ts_first"] + pd.to_timedelta(m, unit="m")
-    agg["complete"] = True
-    if len(agg) > 0:
-        agg.loc[agg.index[-1], "complete"] = False
+    agg = g.groupby("bucket_start", as_index=False).agg(
+        scheduled_bucket_end=("scheduled_bucket_end", "first"),
+        o=("o", "first"), h=("h", "max"), l=("l", "min"), c=("c", "last"),
+        ts_first=("ts", "first"), ts_last=("ts", "last"), n=("o", "size"),
+    )
+    agg["last_observed_at"] = agg["ts_last"] + minute
+    agg["is_closed"] = agg["scheduled_bucket_end"] <= watermark
+    expected = (agg["scheduled_bucket_end"] - agg["bucket_start"]) // minute
+    agg["is_complete"] = agg["is_closed"] & (agg["n"] == expected)
+    agg["data_coverage_status"] = np.select(
+        [~agg["is_closed"], agg["is_complete"]], ["OPEN", "FULL"], default="PARTIAL_UNCLASSIFIED",
+    )
+    agg["available_at"] = agg["scheduled_bucket_end"].where(agg["is_closed"])
+    agg["t_open"] = agg["bucket_start"]
+    agg["t_close"] = agg["scheduled_bucket_end"]
+    agg["complete"] = agg["is_closed"]
+    local_start = pd.DatetimeIndex(agg["bucket_start"]).tz_convert(tz_use).tz_localize(None)
+    agg["b"] = local_start.as_unit("s").asi8 // 60
     return agg
+
+
+def minute_confirmation_index(idx: pd.DatetimeIndex, available_at) -> np.ndarray:
+    """First M1 close at or after availability, or len(idx) when unavailable."""
+    return (idx + pd.Timedelta(minutes=1)).searchsorted(available_at, side="left")
 
 
 def quarter_labels(idx: pd.DatetimeIndex, qt_anchor: str = "ny1800") -> pd.DataFrame:

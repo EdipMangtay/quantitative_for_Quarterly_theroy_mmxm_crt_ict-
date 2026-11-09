@@ -687,12 +687,7 @@ def paired_event_cluster_test(
 # Cryptographic Cache Invalidation & Hash Helpers (P1.11)
 # ---------------------------------------------------------------------------
 def compute_source_store_sha256(store_dir: Path | None = None) -> str:
-    """Compute a deterministic SHA256 digest over the core price store Parquet files (P1.11).
-
-    Hashes file size + first/middle/last 256KB blocks of every core store file so that
-    any change to any historical price file immediately invalidates cached events,
-    while executing in < 15ms.
-    """
+    """Hash the complete content of each core quote file in deterministic order."""
     sdir = store_dir or STORE
     core_files = [
         "US100_BID_M1.parquet",
@@ -710,15 +705,8 @@ def compute_source_store_sha256(store_dir: Path | None = None) -> str:
             continue
         sz = p.stat().st_size
         h.update(f"{fname}:{sz}:".encode())
-        block = 256 * 1024
         with p.open("rb") as f:
-            h.update(f.read(block))
-            if sz > 2 * block:
-                f.seek(sz // 2)
-                h.update(f.read(block))
-            if sz > block:
-                f.seek(max(0, sz - block))
-                h.update(f.read(block))
+            h.update(hashlib.file_digest(f, "sha256").digest())
     return h.hexdigest()
 
 

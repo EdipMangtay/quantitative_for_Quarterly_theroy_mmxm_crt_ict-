@@ -133,7 +133,15 @@ def main() -> int:
     parser.add_argument("--full", action="store_true", help="Re-run full 5-year V2 + V3 engine calculation from parquet store")
     parser.add_argument("--v3", action="store_true", help="Re-run full V3 Universal Fractal Engine calculation")
     parser.add_argument("--ingest", action="store_true", help="Re-run data ingestion if store files are missing")
+    parser.add_argument("--v35-sample", type=int, metavar="M1_BARS", help="Run V3.5 behavioral sample in a separate output directory")
     args = parser.parse_args()
+
+    if args.v35_sample is not None:
+        if args.full or args.v3 or args.ingest:
+            parser.error("--v35-sample cannot be combined with a legacy pipeline or ingestion")
+        from astra6.research_v35 import main as run_sample
+        run_sample(["--observations", str(args.v35_sample)])
+        return 0
 
     t0 = time.time()
     print("=" * 78)

@@ -34,7 +34,7 @@ from . import bars, cisd, clock, crt, hpc, ict, sim, smt
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "data" / "results"
 
-ALGO_VERSION = "ASTRA6_V3.1_CAUSAL_REPAIRED"
+ALGO_VERSION = "ASTRA6_V3.5_CAUSAL_REPAIR"
 
 # Full V3 Timeframe Universe (Section 2) ordered from smallest to largest minutes
 V3_TIMEFRAMES = ["M1", "M3", "M5", "M10", "M15", "M30", "H1", "M90", "H2", "H4", "H6", "D1", "W1"]
@@ -224,36 +224,21 @@ def extract_original_consolidations(
     traded: str = "US100",
     timeframes: tuple[str, ...] = ("M1", "M3", "M5", "M15", "M30", "H1", "H4"),
     dataset_hash: str = "",
+    *,
+    include_lifecycle: bool = False,
 ) -> pd.DataFrame:
-    """Build the complete `original_consolidations.parquet` table across all eligible timeframes (Section 6.2 & P0.2).
+    """Return confirmed OC summaries or immutable candidate/lifecycle events.
 
-    Strict Confirmation Timing (P0.2):
-      - `panel.index` (`idx`) is the M1 bar open timestamp (`t_open_m1`).
-      - M1 bar `j` closes at `m1_close_idx[j] = idx[j] + 1 minute`.
-      - The 4-bar consolidation candidate `[st_i .. cf_i - 1]` completes at `t_cand_known = t_open[cf_i]`,
-        which maps to M1 bar index `j_cand_m1` where `m1_close_idx[j_cand_m1] <= t_cand_known`.
-      - The departure confirmation bar `cf_i` closes at `t_confirm = t_close[cf_i]`,
-        which maps to M1 bar index `j_conf_m1` where `m1_close_idx[j_conf_m1] == t_confirm` (`<= t_confirm`).
-      - No OC is ever usable before `t_confirm` (`j_query >= j_conf_m1`).
+    The default summary includes retrospective revisit/invalidation columns
+    for legacy consumers. With `include_lifecycle`, those observations are
+    separate events, and formation has no departure direction or target.
     """
     idx = panel.index
-    m1_close_idx = idx + pd.Timedelta(minutes=1)
     frames = []
     for tf in timeframes:
-        if tf == "M1":
-            b = pd.DataFrame({
-                "o": panel[f"{traded}_o"].to_numpy(float),
-                "h": panel[f"{traded}_h"].to_numpy(float),
-                "l": panel[f"{traded}_l"].to_numpy(float),
-                "c": panel[f"{traded}_c"].to_numpy(float),
-                "t_open": idx,
-                "t_close": m1_close_idx,
-                "complete": True,
-            })
-        else:
-            b = bars.resample(panel, traded, tf, "cal")
-            b = b[b["complete"]].reset_index(drop=True)
-        if len(b) < 20:
+        b = bars.resample(panel, traded, tf, "cal")
+        b = b[b["is_closed"]].reset_index(drop=True)
+        if len(b) < 5:
             continue
 
         o = b["o"].to_numpy(float)
@@ -264,24 +249,49 @@ def extract_original_consolidations(
 
         min_dep = 0.55 if tf in ("M1", "M3") else 0.35
         max_w = 2.0 if tf in ("M1", "M3") else 2.4
+        t_open = b["t_open"].to_numpy()
+        t_close = b["available_at"].to_numpy()
+        coverage = b["data_coverage_status"].to_numpy()
+        opens_sec = pd.DatetimeIndex(t_open).as_unit("s").asi8
+        if include_lifecycle:
+            ends = np.arange(4, len(b))
+            cand_high = b["h"].rolling(4).max().to_numpy()[ends]
+            cand_low = b["l"].rolling(4).min().to_numpy()[ends]
+            width = cand_high - cand_low
+            selected = (width > 0) & (width <= max_w * atr[ends])
+            ends = ends[selected]
+            frames.append(pd.DataFrame({
+                "oc_id": [f"OC_{traded}_{tf}_{opens_sec[k - 3]}" for k in ends],
+                "event_kind": "CANDIDATE",
+                "instrument": traded,
+                "tf": tf,
+                "tf_minutes": bars.TF_MIN[tf],
+                "t_start": t_open[ends - 3],
+                "t_cand_known": t_close[ends],
+                "j_cand_m1": bars.minute_confirmation_index(idx, t_close[ends]),
+                "t_known": t_close[ends],
+                "available_at": t_close[ends],
+                "data_coverage_status": coverage[ends],
+                "high": cand_high[selected],
+                "low": cand_low[selected],
+                "midpoint": (cand_high[selected] + cand_low[selected]) / 2,
+                "is_accessible": False,
+            }))
         st_i, cf_i, hi, lo, mid, watr, ddir, ddisp, rcnt, frev, invi = _scan_original_consolidations_numba(
             o, h, l, c, atr, min_bars=4, max_width_atr=max_w, min_depart_atr=min_dep, max_horizon_bars=96
         )
         if len(cf_i) == 0:
             continue
 
-        t_open = b["t_open"].to_numpy()
-        t_close = b["t_close"].to_numpy()
         t_start = t_open[st_i]
         # Candidate finishes at close of bar (cf_i - 1), which equals t_open[cf_i]
         t_cand_close = t_close[cf_i - 1]
-        j_cand_m1 = np.clip(m1_close_idx.searchsorted(t_cand_close, side="right") - 1, 0, len(idx) - 1)
-        t_cand_known = m1_close_idx[j_cand_m1]
+        j_cand_m1 = bars.minute_confirmation_index(idx, t_cand_close)
+        t_cand_known = t_cand_close
 
         # Confirmation occurs strictly at close of departure bar cf_i (t_close[cf_i])
         t_conf = t_close[cf_i]
-        j_conf_m1 = np.clip(m1_close_idx.searchsorted(t_conf, side="right") - 1, 0, len(idx) - 1)
-        t_conf_m1_close = m1_close_idx[j_conf_m1]
+        j_conf_m1 = bars.minute_confirmation_index(idx, t_conf)
 
         t_frev = pd.Series(pd.NaT, index=range(len(cf_i)), dtype="datetime64[ms, UTC]")
         has_rev = frev >= 0
@@ -294,15 +304,15 @@ def extract_original_consolidations(
         if has_inv.any():
             t_inv_vals = t_close[invi[has_inv]]
             t_inv.loc[has_inv] = t_inv_vals
-            j_inv_m1[has_inv] = np.clip(m1_close_idx.searchsorted(t_inv_vals, side="right") - 1, 0, len(idx) - 1)
+            j_inv_m1[has_inv] = bars.minute_confirmation_index(idx, t_inv_vals)
 
         target_dir = (-ddir).astype(np.int8)
-        n_ev = len(cf_i)
-        oc_ids = [f"OC_{traded}_{tf}_{k:06d}" for k in range(n_ev)]
-        mmxm_ids = [f"MMXM_{traded}_{tf}_{k:06d}" for k in range(n_ev)]
+        oc_ids = [f"OC_{traded}_{tf}_{opens_sec[k]}" for k in st_i]
+        mmxm_ids = [f"MMXM_{traded}_{tf}_{opens_sec[k]}" for k in st_i]
 
         df_tf = pd.DataFrame({
             "oc_id": oc_ids,
+            "event_kind": "CONFIRMED",
             "instrument": traded,
             "tf": tf,
             "tf_minutes": bars.TF_MIN[tf],
@@ -311,6 +321,9 @@ def extract_original_consolidations(
             "t_cand_known": t_cand_known,
             "t_confirm": t_conf,
             "t_known": t_conf,
+            "available_at": t_conf,
+            "data_coverage_status": b["data_coverage_status"].to_numpy()[cf_i],
+            "departure_close": c[cf_i],
             "j_conf_m1": j_conf_m1,
             "range_pts": hi - lo,
             "high": hi,
@@ -332,11 +345,30 @@ def extract_original_consolidations(
             "algo_version": ALGO_VERSION,
             "dataset_hash": dataset_hash[:16] if dataset_hash else "VERIFIED_STORE",
         })
+        if include_lifecycle:
+            for kind, present, timestamps in (
+                ("REVISITED", has_rev, t_frev), ("INVALIDATED", has_inv, t_inv),
+            ):
+                events = df_tf.loc[present, [
+                    "oc_id", "instrument", "tf", "tf_minutes", "t_start",
+                    "target_dir", "high", "low", "midpoint", "connected_mmxm_id",
+                ]].copy()
+                events["event_kind"] = kind
+                events["available_at"] = timestamps[present]
+                events["t_known"] = events["available_at"]
+                events["is_accessible"] = kind != "INVALIDATED"
+                frames.append(events)
+            df_tf = df_tf.drop(columns=[
+                "age_bars", "revisit_count", "t_first_revisit", "t_invalidated", "j_inv_m1",
+            ])
+            df_tf["is_accessible"] = True
         frames.append(df_tf)
 
     if not frames:
         return pd.DataFrame()
-    return pd.concat(frames, ignore_index=True).sort_values("t_confirm").reset_index(drop=True)
+    return pd.concat(frames, ignore_index=True).sort_values(
+        ["available_at", "oc_id"], kind="stable",
+    ).reset_index(drop=True)
 
 
 # ---------------------------------------------------------------------------
@@ -355,6 +387,7 @@ def _run_incremental_mmxm_fsm_numba(
     oc_hi_arr: np.ndarray,
     oc_lo_arr: np.ndarray,
     oc_mid_arr: np.ndarray,
+    departure_close_arr: np.ndarray | None = None,
 ) -> tuple[
     np.ndarray,
     np.ndarray,
@@ -394,8 +427,6 @@ def _run_incremental_mmxm_fsm_numba(
         jcand = j_cand_arr[i]
         if j0 < 0 or j0 >= n_m1 or jcand < 0 or jcand >= n_m1:
             continue
-        if jcand >= j0:
-            jcand = max(0, j0 - 1)
 
         tf_min = tf_min_arr[i]
         t_dir = t_dir_arr[i]  # +1 for Bullish MMBM, -1 for Bearish MMSM
@@ -407,12 +438,11 @@ def _run_incremental_mmxm_fsm_numba(
             rng = 1.0
         tgt_px = oc_hi if t_dir == 1 else oc_lo
 
-        start_ev = ev_cnt
-
-        # Stage 1: OC Candidate (known at close of consolidation bar before departure bar)
+        # The directional MMXM candidate exists once the OC departure is known.
+        # The earlier, directionless OC candidate is a separate event.
         out_oc_idx[ev_cnt] = i
         out_stage[ev_cnt] = 1
-        out_j_known[ev_cnt] = jcand
+        out_j_known[ev_cnt] = j0
         out_ev_px[ev_cnt] = oc_mid
         out_tgt_px[ev_cnt] = tgt_px
         out_active[ev_cnt] = True
@@ -427,7 +457,7 @@ def _run_incremental_mmxm_fsm_numba(
         out_active[ev_cnt] = True
         ev_cnt += 1
 
-        dep_close = c_m1[j0]
+        dep_close = c_m1[j0] if departure_close_arr is None else departure_close_arr[i]
         out_oc_idx[ev_cnt] = i
         out_stage[ev_cnt] = 3
         out_j_known[ev_cnt] = j0
@@ -448,7 +478,6 @@ def _run_incremental_mmxm_fsm_numba(
         interm_ext = run_ext
         manip_ext = run_ext
         rev_bound = h_m1[j0] if t_dir == 1 else l_m1[j0]
-        terminal_j = horizon_m1
         terminated = False
 
         # Step strictly bar-by-bar using ONLY current bar j (and j-1)
@@ -474,7 +503,6 @@ def _run_incremental_mmxm_fsm_numba(
                         out_tgt_px[ev_cnt] = tgt_px
                         out_active[ev_cnt] = False
                         ev_cnt += 1
-                        terminal_j = j
                         terminated = True
                         break
 
@@ -575,7 +603,6 @@ def _run_incremental_mmxm_fsm_numba(
                         out_tgt_px[ev_cnt] = tgt_px
                         out_active[ev_cnt] = False
                         ev_cnt += 1
-                        terminal_j = j
                         terminated = True
                         break
 
@@ -609,7 +636,6 @@ def _run_incremental_mmxm_fsm_numba(
                         out_tgt_px[ev_cnt] = tgt_px
                         out_active[ev_cnt] = False
                         ev_cnt += 1
-                        terminal_j = j
                         terminated = True
                         break
 
@@ -624,7 +650,6 @@ def _run_incremental_mmxm_fsm_numba(
                         out_tgt_px[ev_cnt] = tgt_px
                         out_active[ev_cnt] = False
                         ev_cnt += 1
-                        terminal_j = j
                         terminated = True
                         break
 
@@ -718,7 +743,6 @@ def _run_incremental_mmxm_fsm_numba(
                         out_tgt_px[ev_cnt] = tgt_px
                         out_active[ev_cnt] = False
                         ev_cnt += 1
-                        terminal_j = j
                         terminated = True
                         break
 
@@ -752,7 +776,6 @@ def _run_incremental_mmxm_fsm_numba(
                         out_tgt_px[ev_cnt] = tgt_px
                         out_active[ev_cnt] = False
                         ev_cnt += 1
-                        terminal_j = j
                         terminated = True
                         break
 
@@ -767,10 +790,9 @@ def _run_incremental_mmxm_fsm_numba(
             out_tgt_px[ev_cnt] = tgt_px
             out_active[ev_cnt] = False
             ev_cnt += 1
-            terminal_j = horizon_m1
 
-        for k_ev in range(start_ev, ev_cnt):
-            out_j_term[k_ev] = terminal_j
+    for k_ev in range(ev_cnt):
+        out_j_term[k_ev] = -1 if out_active[k_ev] else out_j_known[k_ev]
 
     return (
         out_oc_idx[:ev_cnt],
@@ -801,6 +823,8 @@ def build_fractal_mmxm_state_events(
     """
     if len(oc_df) == 0:
         return pd.DataFrame()
+    if "event_kind" in oc_df:
+        oc_df = oc_df[oc_df["event_kind"] == "CONFIRMED"]
     idx = panel.index
     m1_close_idx = idx + pd.Timedelta(minutes=1)
     n_m1 = len(idx)
@@ -832,6 +856,7 @@ def build_fractal_mmxm_state_events(
     oc_idx, st_num, j_known, ev_px, tgt_px, is_act, j_term = _run_incremental_mmxm_fsm_numba(
         o_m1, h_m1, l_m1, c_m1,
         j_cand_arr, j_conf_arr, tf_min_arr, t_dir_arr, oc_hi_arr, oc_lo_arr, oc_mid_arr,
+        work_oc["departure_close"].to_numpy(np.float64) if "departure_close" in work_oc else None,
     )
     if len(oc_idx) == 0:
         return pd.DataFrame()
@@ -848,6 +873,10 @@ def build_fractal_mmxm_state_events(
     stage_names = np.array([MMXM_STAGE_NAMES[int(s)] for s in st_num], dtype=object)
     model_types = np.where(parent_dir == 1, "MMBM", "MMSM")
     ev_ids = [f"{m_id}_S{int(s):02d}" for m_id, s in zip(parent_mmxm, st_num)]
+    t_known = pd.Series(m1_close_idx[j_known])
+    source_confirmation = st_num <= 3
+    if "available_at" in work_oc:
+        t_known.loc[source_confirmation] = work_oc["available_at"].array[oc_idx[source_confirmation]]
 
     out = pd.DataFrame({
         "mmxm_event_id": ev_ids,
@@ -860,7 +889,8 @@ def build_fractal_mmxm_state_events(
         "stage_num": st_num.astype(np.int64),
         "stage_name": stage_names,
         "j_m1_known": j_known,
-        "t_known": m1_close_idx[j_known],
+        "t_known": t_known,
+        "available_at": t_known,
         "oc_high": oc_hi_arr[oc_idx],
         "oc_low": oc_lo_arr[oc_idx],
         "event_price": ev_px,
@@ -869,7 +899,18 @@ def build_fractal_mmxm_state_events(
         "j_terminal_m1": j_term,
         "universe_coverage": "FULL_UNIVERSE",
     })
-    return out.sort_values(["j_m1_known", "stage_num"]).reset_index(drop=True)
+    return out.sort_values(["j_m1_known", "stage_num", "mmxm_id"]).reset_index(drop=True)
+
+
+def active_mmxm_asof(events: pd.DataFrame, query_j: int) -> pd.DataFrame:
+    """Return the latest active state of every observed candidate and timeframe."""
+    if events.empty:
+        return events
+    known = events[events["j_m1_known"] <= query_j].sort_values(
+        ["j_m1_known", "stage_num", "mmxm_id"], kind="stable",
+    )
+    latest = known.drop_duplicates(["tf", "mmxm_id"], keep="last")
+    return latest[latest["is_active"]]
 
 
 # ---------------------------------------------------------------------------
@@ -1155,12 +1196,11 @@ def _asof_join_active_mmxm_numba(
             else:
                 hi = mid
         k = lo - 1
-        steps = 0
         best_stage = 0
         best_tf = -1
         best_jk = -1
         best_r = -1
-        while k >= 0 and steps < 120:
+        while k >= 0:
             if jq - ev_j_known[k] > 1440:
                 break
             if ev_dir[k] == dq and ev_j_term[k] >= jq:
@@ -1179,7 +1219,6 @@ def _asof_join_active_mmxm_numba(
                     best_jk = ev_j_known[k]
                     best_r = ev_row_idx[k]
             k -= 1
-            steps += 1
         m_stage[i] = best_stage
         m_tf[i] = best_tf
         m_j_known[i] = best_jk
@@ -1313,13 +1352,16 @@ def attach_full_fractal_context(
     code_to_tf = {idx_t: t for idx_t, t in enumerate(mmxm_tfs_list)}
 
     if mmxm_ev_df is not None and len(mmxm_ev_df) > 0:
-        ev_sorted = mmxm_ev_df.sort_values("j_m1_known").reset_index(drop=True)
+        ev_sorted = mmxm_ev_df.sort_values(
+            ["j_m1_known", "stage_num", "mmxm_id"], kind="stable",
+        ).reset_index(drop=True)
+        # The next observation supersedes the prior state at that bar. This
+        # index is private to the join and never written onto historical events.
+        next_update = ev_sorted.groupby(["tf", "mmxm_id"], sort=False)["j_m1_known"].shift(-1)
+        ev_sorted["j_valid_through"] = next_update.fillna(len(panel)).astype(np.int64) - 1
+        ev_sorted = ev_sorted[ev_sorted["is_active"]].reset_index(drop=True)
         ev_jk = ev_sorted["j_m1_known"].to_numpy(np.int64)
-        ev_jt = (
-            ev_sorted["j_terminal_m1"].to_numpy(np.int64)
-            if "j_terminal_m1" in ev_sorted.columns
-            else (ev_jk + 360)
-        )
+        ev_jt = ev_sorted["j_valid_through"].to_numpy(np.int64)
         ev_dr = ev_sorted["direction"].to_numpy(np.int8)
         ev_st = ev_sorted["stage_num"].to_numpy(np.int8)
         ev_tc = np.array([tf_to_code.get(str(t), 0) for t in ev_sorted["tf"]], dtype=np.int8)
@@ -1792,9 +1834,16 @@ def execute_strategy_at_custom_triggers(
 
     m1_close_idx = idx + pd.Timedelta(minutes=1)
     sub["j_trig"] = j_ex
+    sub["j_confirm"] = j_ex
     sub["j_fill"] = j_fl
     sub["t_signal_known"] = m1_close_idx[j_ex]
+    sub["t_confirm_available"] = sub["t_signal_known"]
     sub["t_fill"] = idx[j_fl]
+    sub["j_exit"] = exit_j
+    exit_times = pd.Series(pd.NaT, index=sub.index, dtype=m1_close_idx.dtype)
+    valid_exits = exit_j >= 0
+    exit_times.loc[valid_exits] = m1_close_idx[exit_j[valid_exits]]
+    sub["t_exit"] = exit_times
     sub["px_entry"] = ep
     sub["sl_init"] = sl_px
     sub["tp_init"] = tp_px

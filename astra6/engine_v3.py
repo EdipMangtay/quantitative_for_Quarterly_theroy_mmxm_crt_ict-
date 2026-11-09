@@ -156,11 +156,23 @@ def _fast_cell_metrics(df_sub: pd.DataFrame, r_col: str = "r") -> dict[str, Any]
     neg_sum = float(-r[r < 0].sum())
     pf = float(pos_sum / neg_sum) if neg_sum > 1e-9 else (np.inf if pos_sum > 0 else np.nan)
 
-    eq = np.cumsum(r)
+    exit_order = next(
+        (name for name in ("t_exit", "exit_bar_idx", "j_exit", "t_fill", "t_signal_known") if name in df_sub),
+        None,
+    )
+    if exit_order is not None:
+        chronology = pd.DataFrame({"when": df_sub.loc[finite_m, exit_order].to_numpy(), "r": r})
+        chronology = chronology.sort_values("when", kind="stable")
+        ordered_r = chronology["r"].to_numpy()
+        # Simultaneous settlements have no observable ordering within a bar.
+        equity_r = chronology.groupby("when", sort=False, dropna=False)["r"].sum().to_numpy()
+    else:
+        ordered_r = equity_r = r
+    eq = np.cumsum(equity_r)
     peaks = np.maximum.accumulate(np.concatenate(([0.0], eq)))[1:]
     max_dd = float(np.max(peaks - eq)) if n > 0 else 0.0
 
-    is_loss = (r <= 0.0).astype(np.int8)
+    is_loss = (ordered_r < 0.0).astype(np.int8)
     padded = np.concatenate(([0], is_loss, [0]))
     diffs = np.diff(padded)
     starts = np.nonzero(diffs == 1)[0]

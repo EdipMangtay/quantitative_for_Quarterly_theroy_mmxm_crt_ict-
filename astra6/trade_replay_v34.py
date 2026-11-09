@@ -1,315 +1,144 @@
-"""
-ASTRA 6 V3.4 — Visual Trade Replay Engine (Phase 6).
+"""Render genuine recorded-quote replays from the V3.5 order ledger.
 
-Generates 20 genuine, traceable chart replays from real historical market data:
-  - 10 Profitable Trades (Target Hit)
-  - 5 Losing Trades (Stop Hit)
-  - 3 Invalidated / Missed-Entry Trades (Stop breached before confirmation or no confirmation)
-  - 2 Timeout / Ambiguous Trades (Horizon expiration / mark-to-market exit)
-
-Every chart shows all 10 verified dimensions:
-  1. Liquidity sweep level & timestamp
-  2. MMXM structure and stage
-  3. 6H / 90M / Micro QT context
-  4. SMT / SSMT status
-  5. CRT confirmation level
-  6. Independent CISD confirmation
-  7. Entry fill price & timestamp
-  8. Structural stop level
-  9. Pre-existing target price
-  10. Actual exit price & realized R
-
-Outputs:
-  - `data/results/v3_4_trade_replays.json`
-  - SVG visual diagrams in `reports/figures/trade_replays/`
+The V3.4 replay JSON, illustrations and reports stay in their original paths.
 """
 
+from __future__ import annotations
+
+import argparse
 import json
+from html import escape
 from pathlib import Path
-from typing import Any
 
-import numpy as np
 import pandas as pd
 
-from astra6 import bars, fractal_v3, signals
-
-ROOT = Path(__file__).resolve().parent.parent
-RESULTS = ROOT / "data" / "results"
-FIG_DIR = ROOT / "reports" / "figures" / "trade_replays"
+from astra6 import bars
+from astra6.execution_v35 import MINUTE
+from astra6.research_v35 import OUTPUT
 
 
-def generate_svg_chart(replay: dict[str, Any], bars_df: pd.DataFrame) -> str:
-    """Generate a clean SVG chart displaying price candles and all annotated trade levels."""
-    width = 900
-    height = 450
-    padding_left = 65
-    padding_right = 160
-    padding_top = 40
-    padding_bottom = 50
+ROOT = Path(__file__).resolve().parents[1]
+FIG_DIR = ROOT / "reports" / "figures" / "v35_replays"
 
-    plot_w = width - padding_left - padding_right
-    plot_h = height - padding_top - padding_bottom
 
-    n_bars = len(bars_df)
-    if n_bars == 0:
-        return ""
-
-    min_px = min(bars_df["l"].min(), replay["stop_px"], replay["target_px"]) - 5.0
-    max_px = max(bars_df["h"].max(), replay["stop_px"], replay["target_px"]) + 5.0
-    px_range = max_px - min_px if max_px > min_px else 1.0
-
-    def get_x(i: int) -> float:
-        return padding_left + (i / max(1, n_bars - 1)) * plot_w
-
-    def get_y(px: float) -> float:
-        return padding_top + plot_h - ((px - min_px) / px_range) * plot_h
-
-    # SVG Elements
-    svg = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="100%" height="100%" style="background:#0f172a; border-radius:8px; font-family:Inter, monospace;">',
-        f'<text x="{padding_left}" y="25" fill="#f8fafc" font-size="14" font-weight="700">ASTRA 6 Replay #{replay["replay_id"]}: {replay["opportunity_id"]} ({replay["direction"]}) | {replay["outcome_status"]} ({replay["realized_net_r"]:+.2f}R)</text>',
-    ]
-
-    # Gridlines
-    for step in np.linspace(min_px, max_px, 6):
-        y_pos = get_y(step)
-        svg.append(f'<line x1="{padding_left}" y1="{y_pos:.1f}" x2="{width - padding_right}" y2="{y_pos:.1f}" stroke="#334155" stroke-dasharray="2,4" />')
-        svg.append(f'<text x="{padding_left - 8}" y="{y_pos + 4:.1f}" fill="#94a3b8" font-size="10" text-anchor="end">{step:.1f}</text>')
-
-    # Plot candles
-    candle_w = max(2.0, (plot_w / n_bars) * 0.65)
-    for i, (_, row) in enumerate(bars_df.iterrows()):
-        x_c = get_x(i)
-        y_o = get_y(row["o"])
-        y_c = get_y(row["c"])
-        y_h = get_y(row["h"])
-        y_l = get_y(row["l"])
-        is_bull = row["c"] >= row["o"]
-        color = "#22c55e" if is_bull else "#ef4444"
-
-        # Wick
-        svg.append(f'<line x1="{x_c:.1f}" y1="{y_h:.1f}" x2="{x_c:.1f}" y2="{y_l:.1f}" stroke="{color}" stroke-width="1.2" />')
-        # Body
-        body_top = min(y_o, y_c)
-        body_h = max(1.5, abs(y_o - y_c))
-        svg.append(f'<rect x="{x_c - candle_w/2:.1f}" y="{body_top:.1f}" width="{candle_w:.1f}" height="{body_h:.1f}" fill="{color}" />')
-
-    # Horizontal trade levels
+def generate_svg_chart(replay, quotes):
+    """Render only OHLC from the recorded exit-side quote stream."""
+    width, height = 900, 390
+    left, right, top, bottom = 72, 768, 54, 320
+    side = "" if replay["direction"] == 1 else "a"
+    price = quotes[[f"US100_{side}{part}" for part in "ohlc"]]
     levels = [
-        ("ENTRY", replay["entry_px"], "#38bdf8", "solid"),
-        ("STOP", replay["stop_px"], "#f87171", "dash"),
-        ("TARGET", replay["target_px"], "#4ade80", "dash"),
-        ("SWEEP", replay["sweep_px"], "#fbbf24", "dot"),
+        (label, replay[key], color) for label, key, color in (
+            ("Giriş", "entry_price", "#2563eb"), ("Stop", "stop_price", "#be123c"),
+            ("Hedef", "target_price", "#047857"), ("Çıkış", "exit_price", "#7c3aed"),
+        ) if replay.get(key) is not None
     ]
-    for lbl, px, col, style in levels:
-        if np.isfinite(px):
-            y_lvl = get_y(px)
-            dash = ' stroke-dasharray="4,4"' if style == "dash" else (' stroke-dasharray="2,2"' if style == "dot" else '')
-            svg.append(f'<line x1="{padding_left}" y1="{y_lvl:.1f}" x2="{width - padding_right}" y2="{y_lvl:.1f}" stroke="{col}" stroke-width="1.8"{dash} />')
-            svg.append(f'<rect x="{width - padding_right + 6}" y="{y_lvl - 10:.1f}" width="145" height="20" rx="4" fill="#1e293b" stroke="{col}" />')
-            svg.append(f'<text x="{width - padding_right + 12}" y="{y_lvl + 4:.1f}" fill="{col}" font-size="10" font-weight="600">{lbl}: {px:.2f}</text>')
+    low = min(price.min().min(), *(value for _, value, _ in levels))
+    high = max(price.max().max(), *(value for _, value, _ in levels))
+    span = max(high - low, 1e-6)
+    first, last = quotes.index[[0, -1]]
+    seconds = max((last - first).total_seconds(), 60)
+    candle_width = max(1, min(10, (right - left) * 40 / seconds))
 
-    # Bottom annotations
-    svg.append(f'<text x="{padding_left}" y="{height - 15}" fill="#94a3b8" font-size="10">QT: {replay["qt_context"]} | MMXM: {replay["mmxm_stage"]} | SMT: {replay["smt_status"]} | CISD: {replay["cisd_tf"]} ({replay["cisd_time"][-8:]})</text>')
-    svg.append('</svg>')
+    def x(t):
+        return left + (right - left) * (t - first).total_seconds() / seconds
+
+    def y(value):
+        return bottom - (bottom - top) * (value - low) / span
+
+    title = escape(f'{replay["underlying_event_id"]} · {replay["policy_id"]}')
+    quote_name = "Bid" if not side else "Ask"
+    svg = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" role="img" aria-label="{title}">',
+        '<rect width="900" height="390" fill="white"/>',
+        '<g font-family="Arial, sans-serif" font-size="12" fill="#172033">',
+        f'<text x="24" y="24" font-size="16" font-weight="bold">{title}</text>',
+        f'<text x="24" y="43">{quote_name} M1 · Kayıtlı OHLC · {escape(replay["execution_status"])}</text>',
+    ]
+    for t, ohlc in zip(quotes.index, price.itertuples(index=False, name=None)):
+        o, h, lo, c = ohlc
+        loc = x(t)
+        color = "#047857" if c >= o else "#be123c"
+        svg.append(f'<line x1="{loc:.2f}" x2="{loc:.2f}" y1="{y(h):.2f}" y2="{y(lo):.2f}" stroke="{color}"/>')
+        svg.append(
+            f'<rect x="{loc - candle_width / 2:.2f}" y="{min(y(o), y(c)):.2f}" '
+            f'width="{candle_width:.2f}" height="{max(1, abs(y(c) - y(o))):.2f}" fill="{color}"/>'
+        )
+    for label, value, color in levels:
+        cy = y(value)
+        svg.append(f'<line x1="{left}" x2="{right}" y1="{cy:.2f}" y2="{cy:.2f}" stroke="{color}" stroke-dasharray="4 3"/>')
+    for i, (label, value, color) in enumerate(levels):
+        svg.append(f'<text x="{right + 12}" y="{top + 20 * i}" fill="{color}">{label} {value:.2f}</text>')
+    for value in (first, first + (last - first) / 2, last):
+        svg.append(f'<text text-anchor="middle" x="{x(value):.2f}" y="343">{value:%d.%m %H:%M} UTC</text>')
+    markers = [("Süpürme", replay["event_observed_at"]), ("Dolum", replay["t_fill"]), ("Çıkış barı", replay["exit_bar_open"])]
+    markers += [(f"{kind} {tf}", when) for kind, tf, when in zip(
+        replay["factor_types"], replay["factor_timeframes"], replay["factor_available_at"],
+    )]
+    if replay["target_available_at"]:
+        markers.append(("Yapısal hedef bilinebilir", replay["target_available_at"]))
+    for label, time in markers:
+        if time is None:
+            continue
+        time = pd.Timestamp(time)
+        if first <= time <= last:
+            pos = x(time)
+            svg.append(f'<line x1="{pos:.2f}" x2="{pos:.2f}" y1="{top}" y2="{bottom}" stroke="#64748b" stroke-dasharray="2 5"><title>{escape(label)} {time.isoformat()}</title></line>')
+    svg += ['<text x="24" y="371">Bar içindeki kesin temas sırası OHLC çözünürlüğünde gözlenmez.</text>', '</g></svg>']
     return "\n".join(svg)
 
 
-def build_trade_replays() -> list[dict[str, Any]]:
-    """Select and build 20 traceably verified historical replays."""
-    print("[V3.4 REPLAY] Selecting 20 genuine trade replays from database...", flush=True)
+def build_trade_replays(ledger_path=OUTPUT / "sample_1300_ledger.parquet"):
+    """Select 20 distinct executed events and write consistent JSON and SVGs."""
+    trades = pd.read_parquet(ledger_path)
+    executed = trades[trades["j_fill"] >= 0]
+    focus = executed[
+        (executed["underlying_event_id"] == "UEV_US100_M5_884_S") & (executed["policy_id"] == "00_No_CISD")
+    ]
+    eligible = executed[executed["policy_id"] == "CFG64_00"].sort_values(["j_fill", "underlying_event_id"])
+    ranked = pd.concat([
+        focus,
+        eligible[eligible.execution_status == "TARGET_HIT"].head(6),
+        eligible[eligible.execution_status == "STOP_HIT"].head(6),
+        eligible[eligible.execution_status.isin(["TIMEOUT", "AMBIGUOUS", "DATA_END"])].head(7),
+        eligible,
+    ]).drop_duplicates("underlying_event_id").head(20)
+    panel = bars.load_panel()
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-
-    panel = bars.load_panel(("US100", "US500", "US30"), with_ask=True)
-    t_m1 = panel.index.to_numpy() if isinstance(panel.index, pd.DatetimeIndex) else panel["t"].to_numpy()
-    bh = panel["US100_h"].to_numpy()
-    bl = panel["US100_l"].to_numpy()
-    bo = panel["US100_o"].to_numpy()
-    bc = panel["US100_c"].to_numpy()
-
-    to_df = pd.read_parquet(RESULTS / "target_outcomes.parquet")
-    tc_df = pd.read_parquet(RESULTS / "target_candidates.parquet")
-    cf_df = pd.read_parquet(RESULTS / "counterfactual_policy_trades.parquet")
-
-    merged = pd.merge(
-        to_df,
-        tc_df[["target_candidate_id", "entry_px", "stop_px", "target_px", "distance_r", "known_before_entry"]],
-        on="target_candidate_id",
-        how="left",
-    )
-
-    # 1. 10 Profitable Trades (TARGET_HIT)
-    winners = merged[(merged["outcome_status"] == "TARGET_HIT") & (merged["realized_net_r"] >= 1.0)].copy()
-    sample_win = winners.sample(10, random_state=42)
-
-    # 2. 5 Losing Trades (STOP_HIT)
-    losers = merged[(merged["outcome_status"] == "STOP_HIT") & (merged["realized_net_r"] <= -0.9)].copy()
-    sample_loss = losers.sample(5, random_state=42)
-
-    # 3. 3 Invalidated / Missed-Entry Trades
-    # Invalidation: events where price touched stop level prior to CISD confirmation
-    cands_df = pd.read_parquet(RESULTS / "candidate_opportunities.parquet")
-    missed = cands_df[(cands_df["f_cisd"] == True) & (cands_df["entry_mode"] == "dev_cisd")].sample(3, random_state=42)
-
-    # 4. 2 Timeout Trades
-    timeouts = merged[merged["outcome_status"] == "TIMEOUT"].sample(2, random_state=42)
-
     replays = []
-    r_id = 1
-
-    # Add Winners
-    for _, row in sample_win.iterrows():
-        replays.append({
-            "replay_id": r_id,
-            "category": "PROFITABLE_TARGET_HIT",
-            "opportunity_id": row["opportunity_id"],
-            "underlying_event_id": row["underlying_event_id"],
-            "direction": row["direction"],
-            "outcome_status": "TARGET_HIT",
-            "realized_net_r": round(float(row["realized_net_r"]), 2),
-            "entry_px": round(float(row["entry_px"]), 2),
-            "stop_px": round(float(row["stop_px"]), 2),
-            "target_px": round(float(row["target_px"]), 2),
-            "exit_px": round(float(row["exit_px"]), 2),
-            "sweep_px": round(float(row["stop_px"] + (5.0 if row["direction"] == "LONG" else -5.0)), 2),
-            "hold_bars": int(row["hold"]),
-            "origin_tf": str(row["narrative_tf"]),
-            "narrative_tf": str(row["narrative_tf"]),
-            "entry_tf": str(row["entry_tf"]),
-            "target_tf": str(row["target_tf"]),
-            "target_type": str(row["target_type"]),
-            "mmxm_stage": "Stage_08_Reversal" if row["has_mmxm"] else "Trend_Continuation",
-            "qt_context": f"90M_Q{row['qt_q90']}",
-            "smt_status": "ACTIVE_CORRELATION_BREAK",
-            "cisd_tf": str(row["entry_tf"]),
-            "cisd_time": "14:45:00 UTC",
-            "exit_time": "15:20:00 UTC",
-        })
-        r_id += 1
-
-    # Add Losers
-    for _, row in sample_loss.iterrows():
-        replays.append({
-            "replay_id": r_id,
-            "category": "LOSING_STOP_HIT",
-            "opportunity_id": row["opportunity_id"],
-            "underlying_event_id": row["underlying_event_id"],
-            "direction": row["direction"],
-            "outcome_status": "STOP_HIT",
-            "realized_net_r": round(float(row["realized_net_r"]), 2),
-            "entry_px": round(float(row["entry_px"]), 2),
-            "stop_px": round(float(row["stop_px"]), 2),
-            "target_px": round(float(row["target_px"]), 2),
-            "exit_px": round(float(row["exit_px"]), 2),
-            "sweep_px": round(float(row["stop_px"] + (5.0 if row["direction"] == "LONG" else -5.0)), 2),
-            "hold_bars": int(row["hold"]),
-            "origin_tf": str(row["narrative_tf"]),
-            "narrative_tf": str(row["narrative_tf"]),
-            "entry_tf": str(row["entry_tf"]),
-            "target_tf": str(row["target_tf"]),
-            "target_type": str(row["target_type"]),
-            "mmxm_stage": "Stage_06_MSS" if row["has_mmxm"] else "Trend_Continuation",
-            "qt_context": f"90M_Q{row['qt_q90']}",
-            "smt_status": "CONFIRMED_SMT",
-            "cisd_tf": str(row["entry_tf"]),
-            "cisd_time": "10:15:00 UTC",
-            "exit_time": "10:45:00 UTC",
-        })
-        r_id += 1
-
-    # Add Missed / Invalidated
-    for _, row in missed.iterrows():
-        replays.append({
-            "replay_id": r_id,
-            "category": "INVALIDATED_BEFORE_ENTRY",
-            "opportunity_id": row["opportunity_id"],
-            "underlying_event_id": row["underlying_event_id"],
-            "direction": row["direction_label"],
-            "outcome_status": "INVALIDATED_STOP_BEFORE_CONFIRMATION",
-            "realized_net_r": 0.0,
-            "entry_px": round(float(row["sl_init"] + (15.0 if row["dir"] == 1 else -15.0)), 2),
-            "stop_px": round(float(row["sl_init"]), 2),
-            "target_px": round(float(row["tp_init"]), 2),
-            "exit_px": round(float(row["sl_init"]), 2),
-            "sweep_px": round(float(row["sl_init"]), 2),
-            "hold_bars": 0,
-            "origin_tf": str(row["origin_tf"]),
-            "narrative_tf": str(row["narrative_tf"]),
-            "entry_tf": str(row["entry_tf"]),
-            "target_tf": str(row["target_tf"]),
-            "target_type": str(row["target_type"]),
-            "mmxm_stage": "Stage_07_POI_Invalidated",
-            "qt_context": f"90M_Q{row['q90_trig']}",
-            "smt_status": "FAILED_DIVERGENCE",
-            "cisd_tf": "M5",
-            "cisd_time": "NO_TRIGGER",
-            "exit_time": "INVALIDATED_AT_SWEEP",
-        })
-        r_id += 1
-
-    # Add Timeouts
-    for _, row in timeouts.iterrows():
-        replays.append({
-            "replay_id": r_id,
-            "category": "TIMEOUT_HORIZON_EXPIRY",
-            "opportunity_id": row["opportunity_id"],
-            "underlying_event_id": row["underlying_event_id"],
-            "direction": row["direction"],
-            "outcome_status": "TIMEOUT",
-            "realized_net_r": round(float(row["realized_net_r"]), 2),
-            "entry_px": round(float(row["entry_px"]), 2),
-            "stop_px": round(float(row["stop_px"]), 2),
-            "target_px": round(float(row["target_px"]), 2),
-            "exit_px": round(float(row["exit_px"]), 2),
-            "sweep_px": round(float(row["stop_px"] + (5.0 if row["direction"] == "LONG" else -5.0)), 2),
-            "hold_bars": int(row["hold"]),
-            "origin_tf": str(row["narrative_tf"]),
-            "narrative_tf": str(row["narrative_tf"]),
-            "entry_tf": str(row["entry_tf"]),
-            "target_tf": str(row["target_tf"]),
-            "target_type": str(row["target_type"]),
-            "mmxm_stage": "Stage_10_Redistribution",
-            "qt_context": f"90M_Q{row['qt_q90']}",
-            "smt_status": "WEAK_SMT",
-            "cisd_tf": str(row["entry_tf"]),
-            "cisd_time": "09:35:00 UTC",
-            "exit_time": "15:35:00 UTC",
-        })
-        r_id += 1
-
-    # Generate synthetic bar visualization window for SVG rendering
-    np.random.seed(42)
-    for rep in replays:
-        ep = rep["entry_px"]
-        sp = rep["stop_px"]
-        tp = rep["target_px"]
-        xp = rep["exit_px"]
-        is_long = rep["direction"] == "LONG"
-
-        n_bars = 45
-        drift = (xp - ep) / n_bars
-        prices = [ep - (drift * 5)]
-        for i in range(1, n_bars):
-            prices.append(prices[-1] + drift + np.random.uniform(-1.5, 1.5))
-        prices = np.array(prices)
-
-        bars_data = []
-        for i, p in enumerate(prices):
-            o_b = p - np.random.uniform(-1.0, 1.0)
-            c_b = p + np.random.uniform(-1.0, 1.0)
-            h_b = max(o_b, c_b) + np.random.uniform(0.2, 1.8)
-            l_b = min(o_b, c_b) - np.random.uniform(0.2, 1.8)
-            bars_data.append({"o": o_b, "h": h_b, "l": l_b, "c": c_b})
-        bars_df = pd.DataFrame(bars_data)
-
-        svg_content = generate_svg_chart(rep, bars_df)
-        svg_file = FIG_DIR / f"replay_{rep['replay_id']:02d}.svg"
-        svg_file.write_text(svg_content, encoding="utf-8")
-
-    (RESULTS / "v3_4_trade_replays.json").write_text(json.dumps(replays, indent=2))
-    print(f"[V3.4 REPLAY] Generated 20 visual trade replays and saved to {FIG_DIR} and {RESULTS / 'v3_4_trade_replays.json'}")
+    for number, row in enumerate(ranked.itertuples(index=False), 1):
+        if panel.index[row.j_fill] != row.t_fill or panel.index[row.j_exit] != row.exit_bar_open:
+            raise ValueError("Replay index does not match recorded quotes")
+        start = max(0, min(row.j_fill, panel.index.searchsorted(row.event_observed_at)) - 8)
+        # Scope the chart to the exact window observed by this research sample.
+        quotes = panel.iloc[start:row.j_exit + 1]
+        record = {
+            key: getattr(row, key) for key in (
+                "underlying_event_id", "policy_id", "direction", "j_confirm", "j_fill", "j_exit",
+                "entry_price", "stop_price", "target_price", "exit_price", "realized_net_r",
+                "execution_status", "target_event_id", "factor_event_ids", "factor_types", "factor_timeframes",
+                "entry_quote_provenance", "exit_quote_provenance", "parent_structure_id",
+            )
+        }
+        for key in ("factor_event_ids", "factor_types", "factor_timeframes"):
+            record[key] = list(record[key])
+        for key in ("event_observed_at", "t_confirm_available", "t_fill", "t_exit", "exit_bar_open", "target_available_at"):
+            timestamp = getattr(row, key)
+            record[key] = timestamp.isoformat() if pd.notna(timestamp) else None
+        record["factor_available_at"] = [pd.Timestamp(t).isoformat() for t in row.factor_available_at]
+        record.update(
+            replay_id=number, quote_start=quotes.index[0].isoformat(),
+            quote_end=quotes.index[-1].isoformat(), n_recorded_bars=len(quotes),
+            chart=f"figures/v35_replays/replay_{number:02d}.svg",
+        )
+        (ROOT / "reports" / record["chart"]).write_text(generate_svg_chart(record, quotes))
+        replays.append(record)
+    (OUTPUT / "sample_trade_replays.json").write_text(json.dumps(replays, ensure_ascii=False, indent=2) + "\n")
     return replays
 
 
 if __name__ == "__main__":
-    build_trade_replays()
+    parser = argparse.ArgumentParser(description="Render recorded V3.5 behavioral replays")
+    parser.add_argument("--ledger", type=Path, default=OUTPUT / "sample_1300_ledger.parquet")
+    args = parser.parse_args()
+    print(f"recorded quote replays={len(build_trade_replays(args.ledger))}")

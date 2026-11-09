@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 390" role="img" aria-label="UEV_US100_M5_54_L · CFG64_00">
+<rect width="900" height="390" fill="white"/>
+<g font-family="Arial, sans-serif" font-size="12" fill="#172033">
+<text x="24" y="24" font-size="16" font-weight="bold">UEV_US100_M5_54_L · CFG64_00</text>
+<text x="24" y="43">Bid M1 · Kayıtlı OHLC · STOP_HIT</text>
+<line x1="72.00" x2="72.00" y1="70.42" y2="107.26" stroke="#047857"/>
+<rect x="67.00" y="91.79" width="10.00" height="15.20" fill="#047857"/>
+<line x1="115.50" x2="115.50" y1="83.47" y2="97.33" stroke="#be123c"/>
+<rect x="110.50" y="91.72" width="10.00" height="2.13" fill="#be123c"/>
+<line x1="159.00" x2="159.00" y1="88.75" y2="120.32" stroke="#be123c"/>
+<rect x="154.00" y="92.51" width="10.00" height="25.75" fill="#be123c"/>
+<line x1="202.50" x2="202.50" y1="113.88" y2="158.86" stroke="#be123c"/>
+<rect x="197.50" y="116.02" width="10.00" height="40.51" fill="#be123c"/>
+<line x1="246.00" x2="246.00" y1="147.86" y2="223.69" stroke="#be123c"/>
+<rect x="241.00" y="155.82" width="10.00" height="62.06" fill="#be123c"/>
+<line x1="289.50" x2="289.50" y1="210.37" y2="258.39" stroke="#be123c"/>
+<rect x="284.50" y="215.75" width="10.00" height="18.22" fill="#be123c"/>
+<line x1="333.00" x2="333.00" y1="220.11" y2="264.74" stroke="#be123c"/>
+<rect x="328.00" y="229.86" width="10.00" height="34.88" fill="#be123c"/>
+<line x1="376.50" x2="376.50" y1="246.94" y2="297.64" stroke="#be123c"/>
+<rect x="371.50" y="260.53" width="10.00" height="31.92" fill="#be123c"/>
+<line x1="420.00" x2="420.00" y1="248.84" y2="284.23" stroke="#047857"/>
+<rect x="415.00" y="257.76" width="10.00" height="25.93" fill="#047857"/>
+<line x1="463.50" x2="463.50" y1="254.29" y2="300.60" stroke="#be123c"/>
+<rect x="458.50" y="258.14" width="10.00" height="35.30" fill="#be123c"/>
+<line x1="507.00" x2="507.00" y1="260.46" y2="289.06" stroke="#047857"/>
+<rect x="502.00" y="275.65" width="10.00" height="12.79" fill="#047857"/>
+<line x1="550.50" x2="550.50" y1="265.72" y2="289.60" stroke="#047857"/>
+<rect x="545.50" y="266.63" width="10.00" height="8.94" fill="#047857"/>
+<line x1="594.00" x2="594.00" y1="217.34" y2="270.46" stroke="#047857"/>
+<rect x="589.00" y="221.01" width="10.00" height="45.87" fill="#047857"/>
+<line x1="637.50" x2="637.50" y1="218.24" y2="256.15" stroke="#be123c"/>
+<rect x="632.50" y="220.31" width="10.00" height="1.41" fill="#be123c"/>
+<line x1="681.00" x2="681.00" y1="220.22" y2="266.35" stroke="#be123c"/>
+<rect x="676.00" y="220.47" width="10.00" height="45.87" fill="#be123c"/>
+<line x1="724.50" x2="724.50" y1="265.72" y2="309.98" stroke="#be123c"/>
+<rect x="719.50" y="266.79" width="10.00" height="43.19" fill="#be123c"/>
+<line x1="768.00" x2="768.00" y1="274.84" y2="320.00" stroke="#be123c"/>
+<rect x="763.00" y="303.74" width="10.00" height="8.84" fill="#be123c"/>
+<line x1="72" x2="768" y1="225.37" y2="225.37" stroke="#2563eb" stroke-dasharray="4 3"/>
+<line x1="72" x2="768" y1="311.06" y2="311.06" stroke="#be123c" stroke-dasharray="4 3"/>
+<line x1="72" x2="768" y1="54.00" y2="54.00" stroke="#047857" stroke-dasharray="4 3"/>
+<line x1="72" x2="768" y1="313.29" y2="313.29" stroke="#7c3aed" stroke-dasharray="4 3"/>
+<text x="780" y="54" fill="#2563eb">Giriş 16324.32</text>
+<text x="780" y="74" fill="#be123c">Stop 16314.74</text>
+<text x="780" y="94" fill="#047857">Hedef 16343.49</text>
+<text x="780" y="114" fill="#7c3aed">Çıkış 16314.49</text>
+<text text-anchor="middle" x="72.00" y="343">07.11 23:48 UTC</text>
+<text text-anchor="middle" x="420.00" y="343">07.11 23:56 UTC</text>
+<text text-anchor="middle" x="768.00" y="343">08.11 00:04 UTC</text>
+<line x1="420.00" x2="420.00" y1="54" y2="320" stroke="#64748b" stroke-dasharray="2 5"><title>Süpürme 2021-11-07T23:56:00+00:00</title></line>
+<line x1="463.50" x2="463.50" y1="54" y2="320" stroke="#64748b" stroke-dasharray="2 5"><title>Dolum 2021-11-07T23:57:00+00:00</title></line>
+<line x1="768.00" x2="768.00" y1="54" y2="320" stroke="#64748b" stroke-dasharray="2 5"><title>Çıkış barı 2021-11-08T00:04:00+00:00</title></line>
+<text x="24" y="371">Bar içindeki kesin temas sırası OHLC çözünürlüğünde gözlenmez.</text>
+</g></svg>

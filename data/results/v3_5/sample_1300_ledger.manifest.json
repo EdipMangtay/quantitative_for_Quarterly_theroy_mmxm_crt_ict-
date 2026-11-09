@@ -1,0 +1,2150 @@
+{
+  "scope": "BEHAVIORAL_SAMPLE",
+  "status": "NOT_VERIFIED",
+  "source_commit": "9274803d002a14bc18e0a918d8a90fd615b0ed8f",
+  "algo_version": "ASTRA6_V3.5_CAUSAL_REPAIR",
+  "config": {
+    "observations": 1300,
+    "opportunity_timeframes": [
+      "M3",
+      "M5",
+      "M15",
+      "M30",
+      "H1",
+      "H4",
+      "D1",
+      "W1"
+    ],
+    "policies": [
+      {
+        "policy_id": "CFG64_00",
+        "required": [],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_01",
+        "required": [
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_02",
+        "required": [
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_03",
+        "required": [
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_04",
+        "required": [
+          [
+            "STD_SMT",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_05",
+        "required": [
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_06",
+        "required": [
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_07",
+        "required": [
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_08",
+        "required": [
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_09",
+        "required": [
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_10",
+        "required": [
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_11",
+        "required": [
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_12",
+        "required": [
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_13",
+        "required": [
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_14",
+        "required": [
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_15",
+        "required": [
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_16",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_17",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_18",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_19",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_20",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_21",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_22",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_23",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_24",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_25",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_26",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_27",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_28",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_29",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_30",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_31",
+        "required": [
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_32",
+        "required": [
+          [
+            "CRT",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_33",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_34",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_35",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_36",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "STD_SMT",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_37",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_38",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_39",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_40",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_41",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_42",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_43",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_44",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_45",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_46",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_47",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_48",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_49",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_50",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_51",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_52",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_53",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_54",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_55",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_56",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_57",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_58",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_59",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_60",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_61",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_62",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "CFG64_63",
+        "required": [
+          [
+            "CRT",
+            []
+          ],
+          [
+            "MACRO_SSMT",
+            [
+              "M90"
+            ]
+          ],
+          [
+            "MICRO_SSMT",
+            [
+              "M22.5"
+            ]
+          ],
+          [
+            "STD_SMT",
+            []
+          ],
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ],
+          [
+            "MMXM",
+            []
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "00_No_CISD",
+        "required": [],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "01_M1_CRT_CISD",
+        "required": [
+          [
+            "CRT_CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 20,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "M1_STANDALONE_CISD",
+        "required": [
+          [
+            "CISD",
+            [
+              "M1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 20,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "M3_STANDALONE_CISD",
+        "required": [
+          [
+            "CISD",
+            [
+              "M3"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 30,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "M5_STANDALONE_CISD",
+        "required": [
+          [
+            "CISD",
+            [
+              "M5"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 45,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "M15_STANDALONE_CISD",
+        "required": [
+          [
+            "CISD",
+            [
+              "M15"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 90,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "M30_STANDALONE_CISD",
+        "required": [
+          [
+            "CISD",
+            [
+              "M30"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 150,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "H1_STANDALONE_CISD",
+        "required": [
+          [
+            "CISD",
+            [
+              "H1"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 240,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "H4_STANDALONE_CISD",
+        "required": [
+          [
+            "CISD",
+            [
+              "H4"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 480,
+        "horizon": 360,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "FIXED_2R",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "P0_MODEL1_TIMING_PROBE",
+        "required": [
+          [
+            "CISD",
+            [
+              "M5"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 60,
+        "horizon_unit": "CLOCK_MINUTES",
+        "target_type": "M15_LIQ",
+        "require_linked_target": false,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      },
+      {
+        "policy_id": "P0_MODEL2_TIMING_PROBE",
+        "required": [
+          [
+            "CRT",
+            [
+              "H1"
+            ]
+          ],
+          [
+            "CISD",
+            [
+              "M15"
+            ]
+          ],
+          [
+            "MMXM",
+            [
+              "M5"
+            ]
+          ]
+        ],
+        "absent": [],
+        "wait_minutes": 120,
+        "horizon": 120,
+        "horizon_unit": "OBSERVED_BARS",
+        "target_type": "M5_OC",
+        "require_linked_target": true,
+        "max_gap_minutes": 5,
+        "slip": 0.25,
+        "min_risk": 3.0
+      }
+    ]
+  },
+  "config_sha256": "7297511f72860c76b92296ea98ac7bae84f1b067891c9d1d59d499b4b8aced3e",
+  "inputs_sha256": {
+    "US100_BID_M1.parquet": "e192671a588d872bca1cd47da98633b50977656aeb3f43a2b33e8877280af018",
+    "US100_ASK_M1.parquet": "85332e04ab612e43cb3e478f21ac3fa0594e8dfb0262bb05c5c0d64f32680c4c",
+    "US500_BID_M1.parquet": "57429275146079dfdaa0e827e9ec23c3caedd23a7506370fdf3e017c2d025566",
+    "US500_ASK_M1.parquet": "831c44087fcb0ef8356c1d13f9651535d633b0791d5f494d6173d20fef89f1a9",
+    "US30_BID_M1.parquet": "25112214ff063676aae8358abb65abf831b3301cc62f3874c811bf05416acd30",
+    "US30_ASK_M1.parquet": "365f587711c99adb6a8ce0980ac31231a31ea0f9e1ecf72feffcd9429280af6e",
+    "DUKA_US100_M1.parquet": "4d4c36fd6c5987b611c3933ba1df288bec505e86cee6b289b70dba6b890ae6a2",
+    "DUKA_US100_30S.parquet": "0f26f60f034714a5424822816c21b7b7e0f4543197f64f09953844bef2ea8ab5",
+    "DUKA_US500_30S.parquet": "fe37af2770c1ffd031d85947ad6c62ff229aab96c08766a8ad25de15fc4e9cd1"
+  },
+  "source_files_sha256": {
+    "astra6/__init__.py": "5d06cb8dafa2b642deba6bc731aa524540939881a58f0378170e93e317ed1127",
+    "astra6/audit.py": "7cd688aa7313d07f63b147c0b542e47dc1ff22b7a3b7e9f5aa3daf636185589f",
+    "astra6/audit_v34_models.py": "2f1f223d59efb77df07c1d82bc7101087c19ef1132a27f19af003100eb6dff1b",
+    "astra6/bars.py": "ec5a89c97970f5debf72ca2269c16f5cc69d750ad9202f9adb7d43e6a1b96dad",
+    "astra6/cisd.py": "2529f2e17fe85d8104ca46426599813e5d80f4f2894871b0c3d64dd23a2fb9dc",
+    "astra6/clock.py": "b408e5ae1ae153c03d5ac903ab54a8434eeb002e44999de342472e6d77613a58",
+    "astra6/crt.py": "1d7062f1bd8339ca68f4752de611e475cb266f7091cfe8f888a0a4ceef5e711d",
+    "astra6/data/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "astra6/data/download.py": "48b3081690473e8b569cc7bc205342b7b55367217a4987d21ce5d8fee4928479",
+    "astra6/data/dukascopy.py": "48e6edeaa465f747b85547be0b21946a9ac55f62f29b6b656ebf172745f273e1",
+    "astra6/data/forensics.py": "fa40b3e4816798b802ed46328bd1d0da0cb5ac06dbc61a00ba917abf79f484fc",
+    "astra6/data/ingest_hf.py": "1b689d5cb8af163c4419cfa60f36d075ee3f5fee3186a5dbf2911c3da7132cb3",
+    "astra6/engine.py": "231285ee8161fba815f746a9233c71b6a48482391e8d2655d33848565986eb13",
+    "astra6/engine_v3.py": "c26e270c24b51583e20795dc3d35ce62140c0f5966a4c1283aa8f6e4a6209bb9",
+    "astra6/execution_v35.py": "7e41fff419d75965c254f013efa93b8358bfb30ffd1c6a31d89867f2e58a52f5",
+    "astra6/fractal_narrative_v34.py": "01bc59ee995b0e4cb9516669ebe4ff38de8bb61c1cc23e652afd6f598da7e677",
+    "astra6/fractal_v3.py": "6ebe1f520fa57446178b84ebf7589e756b626979fb8eaedb077ac7561a578ab3",
+    "astra6/hpc.py": "960c015c1eea7124f29539b41693e54184bf9834ef6d81675e0dc94c79eebad2",
+    "astra6/ict.py": "47e43776323167ddf36a5e3fa5dc332b77d0f0dd5cf2efc845affc9c81cc2180",
+    "astra6/mmxm.py": "8c9e22fea0360da99d748303bd57a903dafbee5826f6743218e17029a642baae",
+    "astra6/opening.py": "f12de2e887e957fce2c0963f3f075aa17928204a07be2cf5f9f555f9904ce766",
+    "astra6/report.py": "458056ae9f57d1cfc89f43c1fd4d6b0dfd47919001281a35dfa49c32304a6262",
+    "astra6/report_v3.py": "5edf427e3025d88cac8c36521d4073bd04db2d9f143533864a437c52e0c0ca7b",
+    "astra6/research_v35.py": "0c9019252c3dc9c4869a7f28c66985c3cdad7c1734018111b6ea46a32366cb51",
+    "astra6/signals.py": "6976e96dbf53b0720bc6edcf507233fa1ed50c61161a3b9daac695e7e3ba127a",
+    "astra6/sim.py": "fc91cb1b5f68fd20a11cc73aaf4d3634611e160827540a86d320782855daa9ab",
+    "astra6/smt.py": "9e4a207e576044ded83ae1c2e41719a3fb73e1474ae7c638ae3a4ab608aeec04",
+    "astra6/stats.py": "31e4341158310b19206470c5d098253a47456b2db91d08ab0cb955c3abb6f53c",
+    "astra6/trade_replay_v34.py": "ce596762273c3b125824f1a447f19e6df7745d1f73d557c396a0072b8e50823a"
+  },
+  "outputs_sha256": {
+    "sample_1300_ledger.parquet": "4a949abd5d7674e9f3eecbd2186c5fd0ba2e62ad95b20be6f4f0219952661f8d"
+  },
+  "producer": "astra6.research_v35.run_sample",
+  "command": "/Users/mangtay/qt_test/.venv/bin/python run_pipeline.py --v35-sample 1300",
+  "run_id": "2ddd0944aeb2d2d22dbdd6b61a5f6811a71db9bafacf797398de77547bd619ed"
+}

@@ -16,7 +16,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from .bars import TF_MIN, quarter_labels, resample
+from .bars import TF_MIN, minute_confirmation_index, quarter_labels, resample
 from .cisd import attach_true_cisd_to_signals, extract_tf_cisd_events
 from .clock import LDN, NY, dst_regime
 from .crt import classify_confirmed, running_extreme, scan_crt
@@ -69,19 +69,15 @@ def build_context(
     h4 = resample(panel, traded, "H4")
     h1_cal = resample(panel, traded, "H1", "cal")
     m5 = resample(panel, traded, "M5")
-    sw_m5 = swing_table(m5, 2, 2)
-    sw_h1 = swing_table(h1_cal, 2, 2)
-    sw_h4 = swing_table(h4, 2, 2)
+    sw_m5 = swing_table(m5[m5["is_closed"]], 2, 2)
+    sw_h1 = swing_table(h1_cal[h1_cal["is_closed"]], 2, 2)
+    sw_h4 = swing_table(h4[h4["is_closed"]], 2, 2)
     sw_m5["j_known"] = idx.searchsorted(sw_m5["t_known"], side="left")
 
     # PDH/PDL and PWH/PWL
     pd_tbl = period_levels(d1[d1["complete"]], "PD")
-    d1c = d1[d1["complete"]].copy()
-    wk = pd.to_datetime(d1c["t_open"]).dt.tz_convert(NY).dt.tz_localize(None).dt.to_period("W")
-    w_bars = d1c.groupby(wk).agg(
-        o=("o", "first"), h=("h", "max"), l=("l", "min"), c=("c", "last"), t_close=("t_close", "last")
-    ).reset_index(drop=True)
-    pw_tbl = period_levels(w_bars, "PW")
+    w_bars = resample(panel, traded, "W1")
+    pw_tbl = period_levels(w_bars[w_bars["is_closed"]], "PW")
 
     # True Multi-Timeframe CISD tables (M1, M3, M5, M15, M30, H1, H4)
     cisd_tables = {
@@ -131,7 +127,10 @@ def build_context(
     }
 
 
-def extract_crt_events(ctx: dict, tf: str = "M15", anchor: str = "cal", max_bars: int | None = None) -> pd.DataFrame:
+def extract_crt_events(
+    ctx: dict, tf: str = "M15", anchor: str = "cal", max_bars: int | None = None,
+    *, include_developing: bool = False,
+) -> pd.DataFrame:
     """Scan one (tf, anchor) stream and return a flat table of sweep events
     (both directions) with all confirmation & early-entry indices attached."""
     panel = ctx["panel"]
@@ -139,12 +138,14 @@ def extract_crt_events(ctx: dict, tf: str = "M15", anchor: str = "cal", max_bars
     comps = ctx["comps"]
     idx = panel.index
     bars = resample(panel, traded, tf, anchor)
-    bars = bars[bars["complete"]].reset_index(drop=True)
+    if not include_developing:
+        bars = bars[bars["is_closed"]].reset_index(drop=True)
     if max_bars is not None and len(bars) > max_bars:
         bars = bars.iloc[-max_bars:].reset_index(drop=True)
     m = TF_MIN[tf]
     i0 = idx.searchsorted(bars["t_open"].to_numpy(), side="left")
     i1 = idx.searchsorted(bars["t_close"].to_numpy(), side="left")
+    j_confirm = minute_confirmation_index(idx, bars["available_at"])
 
     Href = np.roll(bars["h"].to_numpy(float), 1)
     Lref = np.roll(bars["l"].to_numpy(float), 1)
@@ -154,7 +155,10 @@ def extract_crt_events(ctx: dict, tf: str = "M15", anchor: str = "cal", max_bars
     gap_min = (bars["t_open"].to_numpy() - prev_close) / np.timedelta64(1, "m")
     max_gap = 4320 if tf in ("D1", "W1") else 5
     min_n = max(1, m // 4) if tf in ("D1", "W1") else max(1, m // 2)
-    valid = (np.arange(len(bars)) > 0) & (gap_min <= max_gap) & (bars["n"].to_numpy() >= min_n)
+    previous_closed = bars["is_closed"].shift(1, fill_value=False)
+    valid = (previous_closed & (gap_min <= max_gap)).to_numpy(copy=True)
+    if not include_developing:
+        valid = valid & (bars["n"].to_numpy() >= min_n)
 
     ch = np.vstack([panel[f"{c}_h"].to_numpy(float) for c in comps])
     cl = np.vstack([panel[f"{c}_l"].to_numpy(float) for c in comps])
@@ -172,6 +176,7 @@ def extract_crt_events(ctx: dict, tf: str = "M15", anchor: str = "cal", max_bars
     c = panel[f"{traded}_c"].to_numpy(float)
     atr_htf = atr_wilder(bars["h"].to_numpy(float), bars["l"].to_numpy(float), bars["c"].to_numpy(float), 14)
     atr_ref = np.roll(atr_htf, 1)
+    reference_coverage = bars["data_coverage_status"].shift(1)
     ev, ext_cisd = scan_crt(o, h, l, c, ctx["atr1"], ch, cl, i0, i1, Href, Lref, cHref, cLref,
                             valid, ext=15, disp_k=1.2)
     rows = []
@@ -185,19 +190,23 @@ def extract_crt_events(ctx: dict, tf: str = "M15", anchor: str = "cal", max_bars
         jc1 = ev[:, d, 6] if len(comps) > 1 else np.full(len(bars), -1)
         sub = bars.assign(
             Hr=Href, Lr=Lref, Or=Oref, Cr=Cref, sw=jsw >= 0, ot=jot >= 0,
-            j_open=i0, j_close=i1 - 1, j_sweep=jsw, j_other=jot, j_reclaim=jrc,
+            j_open=i0, j_close=j_confirm, j_sweep=jsw, j_other=jot, j_reclaim=jrc,
             j_cisd=jci, j_disp=jdp, j_cmp0=jc0, j_cmp1=jc1,
             ext_at_cisd=ext_cisd[:, d], atr_ref=atr_ref, dir=direction,
-            tf=tf, anchor=anchor,
+            tf=tf, anchor=anchor, reference_coverage_status=reference_coverage,
+            reference_bucket_start=bars["bucket_start"].shift(1),
         )
         flags = classify_confirmed(sub, d)
+        if include_developing:
+            flags.loc[~sub["is_closed"]] = False
         sub = pd.concat([sub, flags], axis=1)
         sub["E"] = sub["A"] & (sub["j_disp"] >= 0) & (sub["j_disp"] <= sub["j_close"])
-        nxt_c = np.roll(bars["c"].to_numpy(float), -1)
-        nxt_j = np.roll(i1 - 1, -1)
+        nxt_c = bars["c"].shift(-1)
+        nxt_j = pd.Series(j_confirm).shift(-1, fill_value=-1)
         sub["F"] = sub["A"] & ((nxt_c < np.minimum(sub.o, sub.c)) if direction == -1 else (nxt_c > np.maximum(sub.o, sub.c)))
         sub["j_next_close"] = nxt_j
-        prev_sw_out = np.roll((jsw >= 0) & (jot < 0) & ((bars["c"] > Href) if direction == -1 else (bars["c"] < Lref)), 1)
+        sw_out = (jsw >= 0) & (jot < 0) & ((bars["c"] > Href) if direction == -1 else (bars["c"] < Lref))
+        prev_sw_out = sw_out.shift(1, fill_value=False)
         Hr2 = np.roll(Href, 1)
         Lr2 = np.roll(Lref, 1)
         sub["H"] = prev_sw_out & (bars["c"] >= Lr2) & (bars["c"] <= Hr2)

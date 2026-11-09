@@ -287,7 +287,10 @@ def walk_forward_analysis(
             if len(df) == 0:
                 continue
             ts = pd.to_datetime(df["t_trig"], utc=True)
-            sub_tr = df[(ts >= cur) & (ts < tr_end)]
+            within = (ts >= cur) & (ts < tr_end)
+            if "t_exit" in df:
+                within &= pd.to_datetime(df["t_exit"], utc=True) < tr_end
+            sub_tr = df[within]
             if len(sub_tr) < 20:
                 continue
             mr = float(sub_tr[r_col].mean())
@@ -298,7 +301,10 @@ def walk_forward_analysis(
         if best_name is not None:
             df_sel = candidates_by_model[best_name]
             ts = pd.to_datetime(df_sel["t_trig"], utc=True)
-            sub_te = df_sel[(ts >= tr_end) & (ts < te_end)]
+            within = (ts >= tr_end) & (ts < te_end)
+            if "t_exit" in df_sel:
+                within &= pd.to_datetime(df_sel["t_exit"], utc=True) < te_end
+            sub_te = df_sel[within]
             te_sum = summarize_trades(sub_te, r_col=r_col, n_boot=400)
             rows.append({
                 "fold": fold,
@@ -370,3 +376,38 @@ def matched_control_comparison(
         "p_matched": p_val,
     }
 
+
+
+def non_overlapping_policy_trades(ledger: pd.DataFrame, policy_id: str) -> pd.DataFrame:
+    """Apply a single-position allocation to one policy's filled orders."""
+    filled = ledger[(ledger["policy_id"] == policy_id) & (ledger["j_fill"] >= 0)].sort_values(
+        ["t_fill", "underlying_event_id"], kind="stable",
+    )
+    keep = np.zeros(len(filled), dtype=bool)
+    available = None
+    for i, row in enumerate(filled.itertuples(index=False)):
+        if pd.isna(row.t_exit) or row.t_exit < row.t_fill:
+            raise ValueError("Invalid portfolio trade timestamps")
+        if available is None or row.t_fill > available:
+            keep[i] = True
+            available = row.t_exit
+    return filled.iloc[keep]
+
+
+def paired_policy_ledger(ledger: pd.DataFrame, enabled: str, disabled: str) -> pd.DataFrame:
+    """Return one observed pair per UEV with explicit calendar-day/week clusters."""
+    cols = ["underlying_event_id", "event_available_at", "realized_net_r"]
+    def filled(policy):
+        subset = ledger[(ledger["policy_id"] == policy) & (ledger["j_fill"] >= 0)][cols]
+        if not subset["underlying_event_id"].is_unique:
+            raise ValueError("A paired policy has multiple filled rows for one event")
+        return subset
+
+    pairs = filled(enabled).merge(filled(disabled), on="underlying_event_id", suffixes=("_on", "_off"))
+    if not pairs["event_available_at_on"].eq(pairs["event_available_at_off"]).all():
+        raise ValueError("Paired policy rows disagree on the underlying event time")
+    local = pd.to_datetime(pairs["event_available_at_on"], utc=True).dt.tz_convert("America/New_York")
+    pairs["event_day"] = local.dt.strftime("%Y-%m-%d")
+    pairs["event_week"] = local.dt.strftime("%G-W%V")
+    pairs["delta_r"] = pairs["realized_net_r_on"] - pairs["realized_net_r_off"]
+    return pairs

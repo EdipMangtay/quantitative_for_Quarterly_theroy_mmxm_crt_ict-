@@ -17,8 +17,8 @@ For every timeframe candle stream:
          the delivery sequence and requires the breaking candle to close beyond
          `ref_open` with an opposing body larger than `0.35 * ATR`.
   3. Causality:
-       - An `M3`, `M5`, or `M15` CISD is ONLY known at `t_close` of that timeframe's
-         confirming candle (`j_m1_known = idx.searchsorted(t_close, side="left") - 1`).
+       - A CISD is known at the confirming candle's availability timestamp.
+         Its bar-index projection cannot precede that timestamp.
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 from numba import njit
 
-from .bars import resample
+from .bars import minute_confirmation_index, resample
 from .ict import atr_wilder
 
 
@@ -167,19 +167,8 @@ def extract_tf_cisd_events(
 ) -> pd.DataFrame:
     """Build true candle series for `tf` (`M1`, `M3`, `M5`, `M15`) and detect CISD events."""
     idx = panel.index
-    if tf == "M1":
-        bars = pd.DataFrame({
-            "o": panel[f"{traded}_o"].to_numpy(float),
-            "h": panel[f"{traded}_h"].to_numpy(float),
-            "l": panel[f"{traded}_l"].to_numpy(float),
-            "c": panel[f"{traded}_c"].to_numpy(float),
-            "t_open": idx,
-            "t_close": idx + pd.Timedelta(minutes=1),
-            "complete": True,
-        })
-    else:
-        bars = resample(panel, traded, tf, "cal")
-        bars = bars[bars["complete"]].reset_index(drop=True)
+    bars = resample(panel, traded, tf, "cal")
+    bars = bars[bars["is_closed"]].reset_index(drop=True)
 
     o = bars["o"].to_numpy(float)
     h = bars["h"].to_numpy(float)
@@ -192,16 +181,17 @@ def extract_tf_cisd_events(
     dr, di, ei, ci, ii, rop, epx, bc = _scan_tf_cisd(o, h, l, c, atr, allow_pause, req_disp)
 
     t_open = bars["t_open"].to_numpy()
-    t_close = bars["t_close"].to_numpy()
-    t_conf = t_close[ci]
-    # Map confirmation timestamp to the M1 bar index whose close equals t_conf
-    j_m1_conf = np.clip(idx.searchsorted(t_conf, side="left") - 1, 0, len(idx) - 1)
+    availability = bars["available_at"].to_numpy()
+    t_conf = availability[ci]
+    j_m1_conf = minute_confirmation_index(idx, t_conf)
     j_m1_deliv = np.clip(idx.searchsorted(t_open[di], side="left"), 0, len(idx) - 1)
     j_m1_ext = np.clip(idx.searchsorted(t_open[ei], side="left"), 0, len(idx) - 1)
     j_m1_inv = np.full(len(ci), -1, dtype=np.int64)
     has_inv = ii >= 0
+    t_invalidated = pd.Series(pd.NaT, index=range(len(ci)), dtype="datetime64[us, UTC]")
     if has_inv.any():
-        j_m1_inv[has_inv] = np.clip(idx.searchsorted(t_close[ii[has_inv]], side="left") - 1, 0, len(idx) - 1)
+        j_m1_inv[has_inv] = minute_confirmation_index(idx, availability[ii[has_inv]])
+        t_invalidated.loc[has_inv] = availability[ii[has_inv]]
 
     df = pd.DataFrame({
         "cisd_tf": tf,
@@ -219,6 +209,10 @@ def extract_tf_cisd_events(
         "break_close": bc,
         "t_deliv_open": t_open[di],
         "t_confirm": t_conf,
+        "available_at": t_conf,
+        "invalidated_at": t_invalidated,
+        "source_instrument": traded,
+        "data_coverage_status": bars["data_coverage_status"].to_numpy()[ci],
     })
     return df.sort_values("j_conf_m1").reset_index(drop=True)
 
