@@ -1,9 +1,9 @@
 {
   "handoff_version": "ASTRA6_V3.1_CAUSAL_REPAIRED_TO_V4_FROZEN_HANDOFF",
-  "generated_at_utc": "2026-11-08 20:20:15.113947+00:00",
-  "source_store_sha256": "17ddcb9ae521eefd6d881eebb95fcc108fb9d4063b0cca581bdcfaac4fce144f",
-  "algo_version": "ASTRA6_V3.1_CAUSAL_REPAIRED",
-  "config_hash": "3503769cd0d2e14be690846e999e406dc87ed5ce62f6ed7002d6472ef727c96f",
+  "generated_at_utc": "2026-11-09 09:37:50.665067+00:00",
+  "source_store_sha256": "1074437fbe7f1689ac71b9aee180443c9ff91a890b078c28c024dae383ff2db1",
+  "algo_version": "ASTRA6_V3.5_CAUSAL_REPAIR",
+  "config_hash": "c4d62cc333cffe06dd56d73a09ebab0e5164786d17aed82df726ca93b294b139",
   "frozen_candidates_count": 10,
   "execution_rules": {
     "long_entry_quote": "Next-Bar Open Ask + 0.25 pts slippage",
