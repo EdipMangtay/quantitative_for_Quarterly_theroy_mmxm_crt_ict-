@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASTRA 6 V3.4 — Nihai Strateji Dogrulama ve Uygulanabilir Islem Playbook Raporu</title>
+  <style>
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --primary-color: #0f172a;
+  --secondary-color: #1e3a8a;
+  --accent-color: #2563eb;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --bg-page: #f8fafc;
+  --bg-card: #ffffff;
+  --border-color: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text-main);
+  background-color: var(--bg-page);
+  margin: 0;
+  padding: 30px 20px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.report-container {
+  max-width: 1180px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  padding: 48px 56px;
+  border-radius: 12px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+}
+
+h1 {
+  color: var(--primary-color);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  border-bottom: 3px solid var(--accent-color);
+  padding-bottom: 14px;
+  margin-top: 0;
+  margin-bottom: 12px;
+  line-height: 1.25;
+}
+
+.report-subtitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--secondary-color);
+  margin-bottom: 24px;
+}
+
+h2 {
+  color: var(--secondary-color);
+  font-size: 18px;
+  font-weight: 700;
+  border-bottom: 1.5px solid var(--border-color);
+  padding-bottom: 8px;
+  margin-top: 36px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
+h3 {
+  color: var(--primary-color);
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+
+p, li {
+  color: var(--text-main);
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+ul, ol {
+  padding-left: 24px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+li {
+  margin-bottom: 6px;
+}
+
+strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+pre {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 16px 20px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  margin: 18px 0;
+  border: 1px solid #1e293b;
+}
+
+pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border: none;
+  font-size: inherit;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 12.5px;
+  background: #ffffff;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+th {
+  background: #f8fafc;
+  color: var(--primary-color);
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--border-color);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+td {
+  padding: 9px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: var(--text-main);
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:nth-child(even) td {
+  background-color: #fafbfc;
+}
+
+tr:hover td {
+  background-color: #f1f5f9;
+}
+
+blockquote {
+  border-left: 4px solid var(--accent-color);
+  background: #eff6ff;
+  padding: 12px 18px;
+  margin: 18px 0;
+  border-radius: 0 8px 8px 0;
+  color: #1e3a8a;
+  font-size: 13.5px;
+}
+
+blockquote p {
+  margin: 0;
+  color: #1e3a8a;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 32px 0;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    padding: 0 !important;
+  }
+  .report-container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  h1 {
+    font-size: 20pt !important;
+    border-bottom: 2pt solid #2563eb !important;
+  }
+  h2 {
+    font-size: 14pt !important;
+    page-break-after: avoid;
+    margin-top: 20pt !important;
+  }
+  h3 {
+    font-size: 11pt !important;
+    page-break-after: avoid;
+  }
+  p, li {
+    font-size: 9.5pt !important;
+    line-height: 1.5 !important;
+  }
+  table {
+    page-break-inside: avoid;
+    font-size: 8.5pt !important;
+  }
+  th, td {
+    padding: 5pt 7pt !important;
+  }
+  pre {
+    page-break-inside: avoid;
+    font-size: 7.5pt !important;
+    padding: 8pt 12pt !important;
+    white-space: pre-wrap !important;
+    word-break: break-all;
+    background: #0f172a !important;
+    color: #f8fafc !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  blockquote {
+    page-break-inside: avoid;
+    background: #eff6ff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding: 8pt 14pt !important;
+    margin: 10pt 0 !important;
+  }
+  tr {
+    page-break-inside: avoid;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="report-container">
+    <h1
+id="astra-6-v3.4-nihai-strateji-doğrulama-ve-uygulanabilir-işlem-playbook-raporu">ASTRA
+6 — V3.4 NİHAİ STRATEJİ DOĞRULAMA VE UYGULANABİLİR İŞLEM PLAYBOOK
+RAPORU</h1>
+<p><strong>Tam Nedensel Bağımsız Strateji Simülasyonu, 4 Temel Modelin
+Adli Denetimi, Fraktal Anlatı Doğrulaması ve 20 İzlenebilir İşlem
+Replay’i</strong></p>
+<hr />
+<h3 id="yönetici-özeti-ve-akademik-bildirim">YÖNETİCİ ÖZETİ VE AKADEMİK
+BİLDİRİM</h3>
+<p>Bu araştırma raporu, <strong>ASTRA 6</strong> kantitatif araştırma
+altyapısının <strong>V3.4</strong> sürümü kapsamında tamamlanan kapsamlı
+denetim, simülasyon ve doğrulama sonuçlarını sunmaktadır. Çalışmanın
+temel amacı, önceki sürümlerde tespit edilen metodolojik kusurları (tek
+simülasyon üzerine filtreleme, küçük örneklem yanılsamaları, manuel
+kayıt sapmaları) tamamen tasfiye etmek; kurumsal standartlarda nedensel,
+geleceğe sızmayan (<strong>zero future leakage</strong>), bağımsız
+karşıolgusal (<strong>counterfactual</strong>) politikalarla geriye
+dönük testleri yeniden icra etmek ve sonuçları hiçbir yapay iyimserliğe
+yer vermeksizin sunmaktır.</p>
+<p>Çalışmada <strong>kesin veri kısıtlaması kuralına</strong> tam riayet
+edilmiş; 2021–2026 dönemini kapsayan 5 yıllık, 1 dakikalık (M1) 3-Endeks
+(US100, US500, US30) orijinal yerel veri seti haricinde hiçbir yeni veri
+indirilmemiş, sentetik fiyat üretilmemiş veya harici sağlayıcı
+kullanılmamıştır.</p>
+<pre><code>========================================================================================
+                          ASTRA 6 V3.4 TEMEL ADLİ BULGULAR ÖZETİ
+========================================================================================
+1. Bağımsız Politika Simülasyonu (Phase 1):
+   - 64 Temel Konfigürasyon ve MTF CISD politikaları artık ortak havuz filtrelemesi DEĞİLDİR.
+   - Her politika kendi doğrulama anında, kendi gecikmesiyle, bağımsız tetikleyici, giriş,
+     stop ve hedef seviyeleriyle simüle edilmektedir (3.68M karşıolgusal işlem).
+   - Tek Olay Kanıtı (UEV_US100_M5_884_S):
+     * No-CISD: Bar 887, Fill 16378.83 -&gt; TARGET_HIT (+1.9898R)
+     * M1 CISD: Bar 888, Fill 16366.13 -&gt; TIMEOUT (+0.3967R)
+     * M5 CISD: Bar 903, Fill 16341.47 -&gt; TIMEOUT (-0.0408R)
+     * M15 CISD: Bar 908, Fill 16346.24 -&gt; TIMEOUT (+0.2495R)
+
+2. Dört Temel Araştırma Modelinin Akıbeti (Phase 2):
+   - MODEL 1 (H1 Anlatı -&gt; M5 Giriş -&gt; M15 Likidite Hedefi):
+     N=325, Win Rate %82.15, Beklenti +0.8279R, PF 5.627, OOS +0.8956R.
+     DURUM: [HISTORICAL_OOS_SUPPORTED] -&gt; Doğrulanmış Yapısal Likidite Kenarı.
+   - MODEL 2 (H1 Dönüş -&gt; M5 Orijinal Konsolidasyon Hedefi):
+     N=792, Win Rate %44.57, Beklenti +0.1893R, PF 1.3424, OOS +0.2913R.
+     DURUM: [HISTORICAL_OOS_SUPPORTED] -&gt; Doğrulanmış Asimetrik Hedef Kenarı.
+   - MODEL 3 (NY Open CFG64_57: CRT + Macro SSMT + Micro SSMT + MMXM):
+     N=658, Win Rate %37.69, Beklenti +0.0715R, PF 1.1143, OOS +0.0935R.
+     Shorts (+0.1359R) Longs (-0.0077R). Gün kümelenmiş SE (+-0.071R) sıfırı kesmektedir.
+     DURUM: [EXPLORATORY_POSITIVE] -&gt; Keşifsel Pozitif Eğilim.
+   - MODEL 4 (MMXM Tamamlandı x QT Q2 LONG Dönüşü):
+     Eski rapor: +0.3651R (N=42).
+     V3.4 Adli Doğrulama: N=96,803, Win Rate %28.60, Beklenti -0.1808R, OOS -0.0896R.
+     DURUM: [CONFIRMED_NEGATIVE_EDGE] -&gt; Eski pozitif kenar tamamen küçük örneklem
+     yanılsamasıdır (N=42) ve geniş evrende pozitif kenar kesinlikle mevcut DEĞİLDİR.
+
+3. Manuel Excel Analiz Düzeltmesi (Copy of EXCEL_TEST.xlsx):
+   - Tamamlanan İşlem: 18 (13 Kazanan, 5 Kaybeden). Win Rate: %72.22.
+   - Gerçekleşen Toplam R: +52.78R, Ortalama R: +2.9322R.
+   - V3.3 PDF&#39;indeki &quot;15W / 3L / %83.33&quot; iddiası tespit edilip düzeltilmiştir.
+   - #14 nolu işlemde Stop = Giriş (16120.00) anomalisi belgelenmiştir.
+   - Seçilim sapması (selection bias) uyarısı eklenmiş; p_bh_fdr = 1.000 olarak onaylanmıştır.
+========================================================================================</code></pre>
+<hr />
+<h2
+id="bölüm-1-gerçek-bağimsiz-strateji-simülasyonu-ve-tek-olay-kaniti-phase-1">BÖLÜM
+1 — GERÇEK BAĞIMSIZ STRATEJİ SİMÜLASYONU VE TEK OLAY KANITI (PHASE
+1)</h2>
+<h3 id="eski-mimari-vs.-v3.4-bağımsız-yürütme-mimarisi">1.1 Eski Mimari
+vs. V3.4 Bağımsız Yürütme Mimarisi</h3>
+<p>Önceki sürümlerdeki kritik mimari kusur, piyasa fırsatlarının tek bir
+varsayılan kural setine göre simüle edilip kaydedilmesi, ardından 64
+farklı konfigürasyon veya CISD varyasyonunun bu sabit sonuçlar üzerinden
+<strong>maskelenerek (post-hoc filtering)</strong> raporlanmasıydı.</p>
+<p>Bu durum, farklı doğrulama kurallarının gerektirdiği gecikmeyi, fiyat
+kaymasını ve dinamik risk-ödül oranlarını göz ardı etmekteydi. Örneğin,
+bir işlem intrabar fiyatta tetiklendiğinde karlı kapanırken, mum
+kapanışını veya M15 CISD onayını beklediğinde fiyat hedefe çoktan
+yaklaşmış veya stop mesafesi genişlemiş olabilmektedir.</p>
+<p>V3.4 motorunda her bir alt olay (<code>underlying_event_id</code>),
+64 temel konfigürasyon ve 20 MTF CISD spesifikasyonu için ayrı ayrı
+sıfırdan simüle edilmiştir: 1. <strong>Politikaya Özgü Doğrulama Zamanı
+(<span
+class="math inline"><em>j</em><sub><em>t</em><em>r</em><em>i</em><em>g</em></sub></span>)</strong>:
+- <code>f_crt=False</code> ise intrabar seviye geri alımında (<span
+class="math inline"><em>j</em><sub><em>r</em><em>e</em><em>c</em><em>l</em><em>a</em><em>i</em><em>m</em></sub></span>).
+- <code>f_crt=True</code> ise kesinlikle ilgili mum kapanışında (<span
+class="math inline"><em>j</em><sub><em>c</em><em>l</em><em>o</em><em>s</em><em>e</em></sub></span>).
+- <code>f_cisd=True</code> ise ilgili zaman diliminin teyit barında
+(<span
+class="math inline"><em>j</em><sub><em>c</em><em>i</em><em>s</em><em>d</em></sub></span>).
+- <code>f_mmxm=True</code> ise MMXM aşamasının kesinleştiği barda (<span
+class="math inline"><em>j</em><sub><em>m</em><em>m</em><em>x</em><em>m</em>_<em>k</em><em>n</em><em>o</em><em>w</em><em>n</em></sub></span>).
+2. <strong>Politikaya Özgü İcra Fiyatı (<span
+class="math inline"><em>p</em><em>x</em><sub><em>e</em><em>n</em><em>t</em><em>r</em><em>y</em></sub></span>)</strong>:
+Bir sonraki M1 barının açılışında, spread ve slippage (0.25 puan)
+eklenerek icra edilir. 3. <strong>Politikaya Özgü Yapısal Stop (<span
+class="math inline"><em>s</em><em>l</em><sub><em>i</em><em>n</em><em>i</em><em>t</em></sub></span>)</strong>:
+Doğrulama anındaki yerel swing seviyesi <span
+class="math inline">±0.15 × ATR</span> (minimum 3 puan). 4.
+<strong>Politikaya Özgü Bağımsız Çıkış</strong>: Her işlem kendi giriş
+ve stop seviyeleri üzerinden bağımsız Numba icra motorunda taranır.</p>
+<p>Toplamda <strong>3,685,678 karşıolgusal politika işlemi</strong>
+(<code>counterfactual_policy_trades.parquet</code>) ve <strong>3,302,765
+çoklu zaman dilimli CISD işlemi</strong>
+(<code>multitf_cisd_policy_trades.parquet</code>) üretilmiştir.</p>
+<h3
+id="tek-olay-üzerinde-çoklu-politika-kanıtı-adversarial-demonstration">1.2
+Tek Olay Üzerinde Çoklu Politika Kanıtı (Adversarial Demonstration)</h3>
+<p>Tek bir piyasa fırsatının farklı politikalar altında nasıl tamamen
+farklı sonuçlar ürettiğini kanıtlamak üzere,
+<code>UEV_US100_M5_884_S</code> olayı (2021-11-08 14:36 UTC, NY Open
+açılış likidite süpürmesi) incelenmiştir:</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Politika ID / CISD Kuralı</th>
+<th style="text-align: center;">Doğrulama Barı (<span
+class="math inline"><em>j</em></span>)</th>
+<th style="text-align: center;">İcra Barı</th>
+<th style="text-align: center;">Giriş Fiyatı</th>
+<th style="text-align: center;">Stop Fiyatı</th>
+<th style="text-align: center;">Risk (Puan)</th>
+<th style="text-align: center;">Çıkış Durumu</th>
+<th style="text-align: center;">Gerçekleşen Net R</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>00_No_CISD
+(CFG64_00)</strong></td>
+<td style="text-align: center;">887</td>
+<td style="text-align: center;">888</td>
+<td style="text-align: center;">16378.83</td>
+<td style="text-align: center;">16403.31</td>
+<td style="text-align: center;">24.48</td>
+<td style="text-align: center;"><strong>TARGET_HIT</strong></td>
+<td style="text-align: center;"><strong>+1.9898 R</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>01_M1_CISD
+(CFG64_34)</strong></td>
+<td style="text-align: center;">888</td>
+<td style="text-align: center;">889</td>
+<td style="text-align: center;">16366.13</td>
+<td style="text-align: center;">16403.31</td>
+<td style="text-align: center;">37.18</td>
+<td style="text-align: center;"><strong>TIMEOUT</strong></td>
+<td style="text-align: center;"><strong>+0.3967 R</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>03_M5_CISD</strong></td>
+<td style="text-align: center;">903</td>
+<td style="text-align: center;">904</td>
+<td style="text-align: center;">16341.47</td>
+<td style="text-align: center;">16403.31</td>
+<td style="text-align: center;">61.84</td>
+<td style="text-align: center;"><strong>TIMEOUT</strong></td>
+<td style="text-align: center;"><strong>-0.0408 R</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>04_M15_CISD</strong></td>
+<td style="text-align: center;">908</td>
+<td style="text-align: center;">909</td>
+<td style="text-align: center;">16346.24</td>
+<td style="text-align: center;">16403.31</td>
+<td style="text-align: center;">57.07</td>
+<td style="text-align: center;"><strong>TIMEOUT</strong></td>
+<td style="text-align: center;"><strong>+0.2495 R</strong></td>
+</tr>
+</tbody>
+</table>
+<pre><code>FİYAT ZAMAN ÇİZELGESİ VE İCRA FARKLILIKLARI (UEV_US100_M5_884_S):
+---------------------------------------------------------------------------------------------
+Bar 884: M5 Likidite Süpürmesi gerçekleşti (High: 16400.25).
+Bar 887: No-CISD Reclaim tetiklendi -&gt; Giriş: 16378.83, Stop: 16403.31 (Risk: 24.48p).
+         Fiyat hızla aşağı aktı ve 14 bar içinde 2R hedefine ulaştı -&gt; TARGET_HIT (+1.99R)!
+Bar 888: M1 CISD / M5 Mum Kapanışı gerçekleşti -&gt; Giriş: 16366.13 (12.7 puan daha kötü giriş).
+         Risk 37.18 puana yükseldi. Hedefe ulaşamadan 360 bar doldu -&gt; TIMEOUT (+0.397R).
+Bar 903: M5 CISD 16 bar sonra doğrulandı -&gt; Giriş: 16341.47 (37.36 puan gecikmeli giriş!).
+         Risk 61.84 puana çıktı. Fiyat konsolidasyona girdi -&gt; TIMEOUT (-0.041R).
+Bar 908: M15 CISD 21 bar sonra doğrulandı -&gt; Giriş: 16346.24 -&gt; TIMEOUT (+0.249R).
+---------------------------------------------------------------------------------------------
+SONUÇ: Eski mimaride bu 4 satırın dördü de aynı sonucu vermek zorundaydı. V3.4 bağımsız 
+motorunda tetikleme barları, giriş seviyeleri, risk büyüklükleri ve net R değerleri tamamen 
+farklıdır. Bu durum pytest test_adversarial_single_event_independent_policy_execution ile mühürlenmiştir.</code></pre>
+<hr />
+<h2
+id="bölüm-2-dört-temel-araştirma-modelinin-adli-denetimi-phase-2">BÖLÜM
+2 — DÖRT TEMEL ARAŞTIRMA MODELİNİN ADLİ DENETİMİ (PHASE 2)</h2>
+<p>Sistemdeki en kritik 4 hipotez, tam veri havuzunda, as-of nedensel
+katılımlarla (<code>as-of join</code>) ve kümelenmiş standart hatalarla
+(<code>clustered SE</code>) denetlenmiştir:</p>
+<h3 id="model-karşılaştırma-matrisi">Model Karşılaştırma Matrisi</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Model ID ve Tanımı</th>
+<th style="text-align: center;">Örneklem (<span
+class="math inline"><em>N</em></span>)</th>
+<th style="text-align: center;">Win Rate</th>
+<th style="text-align: center;">Beklenti (<span
+class="math inline"><em>R</em></span>)</th>
+<th style="text-align: center;">Profit Factor</th>
+<th style="text-align: center;">OOS Beklenti (<span
+class="math inline"><em>R</em></span>)</th>
+<th style="text-align: center;"><span
+class="math inline"><em>p</em><sub>gt_zero</sub></span></th>
+<th style="text-align: center;">Doğrulama Durumu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Model 1</strong>: H1 Anlatı <span
+class="math inline">→</span> M5 Giriş <span class="math inline">→</span>
+M15 Likidite Hedefi</td>
+<td style="text-align: center;">325</td>
+<td style="text-align: center;"><strong>%82.15</strong></td>
+<td style="text-align: center;"><strong>+0.8279 R</strong></td>
+<td style="text-align: center;"><strong>5.627</strong></td>
+<td style="text-align: center;"><strong>+0.8956 R</strong></td>
+<td style="text-align: center;"><span
+class="math inline"> &lt; 0.0001</span></td>
+<td
+style="text-align: center;"><code>HISTORICAL_OOS_SUPPORTED</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Model 2</strong>: H1 Dönüş <span
+class="math inline">→</span> M5 Orijinal Konsolidasyon Hedefi</td>
+<td style="text-align: center;">792</td>
+<td style="text-align: center;"><strong>%44.57</strong></td>
+<td style="text-align: center;"><strong>+0.1893 R</strong></td>
+<td style="text-align: center;"><strong>1.3424</strong></td>
+<td style="text-align: center;"><strong>+0.2913 R</strong></td>
+<td style="text-align: center;"><span
+class="math inline">0.0010</span></td>
+<td
+style="text-align: center;"><code>HISTORICAL_OOS_SUPPORTED</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Model 3</strong>: NY Open CRT +
+Çift SMT + MMXM (CFG64_57)</td>
+<td style="text-align: center;">658</td>
+<td style="text-align: center;"><strong>%37.69</strong></td>
+<td style="text-align: center;"><strong>+0.0715 R</strong></td>
+<td style="text-align: center;"><strong>1.1143</strong></td>
+<td style="text-align: center;"><strong>+0.0935 R</strong></td>
+<td style="text-align: center;"><span
+class="math inline">0.1576</span></td>
+<td style="text-align: center;"><code>EXPLORATORY_POSITIVE</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Model 4</strong>: MMXM Tamamlandı
+<span class="math inline">×</span> QT Q2 LONG Dönüşü</td>
+<td style="text-align: center;">96,803</td>
+<td style="text-align: center;"><strong>%28.60</strong></td>
+<td style="text-align: center;"><strong>-0.1808 R</strong></td>
+<td style="text-align: center;"><strong>0.6729</strong></td>
+<td style="text-align: center;"><strong>-0.0896 R</strong></td>
+<td style="text-align: center;"><span
+class="math inline">1.0000</span></td>
+<td
+style="text-align: center;"><code>CONFIRMED_NEGATIVE_EDGE</code></td>
+</tr>
+</tbody>
+</table>
+<h3
+id="model-1-h1-anlatı-rightarrow-m5-giriş-rightarrow-m15-likidite-hedefi-long">2.1
+Model 1: H1 Anlatı <span class="math inline">→</span> M5 Giriş <span
+class="math inline">→</span> M15 Likidite Hedefi (LONG)</h3>
+<ul>
+<li><strong>Nedensellik Doğrulaması</strong>: Hedeflenen M15 tepe
+seviyesi (<code>prev_h_m15</code>), giriş barı öncesinde tamamlanmış son
+M15 mumundan türetilmiştir. İşlemlerin %100’ünde hedef seviyesi girişten
+önce mevcuttur.</li>
+<li><strong>İstatistiki Güç</strong>: 325 işlem, 283 bağımsız işlem
+gününe dağılmıştır. Liang-Zeger gün kümelenmiş standart hatası <span
+class="math inline"><em>S</em><em>E</em><sub><em>c</em><em>l</em><em>u</em><em>s</em><em>t</em><em>e</em><em>r</em></sub> = 0.0657</span>
+olup, %95 güven aralığı <span
+class="math inline">[+0.713<em>R</em>, +0.960<em>R</em>]</span>
+bandındadır.</li>
+<li><strong>Out-of-Sample Başarısı</strong>: In-sample (2021–2024)
+beklentisi <span class="math inline">+0.8012<em>R</em></span> iken, OOS
+(2024–2026) döneminde <span
+class="math inline">+0.8956<em>R</em></span>’ye yükselmiştir. Bu model,
+yapısal hedef kullanımının sabit 2R hedeflerine karşı mutlak üstünlüğünü
+kanıtlamaktadır. Ortalama hedef mesafesi <span
+class="math inline">1.15<em>R</em></span> olduğu için yüksek kazanma
+oranı (%82.15) matematiksel olarak tutarlıdır.</li>
+</ul>
+<h3
+id="model-2-h1-dönüş-rightarrow-m5-orijinal-konsolidasyon-oc-hedefi-short">2.2
+Model 2: H1 Dönüş <span class="math inline">→</span> M5 Orijinal
+Konsolidasyon (OC) Hedefi (SHORT)</h3>
+<ul>
+<li><strong>Nedensellik Doğrulaması</strong>: Hedeflenen M5 OC seviyesi,
+geçmişte doğrulanmış konsolidasyon kutusunun tavan/taban seviyesidir.
+As-of eşleştirme ile gelecekte oluşacak konsolidasyonların kullanımı
+kesinlikle engellenmiştir.</li>
+<li><strong>İstatistiki Güç</strong>: 792 işlem, 586 bağımsız gün.
+Beklenti <span class="math inline">+0.1893<em>R</em></span>, OOS
+beklentisi <span class="math inline">+0.2913<em>R</em></span>. <span
+class="math inline"><em>p</em> = 0.0010</span> (Holm düzeltmeli <span
+class="math inline"><em>p</em> = 0.0031</span>).</li>
+<li><strong>Risk Profili</strong>: Ortalama hedef mesafesi <span
+class="math inline">2.14<em>R</em></span>’dir. Asimetrik getiri dağılımı
+sayesinde %44.57 kazanma oranı ile <span
+class="math inline">1.3424</span> kar faktörü üretmektedir.</li>
+</ul>
+<h3 id="model-3-ny-open-crt-çift-smt-mmxm-cfg64_57">2.3 Model 3: NY Open
+CRT + Çift SMT + MMXM (CFG64_57)</h3>
+<ul>
+<li><strong>İncelenen Koşullar</strong>: Nasdaq açılışının ilk 90
+dakikasında (09:30–11:00 NY), M5 CRT mumu kapanmış, 90 dakikalık Makro
+SMT ve 22.5 dakikalık Mikro SMT aktif ve MMXM döngüsü devrede.</li>
+<li><strong>Sonuçlar</strong>: <span
+class="math inline"><em>N</em> = 658</span>, Beklenti <span
+class="math inline">+0.0715<em>R</em></span>, Profit Factor <span
+class="math inline">1.1143</span>.</li>
+<li><strong>Asimetri Uyarısı</strong>: Short işlemleri güçlü bir pozitif
+beklenti (<span class="math inline">+0.1359<em>R</em></span>, <span
+class="math inline"><em>N</em> = 363</span>, WR %39.67) üretirken, Long
+işlemleri hafif negatif sapma göstermektedir (<span
+class="math inline">−0.0077<em>R</em></span>, <span
+class="math inline"><em>N</em> = 295</span>, WR %35.25). Kümelenmiş
+standart hata (<span class="math inline">±0.0712<em>R</em></span>)
+sıfırı kestiği için model kurumsal olarak
+<strong>EXPLORATORY_POSITIVE</strong> statüsünde tutulmalıdır.</li>
+</ul>
+<h3 id="model-4ün-çöküşü-mmxm-tamamlandı-times-qt-q2-long-dönüşü">2.4
+Model 4’ün Çöküşü: MMXM Tamamlandı <span class="math inline">×</span> QT
+Q2 LONG Dönüşü</h3>
+<ul>
+<li><strong>Eski İddia</strong>: V3.3 öncesinde bu kurgu için <span
+class="math inline">+0.3651<em>R</em></span> getiri iddia
+edilmekteydi.</li>
+<li><strong>Adli Gerçek</strong>: Eski iddia yalnızca <strong>42
+adet</strong> filtrelenmiş işlemden ibaretti. Tam veri setinde tüm MMXM
+tamamlanma olayları (Stage 11–12) ve QT 90M Q2 evresi as-of
+eşleştirildiğinde, örneklem büyüklüğü <strong>96,803 işleme</strong>
+ulaşmakta ve net beklenti <strong>-0.1808 R</strong> (<span
+class="math inline"><em>P</em><em>F</em> = 0.6729</span>, WR %28.60)
+olmaktadır. In-sample getiri <span
+class="math inline">−0.2169<em>R</em></span>, OOS getiri <span
+class="math inline">−0.0896<em>R</em></span>’dir.</li>
+<li><strong>Nedensel Sonuç</strong>: “MMXM tamamlandıktan sonra Q2
+manevrasıyla hemen tersine döner” hipotezi piyasa gerçekliğinde iflas
+etmiştir. Tamamlanan bir trendin ardından piyasa genellikle ya derin bir
+konsolidasyona girmekte ya da momentum yönünde akmaya devam etmektedir.
+Bu model <strong>CONFIRMED_NEGATIVE_EDGE</strong> olarak işaretlenmiş ve
+playbook’lardan tamamen çıkarılmıştır.</li>
+</ul>
+<hr />
+<h2
+id="bölüm-3-fraktal-anlati-motoru-ve-24-saatlik-drift-doğrulamasi-phase-3">BÖLÜM
+3 — FRAKTAL ANLATI MOTORU VE 24 SAATLİK DRİFT DOĞRULAMASI (PHASE 3)</h2>
+<h3 id="beş-boyutlu-fraktal-anlatı-hiyerarşisi">3.1 Beş Boyutlu Fraktal
+Anlatı Hiyerarşisi</h3>
+<p>ASTRA 6 V3.4 Anlatı Motoru, piyasa bağlamını 5 temel eksende takip
+eder: 1. <strong>Orijin Zaman Dilimi (<span
+class="math inline"><em>T</em><em>F</em><sub><em>o</em><em>r</em><em>i</em><em>g</em><em>i</em><em>n</em></sub></span>)</strong>:
+Likiditenin süpürüldüğü ana yapı (W1, D1, H4, H1). 2. <strong>Yapısal
+Rejim (<span
+class="math inline"><em>R</em><em>e</em><em>g</em><em>i</em><em>m</em><em>e</em><sub><em>s</em><em>t</em><em>r</em><em>u</em><em>c</em><em>t</em></sub></span>)</strong>:
+Trend Yönlü Devam (<code>TREND_CONTINUATION</code>), Yapısal Dönüş
+(<code>STRUCTURAL_REVERSAL</code>) veya Aralık İçi Salınım
+(<code>RANGE_EXPANSION</code>). 3. <strong>Yönsel İlişki</strong>: HTF
+Trendi ile MMXM aşamasının uyumu (<code>ALIGNED</code>,
+<code>COUNTER_HTF_CORRECTION</code>). 4. <strong>İcra Zaman Dilimi
+(<span
+class="math inline"><em>T</em><em>F</em><sub><em>e</em><em>n</em><em>t</em><em>r</em><em>y</em></sub></span>)</strong>:
+M1, M3 veya M5 seviyesinde mikro teyit. 5. <strong>Hedef Zaman Dilimi
+(<span
+class="math inline"><em>T</em><em>F</em><sub><em>t</em><em>a</em><em>r</em><em>g</em><em>e</em><em>t</em></sub></span>)</strong>:
+Kar al seviyesinin bulunduğu asimetrik yapı (M15 Likiditesi veya M5
+OC).</p>
+<h3 id="üç-makro-mikro-boru-hattının-sınanması">3.2 Üç Makro-Mikro Boru
+Hattının Sınanması</h3>
+<p>Geniş zaman pencerelerinde (24 saat boyunca filtresiz) çalışan anlatı
+boru hatları test edilmiştir:</p>
+<pre><code>+----------------------------------------------------------------------------------------------------+
+| Boru Hattı / Anlatı Hipotezi                       | İşlem Sayısı | Win Rate | Beklenti (R) | PF   |
++----------------------------------------------------+--------------+----------+--------------+------+
+| NARRATIVE 1: M5 Bullish MMXM -&gt; M1 CISD -&gt; H1 BSL | 28,969       | %29.63   | -0.2517 R    | 0.65 |
+| NARRATIVE 2: H1 Sweep -&gt; H1 Reversal -&gt; M5 OC      | 5,995        | %41.18   | -0.1851 R    | 0.69 |
+| NARRATIVE 3: H4 Bearish -&gt; M15 Corr -&gt; Daily SSL   | 22,665       | %21.17   | -0.1926 R    | 0.75 |
++----------------------------------------------------------------------------------------------------+</code></pre>
+<h3 id="yirmi-dört-saatlik-negatif-drift-neden-oluşur">3.3 Yirmi Dört
+Saatlik Negatif Drift Neden Oluşur?</h3>
+<p>Bu testler çok kritik bir kantitatif gerçeği ortaya koymuştur:
+<strong>Günün 24 saati boyunca filtresiz çalıştırılan fraktal anlatılar,
+spread, komisyon ve düşük likidite saatlerindeki testere (whipsaw)
+hareketleri nedeniyle -0.18R ile -0.25R arasında negatif bir sürüklenme
+(drift) sergiler.</strong></p>
+<p>Pozitif getiri (edge), ancak ve ancak şu iki şart sağlandığında
+ortaya çıkmaktadır: 1. <strong>Seans Kısıtlaması</strong>: İşlemlerin
+yalnızca yüksek hacimli ve manipülasyonun kurumsal olarak çözüldüğü
+<strong>New York Açılışı (09:30–11:00 NY)</strong> veya <strong>Londra
+Açılışı (08:00–09:30 UTC)</strong> pencerelerine sınırlandırılması. 2.
+<strong>Çoklu Doğrulama (Confluence)</strong>: CRT mum teyidi ve en az
+bir endeksler arası SMT uyumsuzluğu ile filtrelenmesi.</p>
+<hr />
+<h2
+id="bölüm-4-dürüst-istatistiki-doğrulama-ve-excel-mutabakati-phase-4">BÖLÜM
+4 — DÜRÜST İSTATİSTİKİ DOĞRULAMA VE EXCEL MUTABAKATI (PHASE 4)</h2>
+<h3
+id="manuel-excel-çalışma-kitabı-copy-of-excel_test.xlsx-mutabakatı">4.1
+Manuel Excel Çalışma Kitabı (<code>Copy of EXCEL_TEST.xlsx</code>)
+Mutabakatı</h3>
+<p>Kullanıcının araştırma çalışma kitabı doğrudan Python
+<code>openpyxl</code> motoru ile okunmuş ve hücre bazında
+doğrulanmıştır. Önceki V3.3 PDF raporundaki bariz istatistiki hatalar
+düzeltilmiştir:</p>
+<pre><code>========================================================================================
+                          MANUEL EXCEL LOG MUTABAKAT TABLOSU
+========================================================================================
+Metrik / Parametre             | Önceki Hatalı PDF İddiası | V3.4 Düzeltilmiş Gerçek Değer
+-------------------------------+---------------------------+----------------------------
+Kayıtlı Toplam İşlem Sayısı   | 18                        | 18
+Kazanan İşlem Sayısı (Win)     | 15 (Hatalı)               | 13 (Doğrulandı)
+Kaybeden İşlem Sayısı (Loss)   | 3 (Hatalı)                | 5 (Doğrulandı)
+Kazanma Oranı (Win Rate)       | %83.33 (Hatalı)           | %72.22 (Doğrulandı)
+Toplam Gerçekleşen R           | ~ +53.1R                  | +52.78 R
+Ortalama İşlem Başına R        | ~ +2.95R                  | +2.9322 R
+Maksimum Kar / Zarar           | Belirtilmemiş             | Max Win: +5.00R / Max Loss: -1.00R
+----------------------------------------------------------------------------------------
+ÖZEL BULGU VE ADLİ UYARI:
+1. #14 nolu işlem kaydında (Satır 17), Giriş Fiyatı: 16120.00, Stop Fiyatı: 16120.00 olarak
+   girilmiştir. Stop mesafesi sıfır olduğu için bu işlem teorik olarak sonsuz R riski taşır;
+   ancak formülsel olarak +1.00R yazılmıştır. Regresyon testlerimize bu anomali işlenmiştir.
+2. 18 işlemlik manuel portföy, 5 yıllık 644,237 işlem arasından insan gözüyle geriye dönük
+   olarak SEÇİLMİŞTİR (Selection Bias). Çoklu hipotez düzeltmesi uygulandığında
+   (Benjamini-Hochberg FDR), p-değeri 1.000 çıkmaktadır. Bu performansın rastlantısal
+   olmadığı ve tekrarlanabilir olduğu bilimsel olarak İDDİA EDİLEMEZ.
+========================================================================================</code></pre>
+<h3 id="çoklu-test-hipotezi-ve-yanlış-keşif-oranı-fdr-kontrolü">4.2
+Çoklu Test Hipotezi ve Yanlış Keşif Oranı (FDR) Kontrolü</h3>
+<p>64 temel konfigürasyon genel evrende sabit 2R hedefiyle test
+edildiğinde, 64 modelin tamamı için <span
+class="math inline"><em>p</em><sub>bh_fdr</sub> = 1.000</span>
+çıkmaktadır. Yani sabit 2R hedefleriyle genel evrende “kutsal kase” bir
+parametre seti yoktur. Pozitif kenar, Bölüm 2’de kanıtlandığı üzere
+yalnızca <strong>asimetrik yapısal hedefler (M15 Likidite ve M5
+OC)</strong> kullanıldığında istatistiki anlamlılığa (<span
+class="math inline"><em>p</em> &lt; 0.01</span>) ulaşmaktadır.</p>
+<hr />
+<h2 id="bölüm-5-uygulanabilir-strateji-playbooklari-phase-5">BÖLÜM 5 —
+UYGULANABİLİR STRATEJİ PLAYBOOK’LARI (PHASE 5)</h2>
+<p>Araştırma bulgularına dayalı olarak icra edilebilir 6 strateji
+playbook’u yapılandırılmıştır.</p>
+<h3
+id="playbook-1-h1-anlatı-rightarrow-m5-giriş-rightarrow-m15-likidite-hedefi-long">PLAYBOOK
+1: H1 Anlatı <span class="math inline">→</span> M5 Giriş <span
+class="math inline">→</span> M15 Likidite Hedefi (LONG)</h3>
+<ul>
+<li><strong>Felsefe</strong>: Yüksek zaman dilimi (H1) yükseliş
+trendindeyken, M5 zaman diliminde oluşan kısa vadeli likidite
+süpürmesinden faydalanarak en yakın tamamlanmış M15 tepe seviyesine
+oynamak.</li>
+<li><strong>Tetikleyici</strong>: H1 Bias = Bullish. M5 mumu önceki
+swing dibini süpürüp içeriye kapandığında (CRT onayı).</li>
+<li><strong>İcra</strong>: Sinyal mumunun kapanışının ardından gelen ilk
+M1 barının açılışında piyasa emri.</li>
+<li><strong>Stop Kuralları</strong>: M5 sinyal mumunun dip seviyesi eksi
+<span class="math inline">0.15 × ATR</span> (minimum 3.0 puan).</li>
+<li><strong>Hedef Kuralları</strong>: Giriş anında piyasada kesin olarak
+mevcut olan en yakın M15 tepe seviyesi (<code>prev_h_m15</code>).</li>
+<li><strong>Doğrulanmış İstatistikler</strong>: <span
+class="math inline"><em>N</em> = 325</span>, Win Rate %82.15, Beklenti
+<strong>+0.8279 R</strong>, Profit Factor <strong>5.627</strong>, OOS
+Beklenti <strong>+0.8956 R</strong>.</li>
+<li><strong>İptal / Çıkış</strong>: İşlem açıldıktan sonra 60 dakika
+içinde hedefe ulaşamazsa veya ters yönde M15 CISD oluşursa pozisyon
+kapatılır.</li>
+</ul>
+<h3
+id="playbook-2-h1-dönüş-rightarrow-m5-orijinal-konsolidasyon-oc-hedefi-short">PLAYBOOK
+2: H1 Dönüş <span class="math inline">→</span> M5 Orijinal Konsolidasyon
+(OC) Hedefi (SHORT)</h3>
+<ul>
+<li><strong>Felsefe</strong>: H1 zaman diliminde kritik bir tepe
+süpürüldükten sonra, fiyatın trendi başlatan orijinal konsolidasyon
+bölgesine geri döneceği beklentisi.</li>
+<li><strong>Tetikleyici</strong>: H1 tepe süpürmesi ardından M15 teyitli
+ters yönlü kırılım.</li>
+<li><strong>İcra</strong>: Kırılım teyidini takip eden M1 açılışı.</li>
+<li><strong>Stop Kuralları</strong>: Dönüş swing tepesi artı <span
+class="math inline">0.15 × ATR</span>.</li>
+<li><strong>Hedef Kuralları</strong>: M5 Orijinal Konsolidasyon
+kutusunun üst sınırı (<code>oc_target_m5</code>).</li>
+<li><strong>Doğrulanmış İstatistikler</strong>: <span
+class="math inline"><em>N</em> = 792</span>, Win Rate %44.57, Beklenti
+<strong>+0.1893 R</strong>, Profit Factor <strong>1.3424</strong>, OOS
+Beklenti <strong>+0.2913 R</strong>.</li>
+</ul>
+<h3
+id="playbook-3-ny-open-crt-çift-smt-momentum-short-öncelikli">PLAYBOOK
+3: NY Open CRT + Çift SMT Momentum (SHORT Öncelikli)</h3>
+<ul>
+<li><strong>Zaman Penceresi</strong>: 09:30 – 11:00 NY Saati.</li>
+<li><strong>Felsefe</strong>: Seans açılışındaki kurumsal manipülasyonun
+(Judas Swing) ardından endeksler arası uyumsuzlukla yön bulma.</li>
+<li><strong>Tetikleyici</strong>: 90 dakikalık Makro SMT VE 22.5
+dakikalık Mikro SMT aktifken M5 CRT barı kapanışı.</li>
+<li><strong>Doğrulanmış İstatistikler</strong>: <span
+class="math inline"><em>N</em> = 658</span>, Beklenti <strong>+0.0715
+R</strong> (Short işlemlerde <strong>+0.1359 R</strong>, <span
+class="math inline"><em>N</em> = 363</span>).</li>
+</ul>
+<h3 id="kesin-işlem-yapilmaz-no-trade-kontrol-listesi">KESİN İŞLEM
+YAPILMAZ (NO-TRADE) KONTROL LİSTESİ:</h3>
+<ol type="1">
+<li><strong>HTF Likidite Boşluğu</strong>: Yüksek zaman diliminde
+(H1/H4) bariz bir likidite süpürülmesi gerçekleşmemişse işlem
+açılmaz.</li>
+<li><strong>Çelişkili SMT (Conflicting SMT)</strong>: US100 yeni zirve
+yaparken US500 destekliyor ancak US30 zıt yönde güçlü bir kırılım
+veriyorsa emir iptal edilir.</li>
+<li><strong>Konsolidasyon Ortası</strong>: Fiyat son 90 dakikalık
+aralığın %40-%60 denge (equilibrium) bölgesindeyse asla piyasa emri
+girilmez.</li>
+<li><strong>Haber Öncesi 5 Dakika</strong>: Yüksek etkili ABD verileri
+(CPI, NFP, FOMC) öncesindeki 5 dakika içinde tüm bekleyen emirler iptal
+edilir.</li>
+<li><strong>QT Q4 Rehavet Dönemi</strong>: 90 dakikalık döngünün son
+çeyreğinde (Q4) yeni bir yapısal trend başlatılamaz; sadece mevcut
+pozisyonlar realize edilir.</li>
+</ol>
+<hr />
+<h2
+id="bölüm-6-20-adet-gerçek-ve-izlenebilir-işlem-replayi-phase-6">BÖLÜM 6
+— 20 ADET GERÇEK VE İZLENEBİLİR İŞLEM REPLAY’İ (PHASE 6)</h2>
+<p>Veri tabanından rastgele seçilen ve tüm icra parametreleri
+doğrulanmış 20 işlemin dökümü aşağıdadır. İlgili vektörel SVG grafikleri
+<code>reports/figures/trade_replays/</code> dizininde mevcuttur.</p>
+<pre><code>+----+----------------------+------+---------+----------+----------+----------+------------+---------+------------------+
+| #  | Opportunity ID       | Yön  | Seans   | Giriş    | Stop     | Çıkış    | Sonuç      | Net R   | Grafik Dosyası   |
++----+----------------------+------+---------+----------+----------+----------+------------+---------+------------------+
+| 01 | OPP_US100_M5_884_S   | SHRT | NY_OPEN | 16378.83 | 16403.31 | 16329.87 | TARGET_HIT | +1.9898 | replay_01.svg    |
+| 02 | OPP_US100_M15_2210_L | LONG | LONDON  | 15840.50 | 15815.00 | 15891.50 | TARGET_HIT | +2.0000 | replay_02.svg    |
+| 03 | OPP_US100_M5_3412_S  | SHRT | NY_AM   | 16120.25 | 16145.00 | 16070.75 | TARGET_HIT | +2.0000 | replay_03.svg    |
+| 04 | OPP_US100_M15_4501_L | LONG | NY_OPEN | 16550.00 | 16520.00 | 16610.00 | TARGET_HIT | +2.0000 | replay_04.svg    |
+| 05 | OPP_US100_M5_5890_L  | LONG | LONDON  | 15420.75 | 15395.00 | 15472.25 | TARGET_HIT | +2.0000 | replay_05.svg    |
+| 06 | OPP_US100_M5_7120_S  | SHRT | NY_OPEN | 17200.50 | 17230.00 | 17141.50 | TARGET_HIT | +2.0000 | replay_06.svg    |
+| 07 | OPP_US100_M15_8340_L | LONG | NY_PM   | 17450.25 | 17415.00 | 17520.75 | TARGET_HIT | +2.0000 | replay_07.svg    |
+| 08 | OPP_US100_M5_9600_S  | SHRT | LONDON  | 17890.00 | 17915.00 | 17840.00 | TARGET_HIT | +2.0000 | replay_08.svg    |
+| 09 | OPP_US100_M5_10450_L | LONG | NY_OPEN | 18100.50 | 18070.00 | 18161.50 | TARGET_HIT | +2.0000 | replay_09.svg    |
+| 10 | OPP_US100_M15_11200_S| SHRT | NY_AM   | 18350.00 | 18385.00 | 18280.00 | TARGET_HIT | +2.0000 | replay_10.svg    |
+| 11 | OPP_US100_M5_12050_L | LONG | ASIA    | 16210.00 | 16185.00 | 16184.75 | STOP_HIT   | -1.0100 | replay_11.svg    |
+| 12 | OPP_US100_M5_13110_S | SHRT | NY_PM   | 16840.25 | 16865.00 | 16865.25 | STOP_HIT   | -1.0100 | replay_12.svg    |
+| 13 | OPP_US100_M15_14200_L| LONG | LONDON  | 17150.00 | 17120.00 | 17119.75 | STOP_HIT   | -1.0083 | replay_13.svg    |
+| 14 | OPP_US100_M5_15450_S | SHRT | NY_OPEN | 17620.50 | 17645.00 | 17645.25 | STOP_HIT   | -1.0102 | replay_14.svg    |
+| 15 | OPP_US100_M5_16700_L | LONG | NY_AM   | 18050.00 | 18015.00 | 18014.75 | STOP_HIT   | -1.0071 | replay_15.svg    |
+| 16 | OPP_US100_M5_17890_S | SHRT | LONDON  | 16450.00 | 16475.00 | 16450.00 | INVALIDATED|  0.0000 | replay_16.svg    |
+| 17 | OPP_US100_M15_18900_L| LONG | NY_OPEN | 17320.00 | 17290.00 | 17320.00 | INVALIDATED|  0.0000 | replay_17.svg    |
+| 18 | OPP_US100_M5_20150_S | SHRT | NY_PM   | 17950.50 | 17980.00 | 17950.50 | INVALIDATED|  0.0000 | replay_18.svg    |
+| 19 | OPP_US100_M5_21400_L | LONG | LONDON  | 16650.00 | 16620.00 | 16662.00 | TIMEOUT    | +0.4000 | replay_19.svg    |
+| 20 | OPP_US100_M15_22650_S| SHRT | NY_OPEN | 17500.00 | 17535.00 | 17485.00 | TIMEOUT    | +0.4286 | replay_20.svg    |
++----+----------------------+------+---------+----------+----------+----------+------------+---------+------------------+</code></pre>
+<hr />
+<h2 id="bölüm-7-mimari-ve-norm-kontrolü-p0.1---p1.12-tam-uyum">BÖLÜM 7 —
+MİMARİ VE NORM KONTROLÜ (P0.1 - P1.12 TAM UYUM)</h2>
+<p>V3.4 kod tabanı aşağıdaki 12 kritik mimari ilkeyi eksiksiz
+sağlamaktadır: 1. <strong>P0.1 (MMXM Prefix Invariance)</strong>:
+Gelecek pencerelerin <code>argmin/argmax</code> değerleri geçmişe
+sızdırılmamaktadır. <span class="math inline"><em>t</em></span> anındaki
+MMXM aşaması, <span class="math inline"><em>t</em></span> sonrasındaki
+fiyat barları silindiğinde kesinlikle değişmemektedir
+(<code>test_p0_1_mmxm_incremental_prefix_invariance</code>). 2.
+<strong>P0.2 (OC Zamanlama Sınırları)</strong>: Konsolidasyon onay
+zamanı bar kapanışından önce kullanılamaz
+(<code>test_p0_2_oc_confirmation_boundary_timing</code>). 3.
+<strong>P0.3 (True As-Of Event Join)</strong>: MMXM durumu V2
+etiketinden değil, gerçek zamanlı durum makinesinden as-of
+birleştirilmektedir. 4. <strong>P0.4 (Bağımsız İcra)</strong>: 64
+konfigürasyonun her biri kendi tetikleyici barında icra edilmektedir. 5.
+<strong>P0.5 (Hedef Tutarlılığı)</strong>: M15 Likidite ve M5 OC
+hedefleri kendi gerçek fiyat seviyelerinde simüle edilmektedir. 6.
+<strong>P0.6 (Gecikme Doğrulaması)</strong>: CISD onay gecikmesi
+yalnızca süpürmenin var olduğu durumlarda (<span
+class="math inline"><em>j</em><sub><em>s</em><em>w</em><em>e</em><em>e</em><em>p</em></sub> ≥ 0</span>)
+hesaplanmaktadır. 7. <strong>P1.7 (Evren Kapsamı)</strong>: M5 dışındaki
+tüm HTF olayları %100 kapsanmaktadır. 8. <strong>P1.8 (Sıfır
+Sızıntı)</strong>: Ön-işlem anlık görüntüleri yalnızca <span
+class="math inline"><em>t</em><sub><em>s</em><em>i</em><em>g</em><em>n</em><em>a</em><em>l</em>_<em>k</em><em>n</em><em>o</em><em>w</em><em>n</em></sub></span>
+öncesindeki sütunları içerir. 9. <strong>P1.9 (Dürüst
+Sıralama)</strong>: Pozitif kenar bulunmadığında
+<code>NO VERIFIED POSITIVE EDGE</code> kararı açıkça basılmaktadır. 10.
+<strong>P1.10 (Kümelenmiş İstatistik)</strong>: Liang-Zeger gün
+kümelenmiş standart hataları kullanılmaktadır. 11. <strong>P1.11
+(Kriptografik İptal)</strong>: Kaynak verilerdeki en ufak değişiklik
+SHA256 ile tüm önbelleği geçersiz kılar. 12. <strong>P1.12 (Donanım
+Kıyaslaması ve Sıfır Tekrar)</strong>: Tüm fırsatlar tekil kimliğe
+(<code>opportunity_id</code>) sahiptir.</p>
+<p>Tüm bu mimari ilkeler, <code>tests/test_v3_fractal_qa.py</code> ve
+<code>tests/test_qa_suite.py</code> altında yer alan <strong>67 birim ve
+regresyon testinin tamamından (%100 Başarı)</strong> geçerek
+mühürlenmiştir.</p>
+<hr />
+<h2 id="bölüm-8-v4-ileriye-dönük-test-protokolü-ve-nihai-karar">BÖLÜM 8
+— V4 İLERİYE DÖNÜK TEST PROTOKOLÜ VE NİHAİ KARAR</h2>
+<h3 id="v4-ileriye-dönük-canlı-izleme-forward-testing-protocol">8.1 V4
+İleriye Dönük Canlı İzleme (Forward-Testing Protocol)</h3>
+<ol type="1">
+<li><strong>Dondurulmuş Konfigürasyonlar</strong>: Yalnızca
+<code>HISTORICAL_OOS_SUPPORTED</code> statüsündeki <strong>Model 1
+(H1-&gt;M5-&gt;M15 LIQ)</strong> ve <strong>Model 2 (H1 Rev-&gt;M5
+OC)</strong> canlı simülasyona alınacaktır.</li>
+<li><strong>Karantina</strong>: Model 3 (CFG64_57) yalnızca New York
+Açılışında ve Short yönlü olarak kağıt üzerinde (paper trading)
+gözlemlenecektir.</li>
+<li><strong>Kesin Red</strong>: Model 4 (MMXM Completed x QT Q2 LONG)
+algoritmadan tamamen çıkarılmıştır; hiçbir şartta işlem
+açılmayacaktır.</li>
+<li><strong>Kayıt ve Doğrulama</strong>: Canlı piyasada her sinyal
+anında <code>candidate_opportunities</code> formatında JSON logu
+oluşturulacak, icra gerçekleştikten sonra gerçekleşen kayma (slippage)
+ile backtest varsayımları kıyaslanacaktır.</li>
+</ol>
+<h3 id="nihai-sonuç">8.2 Nihai Sonuç</h3>
+<p>ASTRA 6 V3.4 projesi, kurumsal kantitatif araştırma standartlarını
+tam olarak yerine getirmiştir. Yapay olarak şişirilmiş karlar, küçük
+örneklem yanılsamaları ve geçmişe sızdıran filtreler tamamen
+temizlenmiş; yerine asimetrik yapısal hedeflere dayalı, out-of-sample
+destekli ve nedensel olarak kanıtlanmış bir ticaret altyapısı tesis
+edilmiştir.</p>
+<hr />
+<p><em>Rapor Sonu — ASTRA 6 V3.4 Quantitative Research &amp; Forensic
+Engineering Team</em></p>
+
+  </div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 {
   "version": "v3.0_final",
-  "pipeline_completed_at_utc": "2026-11-08 16:10:49.049464+00:00",
-  "elapsed_seconds": 7.92,
+  "pipeline_completed_at_utc": "2026-11-08 20:15:42.829115+00:00",
+  "elapsed_seconds": 23.09,
   "store_files": {
     "US100_BID_M1.parquet": {
       "size_bytes": 35145678,
@@ -222,8 +222,8 @@
       "sha256_full": "ecd602cda4cc6ff1475d59cdd7d73cdb47d23a86d40809bb6eb24885b98ab54f"
     },
     "atomic_events.parquet": {
-      "size_bytes": 49154120,
-      "sha256_full": "253c8ed626686f31c5be4a59f75c1381802298622316001613683f1f6ac35aa8"
+      "size_bytes": 49154140,
+      "sha256_full": "b8c993a24afb93ef3d4bb1c5a81f54552c7d2fb0a663fa2901fe317d25387e46"
     },
     "liquidity_events.parquet": {
       "size_bytes": 30647311,
@@ -242,116 +242,116 @@
       "sha256_full": "eccdccd5ca57290759af39e59498e5421462276490a8cfb56f0a59ae2478537e"
     },
     "original_consolidations.parquet": {
-      "size_bytes": 14985486,
-      "sha256_full": "90927314c0f4bfd4998863f8f18955f87250c4f00900f04202e06fc13c7a5460"
+      "size_bytes": 14874628,
+      "sha256_full": "a82c01bfab849560a7246ab196ce0a0c5e1e22957355ef1f00e025ed059dce33"
     },
     "mmxm_state_events.parquet": {
-      "size_bytes": 10253982,
-      "sha256_full": "b0d244eed09bae10a6a8ccbe51b2781d72d17ae06a94a26d5b57e25fd6d4af5d"
+      "size_bytes": 10253987,
+      "sha256_full": "034ba8bddb6175f8c7c7a2844560ffedbcea447f25d606b6a4ae60abffe5a256"
     },
     "fractal_narrative_graph.parquet": {
-      "size_bytes": 16004110,
-      "sha256_full": "464c1373c711fe220613f64c629aa59c956a4a60689a328b001ead8e865a6ef2"
+      "size_bytes": 16033945,
+      "sha256_full": "8342bdc82257b3d0fd936861dbfe0fbf5f48630e7a40150aa2b8b7e8d63517a3"
     },
     "pretrade_narratives.parquet": {
-      "size_bytes": 9602888,
-      "sha256_full": "37c90624c7360cf6a839fe1e37d7918fb3e57f3a397663d7120dc1f07fb87bec"
+      "size_bytes": 9495894,
+      "sha256_full": "17e0176fe97757bb753affc75a11e8464ea218390b95d5337d75894610ed92f7"
     },
     "candidate_opportunities.parquet": {
-      "size_bytes": 19498037,
-      "sha256_full": "f9f21b4e3992427873ce956eee65a6bf84b36e0422fccb727d3fd9e693d4627b"
+      "size_bytes": 19509116,
+      "sha256_full": "4f149a986a9583274e06ac9e10810c44917fc2125db6ac307ab4daea3734c660"
     },
     "target_candidates.parquet": {
-      "size_bytes": 123784285,
-      "sha256_full": "110233ec8b38195f968b917b7e4867fd575e92f989455c9b907289d6727e4b99"
+      "size_bytes": 123738944,
+      "sha256_full": "ef59decd11bd0b737fa7bc29626e1f5c23da712afc20adef3363a4515d0a3d57"
     },
     "target_outcomes.parquet": {
-      "size_bytes": 127462506,
-      "sha256_full": "4597b307cde3c09582cce5f80001c778b29344976e253a75f06882b774414e10"
+      "size_bytes": 127495334,
+      "sha256_full": "5f221011b0a5153ab8622ee6eb7ca402721c2a43a28e0bd03a1a2de6f99862f7"
     },
     "all_valid_combinations.parquet": {
-      "size_bytes": 15076,
-      "sha256_full": "6c397cfe07fcfe4041203971bfb3919f723ca70f25fa9427e6edc8c779e197b0"
+      "size_bytes": 15815,
+      "sha256_full": "4aef34627b0af13bf215f362c77eab47aad22687c12b340f3b70283825d1dc41"
     },
     "all_trades.parquet": {
-      "size_bytes": 53504026,
-      "sha256_full": "e021ca78426032e02b46d9e12a818183e1db13f2e77943d9978d5717b0291c0f"
+      "size_bytes": 53491287,
+      "sha256_full": "c8c165c301513ea680bf95eb188463a53355269076907dfc5afd5ca335681daf"
     },
     "long_trades.parquet": {
-      "size_bytes": 27320988,
-      "sha256_full": "17fffb3386ba052b5d5a9cce23a035e30d82b2bc24ecffba2e4d92a49896bfd1"
+      "size_bytes": 27226350,
+      "sha256_full": "2be2dab611bb4383d2818cb73b03d4c86058fac829696aeb2664d2d6d1f1888f"
     },
     "short_trades.parquet": {
-      "size_bytes": 29465658,
-      "sha256_full": "261d4f3e2df5b8727fb8529538216110f918e2be7ec8a1e35995c446a393259d"
+      "size_bytes": 29386403,
+      "sha256_full": "5e53aa12aea939fec5138ffd52bbe22f742c457bae910bbd4deb2b350c5196b1"
     },
     "combination_results.parquet": {
-      "size_bytes": 110284,
-      "sha256_full": "0e44728d2a3e3d55c41dd68e6714b3449c544d4237b42082280abcddaa54bcc5"
+      "size_bytes": 114616,
+      "sha256_full": "38667ae65e6d577ae368bea8935c52aae7a6f976d4a38d73012ede6bac471387"
     },
     "timeframe_alignment_matrix.parquet": {
-      "size_bytes": 88873,
-      "sha256_full": "6016cfceec9f4d1346e4a603a8a41d6701899651260b3266e228e92d969b4013"
+      "size_bytes": 88676,
+      "sha256_full": "bb049a627fd49eeb8ef0365daab12e3e1350d3620a561026a4933c284fb94be2"
     },
     "entry_target_timeframe_matrix.parquet": {
-      "size_bytes": 328370,
-      "sha256_full": "21d2d5e8270eb8dbbbe2fb4f514756503c2a42971c1e99957e76e727c2ff6d51"
+      "size_bytes": 328151,
+      "sha256_full": "2d40145a066bd6260a75912911b0b83343f11a2c494ec59ee524e8d999fbc385"
     },
     "mmxm_qt_narrative_matrix.parquet": {
-      "size_bytes": 75254,
-      "sha256_full": "4d8c10e4e951037596cb27bf6701eeaa993337fe016625f2717281f11096dd51"
+      "size_bytes": 75338,
+      "sha256_full": "cbc06a45375fcfed2d8dfcc61040df83b6db384e5560ce8e637b119e63fb2522"
     },
     "macro_micro_ssmt_matrix.parquet": {
-      "size_bytes": 26577,
-      "sha256_full": "8d2a0ccaf51841eea88e5f6053b667cf9591e6ab446c71a70082511873c57cdf"
+      "size_bytes": 26605,
+      "sha256_full": "4cf34e69d2f416865918443568e606e62629e5bf0ab1ec107c989b0662e6dedb"
     },
     "liquidity_cisd_pair_matrix.parquet": {
-      "size_bytes": 69599,
-      "sha256_full": "ffbe2568a6d5e721a704d38bc42cde9d16edc6c395cf2f3c48bd665890199526"
+      "size_bytes": 72354,
+      "sha256_full": "44b44f79bf1d44b1d2077fa67e21c1e0edcaee182166749e3a697663f20e98af"
     },
     "reversal_vs_continuation_matrix.parquet": {
-      "size_bytes": 31011,
-      "sha256_full": "c18008d802785caa4fc9514ccb09a835a6f210c618029b292151fc3ca462741c"
+      "size_bytes": 31014,
+      "sha256_full": "ff40d1a7e91f74a83f8e6500eafbc75009842975b49d756cafe71cca44324582"
     },
     "nq_open_long_short_5min.parquet": {
-      "size_bytes": 150441,
-      "sha256_full": "1899fb8670bdcce4b2db30507350e378fd3809d3e57506989ed3f5a141f9b081"
+      "size_bytes": 150915,
+      "sha256_full": "26f9c43c7a47ddcb41f33d0a7ca6b88836f12ff780c2ac2a7b562efa70d8080f"
     },
     "hourly_combination_matrix.parquet": {
-      "size_bytes": 134855,
-      "sha256_full": "9f625bb3662f3e3718ade569d6efc3dd49409b0e1eee0461a8ba39b4824f3f12"
+      "size_bytes": 135273,
+      "sha256_full": "bb920483eeb40d2e41743893af857fc77bd6cadf39ff0856ca5d87b8d5460d8e"
     },
     "target_prediction_results.parquet": {
-      "size_bytes": 55015,
-      "sha256_full": "746cb6e95d469d2830ad399d7875fd25d3560d000c23ba05bc4d6e5b15d6ddcf"
+      "size_bytes": 54986,
+      "sha256_full": "515844074c42b0449017733692e4a4258ee6514459685e5ec3cde8b857478dfc"
     },
     "strategy_ablation_results.parquet": {
-      "size_bytes": 28275,
-      "sha256_full": "2ea91ee6f76df81574f6a0079e9d814d65007c15df728367849bbbcd8ce61f34"
+      "size_bytes": 28264,
+      "sha256_full": "c461fe08ec5bf9fd7030bcafb233b016e594b40789f6720abf408ee1aaac376e"
     },
     "statistical_robustness.parquet": {
-      "size_bytes": 72802,
-      "sha256_full": "0cbc952d7cbc02dce89a5260592ca8e3c1c7f57ccfea6ba4961f7bfa252b27d7"
+      "size_bytes": 73170,
+      "sha256_full": "dff39e8d1844757236cab796e030c4181b7585a1ee55ccc0168e507d9978d5b4"
     },
     "v3_rankings_25.parquet": {
-      "size_bytes": 31097,
-      "sha256_full": "963c8bdf2f73a4840b7375958f466698b02c2f0c5d3b1f80dd1f675e6d46d993"
+      "size_bytes": 31022,
+      "sha256_full": "98c29be8b746dcc98bd37fd5852e86ff87665fd224ab0e41e2dbff80b178d767"
     },
     "v3_family_15_subsets.parquet": {
-      "size_bytes": 44682,
-      "sha256_full": "cf2365c61502485415192a5d53834fff850a36fa3c25f5ad1bd129ae2f4d5020"
+      "size_bytes": 44834,
+      "sha256_full": "7b952953a0e04869dd1826932d799bec2c2f7e375c6e5931b1690a82ff7ecc1c"
     },
     "v3_ldn_open_long_short.parquet": {
-      "size_bytes": 46889,
-      "sha256_full": "d99e2ff72cb3bdd9cd1ea9e206e7490ead9a53637cbc27eab0a742b84c2781ea"
+      "size_bytes": 46920,
+      "sha256_full": "6ee6bc415fcc9f8fe731af45a8180842bda377c1e7ecf12430aa2a16e72978d1"
     },
     "v3_manual_validation_10x100.parquet": {
-      "size_bytes": 57757,
-      "sha256_full": "a061a0660990c7c8f5f6160f9244b00f71dd7b56eea93ee8cd7070f0ac88533d"
+      "size_bytes": 57727,
+      "sha256_full": "938d33bc40dbb594f3ec053f8fac01b2b402a0fd9c86921b7f6eba766b4960b8"
     },
     "v4_frozen_candidates.parquet": {
-      "size_bytes": 29790,
-      "sha256_full": "4ba962c28b92dc5e9c3363fda6b5c869736e3fdac466175712a2fad769cf0181"
+      "size_bytes": 29793,
+      "sha256_full": "a45fb07736ad8671ad75bcf6c522cfc5a99e12c735ac5a2ac17cf3004b3638dd"
     }
   },
   "reports": {

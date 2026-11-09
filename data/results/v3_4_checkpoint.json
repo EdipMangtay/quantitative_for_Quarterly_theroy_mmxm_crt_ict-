@@ -1,0 +1,98 @@
+{
+  "checkpoint_id": "ASTRA_6_V3_4_FINAL_CHECKPOINT",
+  "version": "3.4.0",
+  "timestamp_utc": "2026-11-08T20:25:00Z",
+  "git_branch": "main",
+  "data_integrity": {
+    "zero_new_data_downloaded": true,
+    "local_store_path": "data/store",
+    "dataset_5yr_m1_verified": true,
+    "hash_invalidation_active": true
+  },
+  "phase_statuses": {
+    "phase_1_independent_strategy_execution": "COMPLETED",
+    "phase_2_audit_four_key_models": "COMPLETED",
+    "phase_3_fractal_narrative_validation": "COMPLETED",
+    "phase_4_honest_statistical_validation": "COMPLETED",
+    "phase_5_strategy_playbooks": "COMPLETED",
+    "phase_6_visual_trade_replay": "COMPLETED",
+    "phase_7_final_reports_turkish": "COMPLETED"
+  },
+  "adversarial_verification": {
+    "single_event_id": "UEV_US100_M5_884_S",
+    "policies_tested": ["00_No_CISD", "01_M1_CISD", "03_M5_CISD", "04_M15_CISD", "CFG64_00", "CFG64_32", "CFG64_34"],
+    "independent_executions_verified": true,
+    "distinct_triggers_and_outcomes_proven": true
+  },
+  "key_models_verdict": {
+    "MODEL_1_H1_M5_M15_LIQ": {
+      "status": "HISTORICAL_OOS_SUPPORTED",
+      "n_trades": 325,
+      "win_rate": 0.8215,
+      "expectancy_r": 0.8279,
+      "profit_factor": 5.627,
+      "oos_expectancy_r": 0.8956
+    },
+    "MODEL_2_H1_REV_M5_OC": {
+      "status": "HISTORICAL_OOS_SUPPORTED",
+      "n_trades": 792,
+      "win_rate": 0.4457,
+      "expectancy_r": 0.1893,
+      "profit_factor": 1.3424,
+      "oos_expectancy_r": 0.2913
+    },
+    "MODEL_3_NY_OPEN_CFG64_57": {
+      "status": "EXPLORATORY_POSITIVE",
+      "n_trades": 658,
+      "win_rate": 0.3769,
+      "expectancy_r": 0.0715,
+      "profit_factor": 1.1143,
+      "oos_expectancy_r": 0.0935,
+      "shorts_expectancy_r": 0.1359
+    },
+    "MODEL_4_MMXM_COMPLETED_QT_Q2_LONG": {
+      "status": "CONFIRMED_NEGATIVE_EDGE",
+      "old_reported_n": 42,
+      "old_reported_r": 0.3651,
+      "audited_n": 96803,
+      "audited_win_rate": 0.2860,
+      "audited_expectancy_r": -0.1808,
+      "oos_expectancy_r": -0.0896,
+      "note": "Previous positive edge was an artifact of small sample size N=42. Collapsed in full causal population."
+    }
+  },
+  "manual_excel_reconciliation": {
+    "workbook": "Copy of EXCEL_TEST.xlsx",
+    "completed_trades": 18,
+    "winners": 13,
+    "losers": 5,
+    "win_rate": 0.7222,
+    "total_r": 52.78,
+    "mean_r": 2.9322,
+    "anomalies_flagged": ["Trade #14 entry_px == stop_px == 16120.00 zero-distance stop"],
+    "statistical_status": "SELECTION_BIAS_PRESENT_P_FDR_1_000"
+  },
+  "test_suite": {
+    "total_tests": 67,
+    "passed": 67,
+    "failed": 0,
+    "test_files": ["tests/test_v3_fractal_qa.py", "tests/test_qa_suite.py"]
+  },
+  "generated_artifacts": [
+    "reports/ASTRA6_V3_4_FINAL_VALIDATION.md",
+    "reports/ASTRA6_V3_4_FINAL_VALIDATION.html",
+    "reports/ASTRA6_V3_4_FINAL_VALIDATION.pdf",
+    "reports/V3_4_STRATEGY_PLAYBOOKS.md",
+    "reports/V3_4_BEFORE_AFTER_RESULTS.md",
+    "reports/V3_4_TEST_EVIDENCE.md",
+    "data/results/v3_4_model_audit.parquet",
+    "data/results/v3_4_model_audit.json",
+    "data/results/v3_4_fractal_narrative_validation.parquet",
+    "data/results/v3_4_fractal_narrative_validation.json",
+    "data/results/v3_4_trade_replays.json",
+    "reports/figures/trade_replays/replay_01.svg ... replay_20.svg",
+    "data/results/counterfactual_policy_trades.parquet",
+    "data/results/multitf_cisd_policy_trades.parquet"
+  ]
+}
+

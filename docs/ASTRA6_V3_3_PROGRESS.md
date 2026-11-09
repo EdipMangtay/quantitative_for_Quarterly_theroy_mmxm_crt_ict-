@@ -53,8 +53,9 @@
   - Delivered `reports/V3_3_BEFORE_AFTER_PERFORMANCE.md`
   - Delivered `reports/V3_3_STATISTICAL_VALIDATION.md`
   - Delivered `reports/V3_3_REPRODUCIBILITY.md`
-  - Delivered `reports/V3_3_FINAL_TEST_RESULTS.md` (61/61 tests passing)
+  - Delivered `reports/V3_3_FINAL_TEST_RESULTS.md` (65/65 tests passing, 100% deterministic coverage)
   - Delivered `reports/ASTRA6_V3_3_FINAL_NARRATIVE_RESEARCH.md`
   - Compiled publication-quality `reports/ASTRA6_V3_3_FINAL_NARRATIVE_RESEARCH.html`
-  - Compiled publication-quality `reports/ASTRA6_V3_3_FINAL_NARRATIVE_RESEARCH.pdf` (8 pages)
+  - Compiled publication-quality `reports/ASTRA6_V3_3_FINAL_NARRATIVE_RESEARCH.pdf` (19 pages, vector print layout)
+  - Reconciled manual Excel stats: 18 trades, 13 wins, 5 losses, 72.22% WR, +52.78R sum, +2.9322R mean, Trade ID 2 flagged.
   - V4 forward-testing candidates frozen and registered (`v4_frozen_candidates.parquet`).

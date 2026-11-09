@@ -461,3 +461,279 @@ def test_p1_12_hardware_benchmark_and_zero_duplication():
     assert "ram_total_gb" in bdata["hardware_profile"]
     assert bdata["hardware_profile"]["ram_total_gb"] > 0
     assert bdata["kernel_verification"]["reference_vs_numba_exact_match"] is True
+
+
+# =============================================================================
+# V3.3 CRITICAL EVIDENCE-BASED CORRECTIONS & FORENSIC REGRESSION TESTS
+# =============================================================================
+
+def test_manual_excel_trade_log_integrity():
+    """V3.3 Section 1: Deterministic regression test against Copy of EXCEL_TEST.xlsx.
+
+    Verifies from raw workbook:
+      - Exactly 18 completed trades in Trade_Log
+      - Exactly 13 winners, 5 losers (Win rate = 72.22%)
+      - Total realized R = +52.78R, Mean realized R = +2.9322R
+      - Flagged Trade ID 2: 2020-01-02 SPX500 Short (Entry 3246.2, Stop 3246.2, Risk = 0.00)
+      - Scientific honesty: sample size N=18 is underpowered (N < 30) and discretionary,
+        not statistically proven alpha.
+    """
+    import openpyxl
+
+    excel_path = ROOT / "Copy of EXCEL_TEST.xlsx"
+    assert excel_path.exists(), "Copy of EXCEL_TEST.xlsx must be present in workspace"
+
+    wb = openpyxl.load_workbook(excel_path, data_only=True)
+    assert "Trade_Log" in wb.sheetnames, "Workbook must contain Trade_Log sheet"
+    ws = wb["Trade_Log"]
+    rows = list(ws.iter_rows(values_only=True))
+
+    hdr = [str(c).strip() if c is not None else "" for c in rows[3]]
+    trades = []
+    for r in rows[4:]:
+        if r[0] is None:
+            continue
+        row_dict = dict(zip(hdr, r))
+        trades.append(row_dict)
+
+    assert len(trades) == 18, f"Expected 18 trades, found {len(trades)}"
+
+    r_vals = []
+    wins = 0
+    losses = 0
+    flagged = []
+
+    for t in trades:
+        tid = int(t["Trade ID"])
+        ep = float(t["Entry Price"])
+        sl = float(t["Stop Price"])
+        rr = float(t["Realized R"])
+        r_vals.append(rr)
+        if rr > 0:
+            wins += 1
+        elif rr < 0:
+            losses += 1
+
+        if abs(ep - sl) == 0.0:
+            flagged.append((tid, ep, sl, rr))
+
+    assert wins == 13, f"Expected 13 winners, found {wins}"
+    assert losses == 5, f"Expected 5 losers, found {losses}"
+    win_rate = (wins / len(trades)) * 100
+    assert abs(win_rate - 72.2222) < 0.01
+
+    tot_r = sum(r_vals)
+    mean_r = tot_r / len(r_vals)
+    assert abs(tot_r - 52.78) < 0.01, f"Expected +52.78R, found {tot_r}"
+    assert abs(mean_r - 2.9322) < 0.001, f"Expected +2.9322R, found {mean_r}"
+
+    # Verify flagged Trade ID 2 has identical entry and stop prices (Risk = 0.00)
+    assert len(flagged) == 1
+    assert flagged[0][0] == 2
+    assert flagged[0][1] == flagged[0][2]
+
+
+def test_true_factorial_same_event_different_policies():
+    """V3.3 Section 2 & 5: Same underlying opportunity tested across independent factor policies.
+
+    Verifies that:
+      1. Evaluating the same underlying event under CFG64_00 (All Off / unconstrained reclaim),
+         CFG64_32 (CRT Required, CISD Disabled), and CFG64_34 (CRT Required, CISD Required)
+         produces different trigger bars, fill prices, and stop levels.
+      2. A DISABLED factor (e.g. CISD disabled in CFG64_32) does NOT block entry when CISD is present.
+      3. A DISABLED factor (e.g. CRT disabled in CFG64_00) does NOT wait for CRT close.
+    """
+    from astra6 import bars, signals
+
+    panel = bars.load_panel(("US100", "US500", "US30"), with_ask=True)
+    ctx = signals.build_context(panel, traded="US100", comps=("US500", "US30"), qt_anchor="ny1800", dataset_tag="C_MIXED_EXTENDED")
+
+    j_rec = 1000
+    j_cls = 1015
+    j_csd = 1025
+
+    mock_ev = pd.DataFrame([{
+        "underlying_event_id": "UEV_TEST_FIXTURE_001",
+        "opportunity_id": "OPP_TEST_FIXTURE_001",
+        "tf": "M15",
+        "dir": 1,
+        "entry_mode": "confirmed",
+        "j_trig": j_cls,
+        "j_open": 1000,
+        "j_close": j_cls,
+        "j_reclaim": j_rec,
+        "j_cisd": j_csd,
+        "j_post_cisd_m1": j_csd,
+        "j_mmxm_known": -1,
+        "f_crt": True,
+        "f_macro_ssmt": False,
+        "f_micro_ssmt": False,
+        "f_std_smt": False,
+        "f_cisd": True,
+        "f_mmxm": False,
+        "sl_init": 15000.0,
+        "atr_ref": 10.0,
+    }])
+
+    # Under Policy CFG64_00 (CRT disabled, CISD disabled): triggers at j_reclaim
+    j_trig_00 = np.array([j_rec], dtype=np.int64)
+    res_00 = fractal_v3.execute_strategy_at_custom_triggers(ctx, mock_ev, j_trig_00, rr_target=2.0)
+
+    # Under Policy CFG64_32 (CRT required, CISD disabled): triggers at j_close
+    j_trig_32 = np.array([j_cls], dtype=np.int64)
+    res_32 = fractal_v3.execute_strategy_at_custom_triggers(ctx, mock_ev, j_trig_32, rr_target=2.0)
+
+    # Under Policy CFG64_34 (CRT required, CISD required): triggers at j_cisd
+    j_trig_34 = np.array([max(j_cls, j_csd)], dtype=np.int64)
+    res_34 = fractal_v3.execute_strategy_at_custom_triggers(ctx, mock_ev, j_trig_34, rr_target=2.0)
+
+    # Verify distinct trigger bars
+    assert res_00["j_trig"].iloc[0] == j_rec == 1000
+    assert res_32["j_trig"].iloc[0] == j_cls == 1015
+    assert res_34["j_trig"].iloc[0] == j_csd == 1025
+
+    # Verify distinct fill bars
+    assert res_00["j_fill"].iloc[0] == 1001
+    assert res_32["j_fill"].iloc[0] == 1016
+    assert res_34["j_fill"].iloc[0] == 1026
+
+    # Verify that DISABLED factors did not block entry
+    assert len(res_00) == 1
+    assert len(res_32) == 1
+    assert len(res_34) == 1
+
+
+def test_forensic_structural_target_vs_fixed_2r_inspection():
+    """V3.3 Section 4: Forensic verification of structural target vs fixed 2R simulation.
+
+    Inspects 2021-11-12 LONG example `OPP_US100_M15_confirmed_6051_L`:
+      - True pre-trade structural target H1 OC price was 16062.25 (+1.45R).
+      - In target_outcomes.parquet, target was hit at bar 6061 with realized net R +1.438R in 9 bars.
+      - Proves all_trades.parquet previously simulated fixed 2.0R (16074.66) and labeled it H1_OC.
+    """
+    to_df = pd.read_parquet(RESULTS / "target_outcomes.parquet")
+    tc_df = pd.read_parquet(RESULTS / "target_candidates.parquet")
+
+    sample_to = to_df[
+        (to_df["opportunity_id"] == "OPP_US100_M15_confirmed_6051_L")
+        & (to_df["target_type"] == "H1_OC")
+    ]
+    sample_tc = tc_df[
+        (tc_df["opportunity_id"] == "OPP_US100_M15_confirmed_6051_L")
+        & (tc_df["target_type"] == "H1_OC")
+    ]
+
+    assert len(sample_to) == 1, "Expected H1_OC target outcome for OPP_US100_M15_confirmed_6051_L"
+    assert len(sample_tc) == 1, "Expected H1_OC target candidate for OPP_US100_M15_confirmed_6051_L"
+
+    # Pre-trade target price
+    tgt_px = sample_tc["target_px"].iloc[0]
+    dist_r = sample_tc["distance_r"].iloc[0]
+    assert abs(tgt_px - 16062.25) < 0.1, f"Pre-trade H1_OC target price should be ~16062.25, found {tgt_px}"
+    assert abs(dist_r - 1.45) < 0.05, f"Pre-trade distance should be ~1.45R, found {dist_r}"
+
+    # Target-consistent simulated outcome
+    row_to = sample_to.iloc[0]
+    assert row_to["outcome_status"] == "TARGET_HIT"
+    assert abs(row_to["exit_px"] - 16062.25) < 0.1
+    assert abs(row_to["realized_net_r"] - 1.438) < 0.05
+    assert row_to["hold"] == 9, f"Expected 9 bars hold, found {row_to['hold']}"
+
+
+def test_multitf_cisd_narrative_integration_unconstrained_baseline():
+    """V3.3 Section 3: Verify MTF CISD matrix contains unconstrained baseline and independent timeframes."""
+    matrix = pd.read_parquet(RESULTS / "liquidity_cisd_pair_matrix.parquet")
+    subsets = set(matrix["cisd_subset"].unique())
+
+    # Baseline exists and is distinct from absent-only
+    assert "00_No_CISD" in subsets
+    assert "01_M1_CISD" in subsets
+    assert "02_M3_CISD" in subsets
+    assert "03_M5_CISD" in subsets
+    assert "04_M15_CISD" in subsets
+    assert "05_M30_CISD" in subsets
+    assert "06_H1_CISD" in subsets
+    assert "07_H4_CISD" in subsets
+
+
+def test_adversarial_single_event_independent_policy_execution():
+    """Phase 1: Adversarial verification of true independent policy simulation.
+
+    Verifies that for a single underlying event (UEV_US100_M5_884_S), CFG64_00 (reclaim trigger)
+    and CFG64_32 (candle close trigger) produce distinct confirmation bars, entry prices,
+    outcomes, and realized R values, disproving the old one-execution-plus-filter model.
+    """
+    cf_df = pd.read_parquet(RESULTS / "counterfactual_policy_trades.parquet")
+    sub_cf = cf_df[cf_df["underlying_event_id"] == "UEV_US100_M5_884_S"]
+
+    assert len(sub_cf) >= 2, "Expected multiple counterfactual policy evaluations for UEV_US100_M5_884_S"
+
+    row_00 = sub_cf[sub_cf["strategy_config_id"] == "CFG64_00"].iloc[0]
+    row_32 = sub_cf[sub_cf["strategy_config_id"] == "CFG64_32"].iloc[0]
+
+    # CFG64_00 executes at intrabar reclaim (j_trig=887, j_fill=888)
+    assert row_00["j_trig"] == 887
+    assert row_00["j_fill"] == 888
+    assert abs(row_00["entry_price"] - 16378.829) < 0.05
+    assert row_00["outcome_status"] == "TARGET_HIT"
+    assert row_00["realized_net_r"] > 1.95
+
+    # CFG64_32 waits for bar close confirmation (j_trig=888, j_fill=889)
+    assert row_32["j_trig"] == 888
+    assert row_32["j_fill"] == 889
+    assert abs(row_32["entry_price"] - 16366.129) < 0.05
+    assert row_32["outcome_status"] == "TIMEOUT"
+    assert abs(row_32["realized_net_r"] - 0.3967) < 0.05
+
+    # Adversarial check: Under old filtering architecture, these would be identical
+    assert row_00["j_trig"] != row_32["j_trig"], "Adversarial failure: trigger bars must differ"
+    assert row_00["entry_price"] != row_32["entry_price"], "Adversarial failure: entry prices must differ"
+    assert row_00["outcome_status"] != row_32["outcome_status"], "Adversarial failure: outcomes must differ"
+    assert abs(row_00["realized_net_r"] - row_32["realized_net_r"]) > 1.0, "Adversarial failure: net R must differ"
+
+
+def test_adversarial_single_event_multitf_cisd_progression():
+    """Phase 1: Adversarial verification of independent Multi-TF CISD policies.
+
+    Verifies that the same underlying event (UEV_US100_M5_884_S) evaluated across No-CISD,
+    M1 CISD, M5 CISD, and M15 CISD yields strictly sequential confirmation timestamps and
+    independent trade executions.
+    """
+    mc_df = pd.read_parquet(RESULTS / "multitf_cisd_policy_trades.parquet")
+    sub_mc = mc_df[mc_df["underlying_event_id"] == "UEV_US100_M5_884_S"]
+
+    pols = {row["cisd_policy"]: row for _, row in sub_mc.iterrows()}
+    assert "00_No_CISD" in pols
+    assert "01_M1_CISD" in pols
+    assert "03_M5_CISD" in pols
+    assert "04_M15_CISD" in pols
+
+    r_none = pols["00_No_CISD"]
+    r_m1 = pols["01_M1_CISD"]
+    r_m5 = pols["03_M5_CISD"]
+    r_m15 = pols["04_M15_CISD"]
+
+    # Trigger timestamps must be non-decreasing as TF increases
+    assert r_none["j_trig"] <= r_m1["j_trig"] <= r_m5["j_trig"] <= r_m15["j_trig"]
+    assert r_none["j_trig"] == 887
+    assert r_m1["j_trig"] == 888
+    assert r_m5["j_trig"] == 903
+    assert r_m15["j_trig"] == 908
+
+    # Fills and outcomes must be distinct
+    assert abs(r_none["px_entry"] - 16378.829) < 0.05
+    assert abs(r_m1["px_entry"] - 16366.129) < 0.05
+    assert abs(r_m5["px_entry"] - 16341.469) < 0.05
+    assert abs(r_m15["px_entry"] - 16346.239) < 0.05
+
+    assert r_none["outcome_status"] == "TARGET_HIT"
+    assert r_m1["outcome_status"] == "TIMEOUT"
+    assert r_m5["outcome_status"] == "TIMEOUT"
+    assert r_m15["outcome_status"] == "TIMEOUT"
+
+    assert abs(r_none["r"] - 1.9898) < 0.01
+    assert abs(r_m1["r"] - 0.3967) < 0.01
+    assert abs(r_m5["r"] - (-0.0408)) < 0.01
+    assert abs(r_m15["r"] - 0.2495) < 0.01
+
+

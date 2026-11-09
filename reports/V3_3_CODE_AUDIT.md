@@ -167,3 +167,4 @@ The codebase architecture is fundamentally sound, modular, and high-performance 
 The discrepancy between the manual trader's workbook and the automated results is entirely explained by **the 15 architectural and semantic defects identified above**—most notably the inverted filter semantics ($b=0 \implies \text{absent}$), 24-hour noise flooding, numerical MMXM proxies, and fixed 2R target execution.
 
 Repairing these logical defects will align ASTRA 6 directly with the true institutional ICT/MMXM narrative.
+

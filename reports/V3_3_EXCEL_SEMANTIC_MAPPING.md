@@ -23,7 +23,10 @@ Instead, the trader executes a **highly selective, context-driven, multi-timefra
    - **Step 3 (Liquidity Sweep & Divergence):** Price sweeps external/internal liquidity (PDH/PDL or Session Extremes). Concurrently or sequentially, a **Sequential SMT (SSMT)** appears between NQ and ES on the 90M or Micro layer.
    - **Step 4 (Structural Confirmation):** A Change in State of Delivery (**CISD**) confirms on LTF (M1 or M5) via a displacement candle closing beyond the reference open of the delivery series.
    - **Step 5 (Executable Entry & Risk Control):** Entry occurs on an **FVG Tap (8/18)**, **CISD Close (4/18)**, or **MSS Retest (2/18)**.
-   - **Step 6 (Structural Target & Invalidation):** The stop loss is placed strictly behind the structural sweep extreme. The target is an opposing structural liquidity pool or historical Original Consolidation, yielding planned R:R ratios of **3.0R to 7.0R** (average realized R: **+2.93R**, Win Rate: **72.2%**).
+   - **Step 6 (Structural Target & Invalidation):** The stop loss is placed strictly behind the structural sweep extreme. The target is an opposing structural liquidity pool or historical Original Consolidation, yielding planned R:R ratios of **3.0R to 7.0R**.
+   - **Reconciled Historical Performance**: Exactly 18 completed trades: **13 winners, 5 losers**, Win Rate = **72.22%**, Total Realized R = **+52.78R**, Mean Realized R = **+2.9322R**.
+   - **Adli Anomali (Trade ID 2 Flag)**: Trade ID 2 (2020-01-02 SPX500 Short) has identical entry and stop prices: Entry = 3246.20, Stop = 3246.20 (Risk = 0.00, Realized R = +2.90R).
+   - **Scientific Disclosure**: A sample of 18 trades over 2 months is underpowered ($N < 30$, $p > 0.05$ under day-clustered bootstrap), subject to discretionary selection bias, and cannot be claimed as statistically immune to chance.
 
 ---
 
@@ -140,3 +143,4 @@ To faithfully encode the manual trader's strategy without curve-fitting or alter
    - Require Stage 8/9 to reference a genuine confirmed CISD event from `multitf_cisd_events.parquet`.
 4. **Simulate Independent CISD Entries on Matched Events:**
    - For every underlying liquidity sweep, evaluate M1, M3, M5, M15, M30, and H1 CISD entries with their exact fill prices and distinct structural stops/targets.
+

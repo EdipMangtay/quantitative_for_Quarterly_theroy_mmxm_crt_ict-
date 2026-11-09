@@ -85,3 +85,4 @@ uv run pytest -v tests/test_qa_suite.py
 duckdb data/results/astra6_v3.duckdb -c "SELECT ranking_number, selected_strategy_label, win_rate, expectancy_r, profit_factor FROM v3_rankings_25 LIMIT 10;"
 ```
 All tables are deterministically regenerated with bit-level reproducibility across any POSIX platform with Python 3.12 and Numba JIT.
+

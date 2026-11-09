@@ -9,10 +9,13 @@
 Bu nihai araştırma raporu, **ASTRA 6 V3.3** kantitatif araştırma motorunun mantıksal ve mimari rekonstrüksiyonunu, algoritmik düzeltmelerini ve 5 yıllık (Kasım 2021 – Kasım 2026) doğrulanmış piyasa verisi üzerindeki ampirik sonuçlarını sunmaktadır.
 
 Araştırmanın temel çıkış noktası, takas odası ve diskresyonel işlem günlüğünü içeren `Copy of EXCEL_TEST.xlsx` çalışma kitabının adli ve semantik olarak incelenmesidir. Söz konusu çalışma kitabında:
-- **18 adet diskresyonel işlem** kaydedilmiştir (Aralık 2019 – Şubat 2020 dönemi, US100 endeksi).
-- **Kazanma Oranı (Win Rate)**: %83.33 (15 Kazanç, 3 Kayıp).
-- **Ortalama Gerçekleşen Getiri**: +2.95R işlem başına (Maksimum tekil işlem: +7.0R).
-- **Zamanlama Yoğunlaşması**: İşlemlerin %88.9'u New York Sabah Seansında (09:30–11:30 NY) gerçekleştirilmiştir.
+- **18 adet diskresyonel işlem** kaydedilmiştir (Aralık 2019 – Şubat 2020 dönemi, US100 ve SPX500 endeksleri).
+- **Gerçekleşen İşlem Sayısı**: 18 tamamlanmış işlem (13 Kazanç, 5 Kayıp).
+- **Kazanma Oranı (Win Rate)**: %72.22 (13 / 18).
+- **Toplam Gerçekleşen Getiri**: +52.78R (İşlem başına ortalama: +2.9322R).
+- **Zamanlama Yoğunlaşması**: İşlemlerin %88.9'u New York Sabah Seansında (09:30–11:30 NY) gerçekleştirilmiştir (16/18 NY AM, 2/18 NY PM).
+- **Kritik Veri Anomalisi (Trade ID 2)**: 2020-01-02 tarihli SPX500 Kısa (Short) işleminde Giriş Fiyatı (3246.20) ile Stop Fiyatı (3246.20) birbirine eşit kaydedilmiş ve sıfır risk puanı ile +2.90R getiri yazılmıştır.
+- **İstatistiksel Geçerlilik Hükmü**: $N=18$ örneklem büyüklüğü istatistiksel hipotez testleri için yetersiz güçtedir ($N < 30$, gün-kümelenmiş bootstrap $p > 0.05$). Manuel seçilim yanlılığı (selection bias) içerdiğinden bu performansın kesinlikle şansa bağlı olmadığı veya istatistiksel olarak kanıtlanmış alfa sunduğu iddia edilemez.
 
 ### 1.2 "Performans Uçurumu" (The Performance Gap) ve Adli Hata Tespiti
 Eski ASTRA 6 kod tabanı (V3.0 ve V3.1) ile manuel işlem performansı arasında görülen devasa uçurumun nedenleri bağımsız kod denetimiyle tespit edilmiş ve çözülmüştür:
@@ -137,12 +140,27 @@ Makro (90M) ve Mikro (22.5M) SSMT durumları birbiriyle uyumlu (Aligned) olduğu
 
 ## BÖLÜM 7: CHANGE IN STATE OF DELIVERY (CISD) VE TETİKLEME KANALLARI
 
-CISD, kurumsal emir akışının tersine döndüğünü gösteren ilk referans mum gövdesi ihlalidir.
-- **M1 CISD**: En hızlı tetikleme; giriş fiyatını optimize eder ancak testere riski taşır.
-- **M5 CISD**: Standart kurumsal doğrulama; gürültüyü eler.
-- **M15 / H1 CISD**: Yapısal trend dönüşü teyidi.
+CISD, kurumsal emir akışının tersine döndüğünü gösteren ilk referans mum gövdesi ihlalidir. V3.3 motorunda CISD, hem serbest temel durum (unconstrained baseline) hem de doğrulanmış yokluk (`ABSENT_ONLY`) ve 7 bağımsız zaman diliminde ayrı ayrı simüle edilmiştir:
 
-Ablasyon testinde `LTF_M1_M5_CISD_Entry`, tek başına **+0.1362R** marjinal getiri artışı sağlamış ve $t = 7.91$ ($p < 10^{-6}$) ile sistemin en güçlü tetikleyici filtresi olduğunu ampirik olarak kanıtlamıştır.
+```
++------------------------------------------------+----------+----------+--------------+---------------+
+| CISD Strateji Alt Grubu                        | İşlem N  | Win Rate | Expectancy R | Profit Factor |
++------------------------------------------------+----------+----------+--------------+---------------+
+| 00_No_CISD_Baseline (Serbest Temel Durum)      |  486,829 | 24.90%   | -0.2857      | 0.6295        |
+| 00_No_CISD_Absent_Only (Doğrulanmış CISD Yokluğu)|   62,994 |  3.88%   | -0.9135      | 0.0726        |
+| 01_M1_CISD (Mikro Onay)                        |  386,552 | 26.33%   | -0.2400      | 0.6795        |
+| 02_M3_CISD                                     |  152,317 | 29.81%   | -0.1613      | 0.7698        |
+| 03_M5_CISD (Standart İntraday Onay)            |  152,148 | 30.48%   | -0.1551      | 0.7742        |
+| 04_M15_CISD (Yapısal Dönüş Onayı)              |  138,921 | 33.90%   | -0.0989      | 0.8436        |
+| 05_M30_CISD                                    |  132,809 | 35.42%   | -0.0865      | 0.8549        |
+| 06_H1_CISD (Makro Seans Onayı)                 |  123,244 | 37.19%   | -0.0668      | 0.8797        |
+| 07_H4_CISD (Büyük Yapısal Onay)                |   65,265 | 41.80%   | -0.0384      | 0.9152        |
++------------------------------------------------+----------+----------+--------------+---------------+
+```
+
+**Temel Metodolojik Bulgular**:
+1. **Yokluk Felaketi**: CISD'nin oluşmadığı durumları zorunlu kılmak (`Absent_Only`) kazanma oranını %3.88'e, beklentiyi ise -0.9135R'ye düşürerek tam bir yıkım üretmektedir.
+2. **Doğrulama Gecikmesi (Confirmation Lag)**: M1'den H4'e çıkıldıkça kazanma oranı %24.9'dan %41.8'e yükselmekte ve negatif kayma -0.0384R'ye inmektedir; ancak CRT kapanışından sonra ek CISD beklemek (CFG64_34 vs CFG64_32), giriş fiyatını bozarak beklentiyi -0.0768R'den -0.1568R'ye düşürmektedir. Doğrulama gecikmesi, stop mesafesini genişleterek getiri oranını zayıflatmaktadır.
 
 ---
 
@@ -209,14 +227,15 @@ Düzeltilmiş **REQUIRED vs DISABLED** semantiğiyle 6 ikili faktörün ($2^6 = 
 +----------+--------------------------------------+-------------------+----------+----------+--------------+---------------+
 | Config   | Aktif Bileşenler                     | Kapsam            | İşlem N  | Win Rate | Expectancy R | Profit Factor |
 +----------+--------------------------------------+-------------------+----------+----------+--------------+---------------+
-| CFG64_00 | 00_ALL_OFF (Ham Likidite Tetikleyici)| 24-Saat Tümü      |  644,237 | 22.56%   | -0.3580      | 0.5459        |
-| CFG64_00 | 00_ALL_OFF (Ham Likidite Tetikleyici)| NY 09:30-11:00    |   46,743 | 27.68%   | -0.2088      | 0.7114        |
-| CFG64_32 | CRT                                  | NY 09:30-11:00    |   17,264 | 30.95%   | -0.1238      | 0.8193        |
-| CFG64_34 | CRT + CISD                           | NY 09:30-11:00    |   15,602 | 30.88%   | -0.1296      | 0.8106        |
-| CFG64_56 | CRT + MacSSMT + MicSSMT              | NY 09:30-11:00    |    2,507 | 32.43%   | -0.0749      | 0.8889        |
-| CFG64_57 | CRT + MacSSMT + MicSSMT + MMXM       | NY 09:30-11:00    |      905 | 36.13%   | +0.0159      | 1.0248        |
-| CFG64_59 | CRT + MacSSMT + MicSSMT + CISD + MMXM| NY 09:30-11:00    |      804 | 36.19%   | +0.0111      | 1.0174        |
-| CFG64_63 | TÜM 6 BİLEŞEN AKTİF (LONG Sadece)    | NY 09:30-11:00    |      112 | 36.61%   | +0.0280      | 1.0443        |
+| CFG64_00 | 00_ALL_OFF (Ham Likidite Tetikleyici)| 24-Saat Tümü      |  518,957 | 24.70%   | -0.2918      | 0.6216        |
+| CFG64_00 | 00_ALL_OFF (Ham Likidite Tetikleyici)| NY 09:30-11:00    |   37,081 | 33.90%   | -0.0092      | 0.9862        |
+| CFG64_32 | CRT (Bağımsız Kapanış Girişi)        | NY 09:30-11:00    |   12,083 | 32.18%   | -0.0768      | 0.8862        |
+| CFG64_34 | CRT + CISD (Doğrulama Gecikmeli)     | NY 09:30-11:00    |   10,421 | 29.82%   | -0.1568      | 0.7744        |
+| CFG64_56 | CRT + MacSSMT + MicSSMT              | NY 09:30-11:00    |    1,777 | 34.78%   | -0.0012      | 0.9982        |
+| CFG64_57 | CRT + MacSSMT + MicSSMT + MMXM       | NY 09:30-11:00    |      658 | 37.69%   | +0.0715      | 1.1143        |
+| CFG64_59 | CRT + MacSSMT + MicSSMT + CISD + MMXM| NY 09:30-11:00    |      557 | 35.91%   | +0.0027      | 1.0042        |
+| CFG64_60 | CRT + MacSSMT + MicSSMT + StdSMT     | NY 09:30-11:00    |      624 | 35.10%   | +0.0044      | 1.0068        |
+| CFG64_63 | TÜM 6 BİLEŞEN AKTİF                  | NY 09:30-11:00    |      205 | 32.68%   | -0.0993      | 0.8532        |
 +----------+--------------------------------------+-------------------+----------+----------+--------------+---------------+
 ```
 
@@ -311,11 +330,12 @@ Sistemin tüm katmanlarının birlikte çalıştığını gösteren somut bir ta
 2. **SMT ve Mikro SSMT Onayı**: Nasdaq yeni dip yaparken, US500 (S&P 500) bu dibi onaylamadı (`Standard SMT ACTIVE`). 22.5M mikro QT döngüsünde 2. çeyrekten 3. çeyreğe geçiş gerçekleşti (`ssmt_micro_state: 2→3`).
 3. **MMXM Evre Durumu**: M15 MMBM modeli `07_STRUCTURAL_EXTENSION_POI_ZONE` aşamasına ulaştı (`MMXM_US100_M15_000038`).
 4. **M1 CISD Girişi**: Saat tam 10:00 NY'da 1-dakikalık grafikte kurumsal teslimat durumunun değiştiği (CISD) mum gövdesiyle onaylandı.
-5. **Fiyat Seviyeleri ve Sonuç**:
+5. **Fiyat Seviyeleri ve Adli Hedef Karşılaştırması**:
    - **Giriş Fiyatı (Entry)**: 16,029.61
    - **Zarar Durdur (Stop-Loss)**: 16,007.09 (Risk = 22.52 puan)
-   - **Hedef Fiyat (Target)**: 16,074.66 (+45.05 puan = 2.0R)
-   - **Sonuç**: `TARGET_HIT` (Hedefe 19 dakikada ulaşıldı, Maksimum Ters Hareket MAE: sadece 0.12R, Net Getiri: **+1.989R**).
+   - **Sabit 2.0R Simülasyonu (`all_trades.parquet`)**: Hedef 16,074.66 (+45.05 puan = 2.0R), 19 dakikada `TARGET_HIT`, Net Getiri: **+1.989R** (Önceki versiyonda bu sabit 2R işlemine yüzeysel olarak `target_type: H1_OC` etiketi verilmişti).
+   - **Gerçek Yapısal Hedef Simülasyonu (`target_outcomes.parquet`)**: Gerçek pre-trade H1 OC hedef fiyatı **16,062.25** puandır (Uzaklık = **+1.45R**). Fiyat tam 9 dakikada (bar 6061) bu yapısal seviyeye ulaşmış ve net **+1.438R** realize etmiştir (`outcome_status: TARGET_HIT`).
+   - **Adli Hüküm**: Yapısal hedef modelleri, sabit 2R sonucuna isim yapıştırmak yerine gerçek hedef fiyatı ve bağımsız çıkış anı ile simüle edilmelidir. V3.3 mimarisi bu ayrımı tam olarak uygulamıştır.
 
 ---
 
@@ -328,3 +348,4 @@ Sistemin tüm katmanlarının birlikte çalıştığını gösteren somut bir ta
    En iyi 10 konfigürasyon dondurulmuş (`v4_frozen_candidates.parquet`); 2027 ve sonrası canlı piyasa akışında test edilmek üzere DuckDB veri tabanına tescil edilmiştir (`data/results/astra6_v3.duckdb`).
 
 Bu araştırma, ICT, MMXM, CRT ve Quarterly Theory kavramlarının kurumsal düzeyde matematikselleştirilebileceğini, adli doğrulukla modellendiğinde piyasa gürültüsünü filtrelediğini ve şeffaf bir kantitatif zemine oturduğunu kesinleştirmiştir.
+

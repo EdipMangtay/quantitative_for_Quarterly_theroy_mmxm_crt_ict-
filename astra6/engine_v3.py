@@ -823,8 +823,48 @@ def run_v3_pipeline(force_recompute: bool = False) -> dict[str, Any]:
         ("NY_Open_0930_1100", ny_open_mask),
     ]
 
+    # Master Prompt V3.3 Section 2 & 8 & Audit P0.4: True Independent Strategy Execution for all 64 configs
+    # Deduplicate candidate opportunities to unique underlying events so each policy executes independently
+    base_events = all_cands.drop_duplicates(subset=["underlying_event_id"]).copy().reset_index(drop=True)
+
+    j_close_ev = base_events["j_close"].to_numpy(np.int64)
+    j_reclaim_ev = np.where(base_events["j_reclaim"].to_numpy(np.int64) >= 0, base_events["j_reclaim"].to_numpy(np.int64), base_events["j_trig"].to_numpy(np.int64))
+    j_cisd_best_ev = np.maximum(
+        base_events["j_cisd"].to_numpy(np.int64),
+        base_events.get("j_post_cisd_m1", pd.Series(-1, index=base_events.index)).to_numpy(np.int64),
+    )
+    j_cisd_best_ev = np.where(j_cisd_best_ev >= 0, j_cisd_best_ev, base_events["j_trig"].to_numpy(np.int64))
+    j_mmxm_k_ev = base_events["j_mmxm_known"].to_numpy(np.int64)
+
+    f_crt_ev = base_events["f_crt"].to_numpy(bool)
+    f_mac_ev = base_events["f_macro_ssmt"].to_numpy(bool)
+    f_mic_ev = base_events["f_micro_ssmt"].to_numpy(bool)
+    f_std_ev = base_events["f_std_smt"].to_numpy(bool)
+    f_cisd_ev = base_events["f_cisd"].to_numpy(bool)
+    f_mmxm_ev = base_events["f_mmxm"].to_numpy(bool)
+    dirs_ev = base_events["dir"].to_numpy(np.int64)
+    sl_base_ev = base_events["sl_init"].to_numpy(np.float64)
+    atr_ref_ev = base_events["atr_ref"].fillna(15.0).to_numpy(np.float64)
+    uev_ids_ev = base_events["underlying_event_id"].to_numpy()
+    ny_days_ev = base_events["ny_day_id"].to_numpy(np.int64)
+    min_ny_ev = base_events["min_from_ny_open_trig"].to_numpy(np.float64)
+    val_split_ev = base_events["validation_split"].to_numpy()
+
+    traded = ctx["traded"]
+    bh = panel[f"{traded}_h"].to_numpy(np.float64)
+    bl = panel[f"{traded}_l"].to_numpy(np.float64)
+    bc = panel[f"{traded}_c"].to_numpy(np.float64)
+    ao = panel[f"{traded}_ao"].to_numpy(np.float64)
+    ah = panel[f"{traded}_ah"].to_numpy(np.float64)
+    al = panel[f"{traded}_al"].to_numpy(np.float64)
+    ac = panel[f"{traded}_ac"].to_numpy(np.float64)
+    bo = panel[f"{traded}_o"].to_numpy(np.float64)
+    t_m1 = panel.index.to_numpy() if isinstance(panel.index, pd.DatetimeIndex) else panel["t"].to_numpy()
+    n_m1 = len(bh)
+
     combo_result_rows = []
     combo_registry_rows = []
+    policy_trade_frames = []
 
     factor_names = ["CRT", "MacSSMT", "MicSSMT", "StdSMT", "CISD", "MMXM"]
     for bits in itertools.product([0, 1], repeat=6):
@@ -835,24 +875,178 @@ def run_v3_pipeline(force_recompute: bool = False) -> dict[str, Any]:
         clabel = "+".join(active_tags) if active_tags else "00_ALL_OFF_BASELINE (Pure_Liquidity_Trigger)"
 
         # Master Prompt V3.3 Section 8: Strict REQUIRED vs DISABLED Semantics
-        # b_i == 1: Factor is REQUIRED before entry (all_cands[factor] == True)
+        # b_i == 1: Factor is REQUIRED before entry (base_events[factor] == True)
         # b_i == 0: Factor is DISABLED (ignored as entry requirement, not required to be absent!)
-        mask_64 = pd.Series(True, index=all_cands.index)
-        if b_crt:
-            mask_64 &= all_cands["f_crt"]
-        if b_mac:
-            mask_64 &= all_cands["f_macro_ssmt"]
-        if b_mic:
-            mask_64 &= all_cands["f_micro_ssmt"]
-        if b_std:
-            mask_64 &= all_cands["f_std_smt"]
-        if b_cisd:
-            mask_64 &= all_cands["f_cisd"]
-        if b_mmxm:
-            mask_64 &= all_cands["f_mmxm"]
+        elig = np.ones(len(base_events), dtype=bool)
+        if b_crt: elig &= f_crt_ev
+        if b_mac: elig &= f_mac_ev
+        if b_mic: elig &= f_mic_ev
+        if b_std: elig &= f_std_ev
+        if b_cisd: elig &= f_cisd_ev
+        if b_mmxm: elig &= f_mmxm_ev
 
-        for scope_name, smask in scopes:
-            sub_scope = all_cands[mask_64 & smask]
+        idx_elig = np.nonzero(elig)[0]
+        if len(idx_elig) == 0:
+            for scope_name in ("All_Sessions", "NY_Open_0930_1100"):
+                for dir_lbl in ("BOTH", "LONG", "SHORT"):
+                    m = _fast_cell_metrics(pd.DataFrame())
+                    combo_result_rows.append({
+                        "config_id": f"{cid}_{dir_lbl}_{scope_name}",
+                        "base_config_id": cid,
+                        "config_index": int(c_idx),
+                        "config_label": clabel,
+                        "n_active_factors": int(sum(bits)),
+                        "scope": scope_name,
+                        "direction": dir_lbl,
+                        "filter_semantics": "REQUIRED_DISABLED",
+                        "f_crt": bool(b_crt),
+                        "f_macro_ssmt": bool(b_mac),
+                        "f_micro_ssmt": bool(b_mic),
+                        "f_std_smt": bool(b_std),
+                        "f_cisd": bool(b_cisd),
+                        "f_mmxm": bool(b_mmxm),
+                        "config_status": "NO_SIGNAL",
+                        **m,
+                    })
+            continue
+
+        # Policy-specific confirmation trigger bar (P0.4)
+        j_trig = np.where(b_crt, j_close_ev[idx_elig], j_reclaim_ev[idx_elig])
+        if b_cisd:
+            j_trig = np.maximum(j_trig, j_cisd_best_ev[idx_elig])
+        if b_mmxm:
+            j_trig = np.maximum(j_trig, np.where(j_mmxm_k_ev[idx_elig] >= 0, j_mmxm_k_ev[idx_elig], j_trig))
+
+        valid = (j_trig >= 0) & (j_trig + 1 < n_m1) & (j_trig <= j_close_ev[idx_elig] + 120)
+        idx_v = idx_elig[valid]
+        if len(idx_v) == 0:
+            for scope_name in ("All_Sessions", "NY_Open_0930_1100"):
+                for dir_lbl in ("BOTH", "LONG", "SHORT"):
+                    m = _fast_cell_metrics(pd.DataFrame())
+                    combo_result_rows.append({
+                        "config_id": f"{cid}_{dir_lbl}_{scope_name}",
+                        "base_config_id": cid,
+                        "config_index": int(c_idx),
+                        "config_label": clabel,
+                        "n_active_factors": int(sum(bits)),
+                        "scope": scope_name,
+                        "direction": dir_lbl,
+                        "filter_semantics": "REQUIRED_DISABLED",
+                        "f_crt": bool(b_crt),
+                        "f_macro_ssmt": bool(b_mac),
+                        "f_micro_ssmt": bool(b_mic),
+                        "f_std_smt": bool(b_std),
+                        "f_cisd": bool(b_cisd),
+                        "f_mmxm": bool(b_mmxm),
+                        "config_status": "NO_SIGNAL",
+                        **m,
+                    })
+            continue
+
+        j_ex = j_trig[valid]
+        j_fl = j_ex + 1
+        d_v = dirs_ev[idx_v]
+        sl_b_v = sl_base_ev[idx_v]
+        atr_v = atr_ref_ev[idx_v]
+
+        ep = np.where(d_v == 1, ao[j_fl] + 0.25, bo[j_fl] - 0.25)
+        sl_px = np.where(
+            d_v == 1,
+            np.minimum(sl_b_v, bl[j_ex] - 0.15 * atr_v),
+            np.maximum(sl_b_v, bh[j_ex] + 0.15 * atr_v),
+        )
+        risk = np.maximum(np.abs(ep - sl_px), 3.0)
+        sl_px = np.where(d_v == 1, ep - risk, ep + risk)
+        tp_px = np.where(d_v == 1, ep + 2.0 * risk, ep - 2.0 * risk)
+
+        m_len = len(idx_v)
+        out_code = np.zeros(m_len, dtype=np.int8)
+        exit_j = np.full(m_len, -1, dtype=np.int64)
+        exit_p = np.full(m_len, np.nan, dtype=np.float64)
+        realized_r = np.full(m_len, np.nan, dtype=np.float64)
+        mfe_r = np.zeros(m_len, dtype=np.float64)
+        mae_r = np.zeros(m_len, dtype=np.float64)
+
+        long_m = np.nonzero(d_v == 1)[0]
+        if len(long_m) > 0:
+            _, _, _, oc_l, ej_l, ep_l, rr_l, mf_l, ma_l = hpc.fast_target_exec_full_numba(
+                bh, bl, bc, j_fl[long_m], d_v[long_m], ep[long_m], sl_px[long_m], tp_px[long_m], 360, 0.25
+            )
+            out_code[long_m] = oc_l
+            exit_j[long_m] = ej_l
+            exit_p[long_m] = ep_l
+            realized_r[long_m] = rr_l
+            mfe_r[long_m] = mf_l
+            mae_r[long_m] = ma_l
+
+        short_m = np.nonzero(d_v == -1)[0]
+        if len(short_m) > 0:
+            _, _, _, oc_s, ej_s, ep_s, rr_s, mf_s, ma_s = hpc.fast_target_exec_full_numba(
+                ah, al, ac, j_fl[short_m], d_v[short_m], ep[short_m], sl_px[short_m], tp_px[short_m], 360, 0.25
+            )
+            out_code[short_m] = oc_s
+            exit_j[short_m] = ej_s
+            exit_p[short_m] = ep_s
+            realized_r[short_m] = rr_s
+            mfe_r[short_m] = mf_s
+            mae_r[short_m] = ma_s
+
+        t_conf_v = t_m1[j_ex]
+        t_fill_v = t_m1[j_fl]
+        valid_exit_j = np.where((exit_j >= 0) & (exit_j < n_m1), exit_j, j_fl)
+        t_exit_v = t_m1[valid_exit_j]
+
+        p_df = pd.DataFrame({
+            "opportunity_id": [f"{cid}_{uev}" for uev in uev_ids_ev[idx_v]],
+            "underlying_event_id": uev_ids_ev[idx_v],
+            "ny_day_id": ny_days_ev[idx_v],
+            "strategy_config_id": cid,
+            "direction": np.where(d_v == 1, "LONG", "SHORT"),
+            "dir": d_v,
+            "t_confirm": t_conf_v,
+            "j_trig": j_ex,
+            "t_fill": t_fill_v,
+            "j_fill": j_fl,
+            "entry_price": ep,
+            "stop_price": sl_px,
+            "target_price": tp_px,
+            "t_exit": t_exit_v,
+            "j_exit": exit_j,
+            "exit_price": exit_p,
+            "outcome_code": out_code,
+            "outcome_status": [hpc.OUTCOME_CODE_TO_LABEL.get(int(c), "UNKNOWN") for c in out_code],
+            "realized_net_r": realized_r,
+            "r": realized_r,
+            "mfe": mfe_r,
+            "mae": mae_r,
+            "hold": np.maximum(1, exit_j - j_fl),
+            "origin_tf": base_events["origin_tf"].to_numpy()[idx_v],
+            "narrative_tf": base_events["narrative_tf"].to_numpy()[idx_v],
+            "mmxm_tf": base_events["mmxm_tf"].to_numpy()[idx_v],
+            "mmxm_id": base_events["mmxm_id"].to_numpy()[idx_v],
+            "entry_tf": base_events["entry_tf"].to_numpy()[idx_v],
+            "target_tf": base_events["target_tf"].to_numpy()[idx_v],
+            "target_type": base_events["target_type"].to_numpy()[idx_v],
+            "mmxm_stage": base_events["mmxm_stage_v3"].map(fractal_v3.MMXM_STAGE_NAMES).fillna("00_OFF").to_numpy()[idx_v],
+            "qt_6h_q": base_events["q6_trig"].to_numpy()[idx_v],
+            "qt_90m_q": base_events["q90_trig"].to_numpy()[idx_v],
+            "qt_micro_q": base_events["q22_trig"].to_numpy()[idx_v],
+            "session": base_events["session"].to_numpy()[idx_v],
+            "instrument": base_events["instrument"].to_numpy()[idx_v],
+            "dataset_provider": base_events["dataset_provider"].to_numpy()[idx_v],
+            "spread_slippage_pts": 0.25,
+            "min_from_ny_open_trig": min_ny_ev[idx_v],
+            "validation_split": val_split_ev[idx_v],
+        })
+
+        ny_mask = (p_df["min_from_ny_open_trig"] >= 0) & (p_df["min_from_ny_open_trig"] < 90)
+        policy_scopes = [
+            ("All_Sessions", pd.Series(True, index=p_df.index)),
+            ("NY_Open_0930_1100", ny_mask),
+        ]
+
+        for scope_name, smask in policy_scopes:
+            sub_scope = p_df[smask]
             for dir_lbl, dmask in [
                 ("BOTH", pd.Series(True, index=sub_scope.index)),
                 ("LONG", sub_scope["dir"] == 1),
@@ -901,6 +1095,12 @@ def run_v3_pipeline(force_recompute: bool = False) -> dict[str, Any]:
                         "n_trades": m["n_trades"],
                         "expectancy_r": m["expectancy_r"],
                     })
+
+        policy_trade_frames.append(p_df)
+
+    if policy_trade_frames:
+        counterfactual_trades_df = pd.concat(policy_trade_frames, ignore_index=True)
+        counterfactual_trades_df.to_parquet(RESULTS / "counterfactual_policy_trades.parquet", index=False, compression="zstd")
 
     # 2. Evaluate all 15 non-empty Strategy-Family subsets of {QT, ICT, CRT, MMXM} (Section 4)
     fam_names = ["QT", "ICT", "CRT", "MMXM"]
@@ -1264,8 +1464,12 @@ def run_v3_pipeline(force_recompute: bool = False) -> dict[str, Any]:
     j_max_any_post = np.maximum.reduce([jp_m1, jp_m3, jp_m5, jp_m15, jp_m30, jp_h1, jp_h4])
 
     # Each CISD subset defines (subset_label, eligibility_mask, custom_trigger_j_exec_array) (P0.4 & P0.6)
+    # Master Prompt V3.3 Section 3: Baseline does NOT exclude CISD-present events (unconstrained by CISD).
+    # Verified absence of CISD is evaluated as a distinct experiment ("00_No_CISD_Absent_Only").
     cisd_exec_specs = [
-        ("00_No_CISD", has_sw_ev & (n_post_active == 0), j_rec_ev),
+        ("00_No_CISD", has_sw_ev, j_rec_ev),
+        ("00_No_CISD_Baseline (Unconstrained / Ignored)", has_sw_ev, j_rec_ev),
+        ("00_No_CISD_Absent_Only (Verified Absence)", has_sw_ev & (n_post_active == 0), j_rec_ev),
         ("01_M1_CISD", pm_m1, jp_m1),
         ("02_M3_CISD", pm_m3, jp_m3),
         ("03_M5_CISD", pm_m5, jp_m5),
@@ -1350,6 +1554,16 @@ def run_v3_pipeline(force_recompute: bool = False) -> dict[str, Any]:
                 })
     liq_cisd_df = pd.DataFrame(liq_cisd_rows)
     liq_cisd_df.to_parquet(RESULTS / "liquidity_cisd_pair_matrix.parquet", index=False)
+
+    cisd_all_frames = []
+    for c_lbl, s_df in executed_cisd_dfs.items():
+        if len(s_df) > 0:
+            df_copy = s_df.copy()
+            df_copy["cisd_policy"] = c_lbl
+            cisd_all_frames.append(df_copy)
+    if cisd_all_frames:
+        cisd_trades_df = pd.concat(cisd_all_frames, ignore_index=True)
+        cisd_trades_df.to_parquet(RESULTS / "multitf_cisd_policy_trades.parquet", index=False, compression="zstd")
 
     # 8. Build `reversal_vs_continuation_matrix.parquet` (Sections 3, 6.1)
     rev_cont_rows = []

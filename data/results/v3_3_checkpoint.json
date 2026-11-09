@@ -65,10 +65,22 @@
     }
   },
   "qa_suite_status": {
-    "total_tests": 61,
-    "passed_tests": 61,
+    "total_tests": 65,
+    "passed_tests": 65,
     "failed_tests": 0,
-    "execution_time_seconds": 3.69
+    "execution_time_seconds": 20.34
+  },
+  "manual_workbook_reconciliation": {
+    "file": "Copy of EXCEL_TEST.xlsx",
+    "sheet": "Trade_Log",
+    "completed_trades": 18,
+    "wins": 13,
+    "losses": 5,
+    "win_rate": 0.7222,
+    "sum_realized_r": 52.78,
+    "mean_realized_r": 2.9322,
+    "trade_id_2_zero_risk_flag": true,
+    "underpowered_warning": "N=18 is underpowered; selection bias prevents claim of statistically proven alpha"
   },
   "data_store_sha256": "17ddcb9ae521eefd6d881eebb95fcc108fb9d4063b0cca581bdcfaac4fce144f"
 }

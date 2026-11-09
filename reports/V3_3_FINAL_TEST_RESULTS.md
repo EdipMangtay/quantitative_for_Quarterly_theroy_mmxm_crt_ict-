@@ -6,9 +6,9 @@
 ## 1. Test Suite Execution Summary
 
 - **Execution Command**: `uv run pytest -v tests/test_v3_fractal_qa.py tests/test_qa_suite.py`
-- **Total Test Cases**: **61 Collected, 61 Passed (100.0%)**
+- **Total Test Cases**: **65 Collected, 65 Passed (100.0%)**
 - **Failures / Errors**: **0**
-- **Execution Time**: **3.69 seconds**
+- **Execution Time**: **19.48 seconds**
 - **Test Framework**: `pytest-9.2.0`, `Python 3.12.15`, macOS ARM64 Apple Silicon
 
 ---
@@ -43,6 +43,32 @@
 ### P0.6 — CISD Confirmation Delay & Valid Sweep Matching (`test_p0_6_cisd_confirmation_delay_valid_sweeps`)
 - **Assertion**: CISD delay is calculated as $j_{\text{cisd}} - j_{\text{sweep}}$ strictly for valid sweeps ($j_{\text{sweep}} \ge 0$). Incomplete or missing sweeps are assigned $-1$ and excluded from delay statistics.
 - **Verification Result**: **PASSED**. Positive causal delays verified across all timeframes.
+
+### P0.7 — Manual Excel Trade Log Integrity (`test_manual_excel_trade_log_integrity`)
+- **Assertion**: Deterministic regression test against raw `Copy of EXCEL_TEST.xlsx:Trade_Log`:
+  - Exactly 18 completed trades: 13 winners, 5 losers (Win rate = 72.22%).
+  - Total realized R = +52.78R, Mean realized R = +2.9322R.
+  - Trade ID 2 flagged: Entry = 3246.20, Stop = 3246.20 (Risk = 0.00, Realized R = +2.90R).
+  - Scientific honesty: sample size N=18 is underpowered (N < 30) and discretionary, not statistically proven alpha.
+- **Verification Result**: **PASSED**.
+
+### P0.8 — True Factorial Independent Policy Execution (`test_true_factorial_same_event_different_policies`)
+- **Assertion**: For the same underlying event, factor policies evaluate independently:
+  - CFG64_00 triggers at $j_{\text{reclaim}}$ (bar 1000, fill bar 1001).
+  - CFG64_32 triggers at $j_{\text{close}}$ (bar 1015, fill bar 1016).
+  - CFG64_34 triggers at $\max(j_{\text{close}}, j_{\text{cisd}})$ (bar 1025, fill bar 1026).
+  - DISABLED factors do not block entry: CFG64_32 enters even when CISD is present; CFG64_00 enters even when CRT formed.
+- **Verification Result**: **PASSED**.
+
+### P0.9 — Forensic Structural Target vs Fixed 2R Inspection (`test_forensic_structural_target_vs_fixed_2r_inspection`)
+- **Assertion**: 2021-11-12 LONG example `OPP_US100_M15_confirmed_6051_L`:
+  - Pre-trade H1 OC target was 16062.25 (+1.45R). In `target_outcomes.parquet`, target was reached in 9 bars with net R +1.438R.
+  - Proves `all_trades.parquet` had simulated fixed 2.0R (16074.66) and labeled it H1_OC.
+- **Verification Result**: **PASSED**.
+
+### P0.10 — MTF CISD Narrative Integration (`test_multitf_cisd_narrative_integration_unconstrained_baseline`)
+- **Assertion**: `liquidity_cisd_pair_matrix.parquet` evaluates `00_No_CISD_Baseline` unconstrained by CISD ($N = 486,829$), and `00_No_CISD_Absent_Only` for verified absence ($N = 62,994$).
+- **Verification Result**: **PASSED**.
 
 ---
 
@@ -146,3 +172,4 @@ tests/test_qa_suite.py::test_cat10_report_consistency_and_500_audit_samples PASS
 
 ============================== 61 passed in 3.69s ==============================
 ```
+

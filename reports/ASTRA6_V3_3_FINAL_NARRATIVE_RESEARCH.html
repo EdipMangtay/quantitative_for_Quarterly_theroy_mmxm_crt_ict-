@@ -1,276 +1,333 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>ASTRA 6 V3.3 Nihai Fraktal Piyasa Anlatisi Raporu</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASTRA 6 V3.3 — Nihai Fraktal Piyasa Anlatisi Raporu</title>
   <style>
-    /* Default styles provided by pandoc.
-    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-    */
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
-  </style>
-  
-  <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-  body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      color: #1e293b;
-      background-color: #ffffff;
-      line-height: 1.6;
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 40px 30px;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --primary-color: #0f172a;
+  --secondary-color: #1e3a8a;
+  --accent-color: #2563eb;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --bg-page: #f8fafc;
+  --bg-card: #ffffff;
+  --border-color: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text-main);
+  background-color: var(--bg-page);
+  margin: 0;
+  padding: 30px 20px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.report-container {
+  max-width: 1180px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  padding: 48px 56px;
+  border-radius: 12px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+}
+
+h1 {
+  color: var(--primary-color);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  border-bottom: 3px solid var(--accent-color);
+  padding-bottom: 14px;
+  margin-top: 0;
+  margin-bottom: 12px;
+  line-height: 1.25;
+}
+
+.report-subtitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--secondary-color);
+  margin-bottom: 24px;
+}
+
+.meta-header-box {
+  background: #f1f5f9;
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--accent-color);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-item .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.meta-item .value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-top: 2px;
+}
+
+h2 {
+  color: var(--secondary-color);
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 36px;
+  margin-bottom: 16px;
+  border-left: 4px solid var(--accent-color);
+  padding-left: 12px;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  color: var(--text-main);
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 22px;
+  margin-bottom: 10px;
+}
+
+p {
+  margin: 10px 0 14px 0;
+  line-height: 1.65;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 18px 0 24px 0;
+  font-size: 11.5px;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+th {
+  background: #1e293b;
+  color: #ffffff;
+  font-weight: 600;
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+
+td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+
+tr:nth-child(even) td {
+  background: #f8fafc;
+}
+
+tr:hover td {
+  background: #f1f5f9;
+}
+
+pre {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  overflow-x: auto;
+  line-height: 1.5;
+  border: 1px solid #334155;
+  margin: 16px 0 20px 0;
+}
+
+code {
+  background: #e2e8f0;
+  color: #0f172a;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11.5px;
+}
+
+pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+}
+
+blockquote {
+  margin: 16px 0 20px 0;
+  padding: 14px 20px;
+  background: #eff6ff;
+  border-left: 4px solid var(--accent-color);
+  border-radius: 0 8px 8px 0;
+  color: #1e3a8a;
+  font-weight: 500;
+}
+
+blockquote p {
+  margin: 0;
+  font-size: 13.5px;
+  color: #1e3a8a;
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: var(--border-color);
+  margin: 32px 0;
+}
+
+ul, ol {
+  margin: 10px 0 16px 20px;
+  padding: 0;
+}
+
+li {
+  margin-bottom: 6px;
+  line-height: 1.6;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-pass {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-fail {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Print Specific Rules */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm 12mm 14mm 12mm;
   }
-  h1, h2, h3, h4 {
-      color: #0f172a;
-      font-weight: 700;
-      margin-top: 1.8em;
-      margin-bottom: 0.6em;
+  body {
+    background: #ffffff !important;
+    padding: 0 !important;
+    font-size: 9.5pt;
+    color: #000000;
+  }
+  .report-container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
   }
   h1 {
-      font-size: 2.2rem;
-      border-bottom: 3px solid #2563eb;
-      padding-bottom: 12px;
+    font-size: 20pt;
+    margin-bottom: 8px;
+  }
+  .report-subtitle {
+    font-size: 11pt;
+    margin-bottom: 16px;
   }
   h2 {
-      font-size: 1.5rem;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 8px;
-      margin-top: 2.2em;
+    break-before: page;
+    page-break-before: always;
+    margin-top: 0 !important;
+    padding-top: 10px;
+    font-size: 14pt;
+    color: #1e3a8a !important;
+    border-left: 4px solid #1e3a8a !important;
+  }
+  /* Avoid page break right after h1 */
+  h2:first-of-type {
+    page-break-before: avoid;
   }
   h3 {
-      font-size: 1.2rem;
+    font-size: 11.5pt;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
   }
-  pre, code {
-      font-family: 'JetBrains Mono', Menlo, Monaco, Consolas, monospace;
-      font-size: 0.85rem;
-  }
-  pre {
-      background: #0f172a;
-      color: #f8fafc;
-      padding: 16px;
-      border-radius: 8px;
-      overflow-x: auto;
-      line-height: 1.45;
-  }
-  code {
-      background: #f1f5f9;
-      color: #0f172a;
-      padding: 2px 6px;
-      border-radius: 4px;
-  }
-  pre code {
-      background: transparent;
-      color: inherit;
-      padding: 0;
+  p, li {
+    font-size: 9.5pt;
+    line-height: 1.5;
   }
   table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-      font-size: 0.85rem;
-  }
-  th, td {
-      padding: 8px 12px;
-      border: 1px solid #cbd5e1;
-      text-align: left;
+    page-break-inside: avoid;
+    font-size: 8pt !important;
+    margin: 10px 0 16px 0;
   }
   th {
-      background-color: #f1f5f9;
-      font-weight: 600;
-      color: #0f172a;
+    background: #1e293b !important;
+    color: #ffffff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding: 5px 6px !important;
+    font-size: 8pt !important;
   }
-  tr:nth-child(even) {
-      background-color: #f8fafc;
+  td {
+    padding: 4px 6px !important;
+    font-size: 8pt !important;
+  }
+  pre {
+    page-break-inside: avoid;
+    font-size: 7.5pt !important;
+    padding: 8px 12px !important;
+    white-space: pre-wrap !important;
+    word-break: break-all;
+    background: #0f172a !important;
+    color: #f8fafc !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   blockquote {
-      border-left: 4px solid #2563eb;
-      margin: 1.5em 0;
-      padding: 12px 20px;
-      background-color: #eff6ff;
-      color: #1e3a8a;
-      border-radius: 0 8px 8px 0;
+    page-break-inside: avoid;
+    background: #eff6ff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding: 8px 14px !important;
+    margin: 10px 0 !important;
   }
-  @media print {
-      body {
-          max-width: 100%;
-          padding: 0;
-      }
-      h2 {
-          page-break-before: always;
-      }
-      table, pre {
-          page-break-inside: avoid;
-      }
+  tr {
+    page-break-inside: avoid;
   }
+}
+
   </style>
 </head>
 <body>
-<header id="title-block-header">
-<h1 class="title">ASTRA 6 V3.3 Nihai Fraktal Piyasa Anlatisi Raporu</h1>
-</header>
-<h1
+  <div class="report-container">
+    <h1
 id="astra-6-v3.3-nihai-fraktal-piyasa-anlatisi-ve-kurumsal-kantitatif-araştirma-raporu">ASTRA
 6 — V3.3 NİHAİ FRAKTAL PİYASA ANLATISI VE KURUMSAL KANTİTATİF ARAŞTIRMA
 RAPORU</h1>
@@ -291,11 +348,24 @@ verisi üzerindeki ampirik sonuçlarını sunmaktadır.</p>
 günlüğünü içeren <code>Copy of EXCEL_TEST.xlsx</code> çalışma kitabının
 adli ve semantik olarak incelenmesidir. Söz konusu çalışma kitabında: -
 <strong>18 adet diskresyonel işlem</strong> kaydedilmiştir (Aralık 2019
-– Şubat 2020 dönemi, US100 endeksi). - <strong>Kazanma Oranı (Win
-Rate)</strong>: %83.33 (15 Kazanç, 3 Kayıp). - <strong>Ortalama
-Gerçekleşen Getiri</strong>: +2.95R işlem başına (Maksimum tekil işlem:
-+7.0R). - <strong>Zamanlama Yoğunlaşması</strong>: İşlemlerin %88.9’u
-New York Sabah Seansında (09:30–11:30 NY) gerçekleştirilmiştir.</p>
+– Şubat 2020 dönemi, US100 ve SPX500 endeksleri). - <strong>Gerçekleşen
+İşlem Sayısı</strong>: 18 tamamlanmış işlem (13 Kazanç, 5 Kayıp). -
+<strong>Kazanma Oranı (Win Rate)</strong>: %72.22 (13 / 18). -
+<strong>Toplam Gerçekleşen Getiri</strong>: +52.78R (İşlem başına
+ortalama: +2.9322R). - <strong>Zamanlama Yoğunlaşması</strong>:
+İşlemlerin %88.9’u New York Sabah Seansında (09:30–11:30 NY)
+gerçekleştirilmiştir (16/18 NY AM, 2/18 NY PM). - <strong>Kritik Veri
+Anomalisi (Trade ID 2)</strong>: 2020-01-02 tarihli SPX500 Kısa (Short)
+işleminde Giriş Fiyatı (3246.20) ile Stop Fiyatı (3246.20) birbirine
+eşit kaydedilmiş ve sıfır risk puanı ile +2.90R getiri yazılmıştır. -
+<strong>İstatistiksel Geçerlilik Hükmü</strong>: <span
+class="math inline"><em>N</em> = 18</span> örneklem büyüklüğü
+istatistiksel hipotez testleri için yetersiz güçtedir (<span
+class="math inline"><em>N</em> &lt; 30</span>, gün-kümelenmiş bootstrap
+<span class="math inline"><em>p</em> &gt; 0.05</span>). Manuel seçilim
+yanlılığı (selection bias) içerdiğinden bu performansın kesinlikle şansa
+bağlı olmadığı veya istatistiksel olarak kanıtlanmış alfa sunduğu iddia
+edilemez.</p>
 <h3 id="performans-uçurumu-the-performance-gap-ve-adli-hata-tespiti">1.2
 “Performans Uçurumu” (The Performance Gap) ve Adli Hata Tespiti</h3>
 <p>Eski ASTRA 6 kod tabanı (V3.0 ve V3.1) ile manuel işlem performansı
@@ -469,15 +539,33 @@ derinleşmektedir.</p>
 id="bölüm-7-change-in-state-of-delivery-cisd-ve-tetikleme-kanallari">BÖLÜM
 7: CHANGE IN STATE OF DELIVERY (CISD) VE TETİKLEME KANALLARI</h2>
 <p>CISD, kurumsal emir akışının tersine döndüğünü gösteren ilk referans
-mum gövdesi ihlalidir. - <strong>M1 CISD</strong>: En hızlı tetikleme;
-giriş fiyatını optimize eder ancak testere riski taşır. - <strong>M5
-CISD</strong>: Standart kurumsal doğrulama; gürültüyü eler. -
-<strong>M15 / H1 CISD</strong>: Yapısal trend dönüşü teyidi.</p>
-<p>Ablasyon testinde <code>LTF_M1_M5_CISD_Entry</code>, tek başına
-<strong>+0.1362R</strong> marjinal getiri artışı sağlamış ve <span
-class="math inline"><em>t</em> = 7.91</span> (<span
-class="math inline"><em>p</em> &lt; 10<sup>−6</sup></span>) ile sistemin
-en güçlü tetikleyici filtresi olduğunu ampirik olarak kanıtlamıştır.</p>
+mum gövdesi ihlalidir. V3.3 motorunda CISD, hem serbest temel durum
+(unconstrained baseline) hem de doğrulanmış yokluk
+(<code>ABSENT_ONLY</code>) ve 7 bağımsız zaman diliminde ayrı ayrı
+simüle edilmiştir:</p>
+<pre><code>+------------------------------------------------+----------+----------+--------------+---------------+
+| CISD Strateji Alt Grubu                        | İşlem N  | Win Rate | Expectancy R | Profit Factor |
++------------------------------------------------+----------+----------+--------------+---------------+
+| 00_No_CISD_Baseline (Serbest Temel Durum)      |  486,829 | 24.90%   | -0.2857      | 0.6295        |
+| 00_No_CISD_Absent_Only (Doğrulanmış CISD Yokluğu)|   62,994 |  3.88%   | -0.9135      | 0.0726        |
+| 01_M1_CISD (Mikro Onay)                        |  386,552 | 26.33%   | -0.2400      | 0.6795        |
+| 02_M3_CISD                                     |  152,317 | 29.81%   | -0.1613      | 0.7698        |
+| 03_M5_CISD (Standart İntraday Onay)            |  152,148 | 30.48%   | -0.1551      | 0.7742        |
+| 04_M15_CISD (Yapısal Dönüş Onayı)              |  138,921 | 33.90%   | -0.0989      | 0.8436        |
+| 05_M30_CISD                                    |  132,809 | 35.42%   | -0.0865      | 0.8549        |
+| 06_H1_CISD (Makro Seans Onayı)                 |  123,244 | 37.19%   | -0.0668      | 0.8797        |
+| 07_H4_CISD (Büyük Yapısal Onay)                |   65,265 | 41.80%   | -0.0384      | 0.9152        |
++------------------------------------------------+----------+----------+--------------+---------------+</code></pre>
+<p><strong>Temel Metodolojik Bulgular</strong>: 1. <strong>Yokluk
+Felaketi</strong>: CISD’nin oluşmadığı durumları zorunlu kılmak
+(<code>Absent_Only</code>) kazanma oranını %3.88’e, beklentiyi ise
+-0.9135R’ye düşürerek tam bir yıkım üretmektedir. 2. <strong>Doğrulama
+Gecikmesi (Confirmation Lag)</strong>: M1’den H4’e çıkıldıkça kazanma
+oranı %24.9’dan %41.8’e yükselmekte ve negatif kayma -0.0384R’ye
+inmektedir; ancak CRT kapanışından sonra ek CISD beklemek (CFG64_34 vs
+CFG64_32), giriş fiyatını bozarak beklentiyi -0.0768R’den -0.1568R’ye
+düşürmektedir. Doğrulama gecikmesi, stop mesafesini genişleterek getiri
+oranını zayıflatmaktadır.</p>
 <hr />
 <h2
 id="bölüm-8-original-consolidation-oc-ve-fraktal-hedef-geometrisi">BÖLÜM
@@ -542,14 +630,15 @@ ikili faktörün (<span class="math inline">2<sup>6</sup> = 64</span>) ve
 <pre><code>+----------+--------------------------------------+-------------------+----------+----------+--------------+---------------+
 | Config   | Aktif Bileşenler                     | Kapsam            | İşlem N  | Win Rate | Expectancy R | Profit Factor |
 +----------+--------------------------------------+-------------------+----------+----------+--------------+---------------+
-| CFG64_00 | 00_ALL_OFF (Ham Likidite Tetikleyici)| 24-Saat Tümü      |  644,237 | 22.56%   | -0.3580      | 0.5459        |
-| CFG64_00 | 00_ALL_OFF (Ham Likidite Tetikleyici)| NY 09:30-11:00    |   46,743 | 27.68%   | -0.2088      | 0.7114        |
-| CFG64_32 | CRT                                  | NY 09:30-11:00    |   17,264 | 30.95%   | -0.1238      | 0.8193        |
-| CFG64_34 | CRT + CISD                           | NY 09:30-11:00    |   15,602 | 30.88%   | -0.1296      | 0.8106        |
-| CFG64_56 | CRT + MacSSMT + MicSSMT              | NY 09:30-11:00    |    2,507 | 32.43%   | -0.0749      | 0.8889        |
-| CFG64_57 | CRT + MacSSMT + MicSSMT + MMXM       | NY 09:30-11:00    |      905 | 36.13%   | +0.0159      | 1.0248        |
-| CFG64_59 | CRT + MacSSMT + MicSSMT + CISD + MMXM| NY 09:30-11:00    |      804 | 36.19%   | +0.0111      | 1.0174        |
-| CFG64_63 | TÜM 6 BİLEŞEN AKTİF (LONG Sadece)    | NY 09:30-11:00    |      112 | 36.61%   | +0.0280      | 1.0443        |
+| CFG64_00 | 00_ALL_OFF (Ham Likidite Tetikleyici)| 24-Saat Tümü      |  518,957 | 24.70%   | -0.2918      | 0.6216        |
+| CFG64_00 | 00_ALL_OFF (Ham Likidite Tetikleyici)| NY 09:30-11:00    |   37,081 | 33.90%   | -0.0092      | 0.9862        |
+| CFG64_32 | CRT (Bağımsız Kapanış Girişi)        | NY 09:30-11:00    |   12,083 | 32.18%   | -0.0768      | 0.8862        |
+| CFG64_34 | CRT + CISD (Doğrulama Gecikmeli)     | NY 09:30-11:00    |   10,421 | 29.82%   | -0.1568      | 0.7744        |
+| CFG64_56 | CRT + MacSSMT + MicSSMT              | NY 09:30-11:00    |    1,777 | 34.78%   | -0.0012      | 0.9982        |
+| CFG64_57 | CRT + MacSSMT + MicSSMT + MMXM       | NY 09:30-11:00    |      658 | 37.69%   | +0.0715      | 1.1143        |
+| CFG64_59 | CRT + MacSSMT + MicSSMT + CISD + MMXM| NY 09:30-11:00    |      557 | 35.91%   | +0.0027      | 1.0042        |
+| CFG64_60 | CRT + MacSSMT + MicSSMT + StdSMT     | NY 09:30-11:00    |      624 | 35.10%   | +0.0044      | 1.0068        |
+| CFG64_63 | TÜM 6 BİLEŞEN AKTİF                  | NY 09:30-11:00    |      205 | 32.68%   | -0.0993      | 0.8532        |
 +----------+--------------------------------------+-------------------+----------+----------+--------------+---------------+</code></pre>
 <hr />
 <h2
@@ -668,16 +757,27 @@ US500 (S&amp;P 500) bu dibi onaylamadı
 <li><strong>M1 CISD Girişi</strong>: Saat tam 10:00 NY’da 1-dakikalık
 grafikte kurumsal teslimat durumunun değiştiği (CISD) mum gövdesiyle
 onaylandı.</li>
-<li><strong>Fiyat Seviyeleri ve Sonuç</strong>:
+<li><strong>Fiyat Seviyeleri ve Adli Hedef Karşılaştırması</strong>:
 <ul>
 <li><strong>Giriş Fiyatı (Entry)</strong>: 16,029.61</li>
 <li><strong>Zarar Durdur (Stop-Loss)</strong>: 16,007.09 (Risk = 22.52
 puan)</li>
-<li><strong>Hedef Fiyat (Target)</strong>: 16,074.66 (+45.05 puan =
-2.0R)</li>
-<li><strong>Sonuç</strong>: <code>TARGET_HIT</code> (Hedefe 19 dakikada
-ulaşıldı, Maksimum Ters Hareket MAE: sadece 0.12R, Net Getiri:
-<strong>+1.989R</strong>).</li>
+<li><strong>Sabit 2.0R Simülasyonu
+(<code>all_trades.parquet</code>)</strong>: Hedef 16,074.66 (+45.05 puan
+= 2.0R), 19 dakikada <code>TARGET_HIT</code>, Net Getiri:
+<strong>+1.989R</strong> (Önceki versiyonda bu sabit 2R işlemine
+yüzeysel olarak <code>target_type: H1_OC</code> etiketi
+verilmişti).</li>
+<li><strong>Gerçek Yapısal Hedef Simülasyonu
+(<code>target_outcomes.parquet</code>)</strong>: Gerçek pre-trade H1 OC
+hedef fiyatı <strong>16,062.25</strong> puandır (Uzaklık =
+<strong>+1.45R</strong>). Fiyat tam 9 dakikada (bar 6061) bu yapısal
+seviyeye ulaşmış ve net <strong>+1.438R</strong> realize etmiştir
+(<code>outcome_status: TARGET_HIT</code>).</li>
+<li><strong>Adli Hüküm</strong>: Yapısal hedef modelleri, sabit 2R
+sonucuna isim yapıştırmak yerine gerçek hedef fiyatı ve bağımsız çıkış
+anı ile simüle edilmelidir. V3.3 mimarisi bu ayrımı tam olarak
+uygulamıştır.</li>
 </ul></li>
 </ol>
 <hr />
@@ -705,5 +805,7 @@ edilmiştir (<code>data/results/astra6_v3.duckdb</code>).</li>
 kurumsal düzeyde matematikselleştirilebileceğini, adli doğrulukla
 modellendiğinde piyasa gürültüsünü filtrelediğini ve şeffaf bir
 kantitatif zemine oturduğunu kesinleştirmiştir.</p>
+
+  </div>
 </body>
 </html>

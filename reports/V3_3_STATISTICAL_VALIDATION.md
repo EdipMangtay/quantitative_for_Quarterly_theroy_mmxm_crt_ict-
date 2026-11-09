@@ -101,3 +101,29 @@ Evaluating identical strategy rules across independent broker/feed feeds confirm
   - OANDA: $N = 773$ trades, Expectancy = -0.1066R, PF = 0.8404.
 
 Both datasets show identical qualitative and quantitative dynamics: heavy negative drift in unconstrained baseline setups, transitioning to near-breakeven performance when restricted to session-aligned institutional confluence.
+
+---
+
+## 6. Multi-Timeframe CISD Narrative Integration: Baseline vs Confirmation Delay
+
+Per Master Prompt V3.3 Section 3, we independently evaluated the unconstrained No-CISD baseline against verified absence (`ABSENT_ONLY`) and all 7 individual CISD confirmation timeframes on the universal liquidity sweep population:
+
+### Table 6.1: Multi-Timeframe CISD Performance Matrix (All Sessions, BOTH Directions)
+
+| CISD Strategy Subset | Trade Count | Win Rate | Expectancy ($R$) | Profit Factor | 95% Bootstrap CI | Statistical Verdict |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **00_No_CISD_Baseline (Unconstrained)** | **486,829** | **24.90%** | **-0.2857** | **0.6295** | `[-0.294R, -0.277R]` | Baseline (Ignores CISD) |
+| **00_No_CISD_Absent_Only (Verified Absence)** | **62,994** | **3.88%** | **-0.9135** | **0.0726** | `[-0.925R, -0.902R]` | Verified Absence Filter |
+| **01_M1_CISD** | 386,552 | 26.33% | -0.2400 | 0.6795 | `[-0.249R, -0.231R]` | Fast Micro Confirmation |
+| **02_M3_CISD** | 152,317 | 29.81% | -0.1613 | 0.7698 | `[-0.173R, -0.149R]` | Intermediate Confirmation |
+| **03_M5_CISD** | 152,148 | 30.48% | -0.1551 | 0.7742 | `[-0.167R, -0.143R]` | Intermediate Confirmation |
+| **04_M15_CISD** | 138,921 | 33.90% | -0.0989 | 0.8436 | `[-0.112R, -0.086R]` | Structural Confirmation |
+| **05_M30_CISD** | 132,809 | 35.42% | -0.0865 | 0.8549 | `[-0.100R, -0.073R]` | HTF Structural Confirmation |
+| **06_H1_CISD** | 123,244 | 37.19% | -0.0668 | 0.8797 | `[-0.081R, -0.052R]` | Macro Structural Confirmation |
+| **07_H4_CISD** | 65,265 | 41.80% | -0.0384 | 0.9152 | `[-0.058R, -0.019R]` | Major Structural Confirmation |
+
+### Key Methodological Insight: Confirmation Delay vs Quality Trade-Off
+1. **Unconstrained Baseline vs Absent-Only**: The true baseline (where CISD is ignored) achieves -0.2857R. Forcing verified absence of CISD drops expectancy to **-0.9135R** (near total loss), proving that the absence of micro structural delivery shift indicates high-probability trend continuation against the trader.
+2. **Confirmation Lag**: Requiring micro M1 CISD improves win rate from 24.9% to 26.3%, but when paired with CRT (CFG64_34 vs CFG64_32), the additional delay waiting for M1 CISD reduces expectancy by -0.080R due to entry price degradation relative to the sweep extreme.
+3. **Timeframe Progression**: Moving from M1 to H4 CISD steadily increases win rate from 26.3% to 41.8% and reduces negative drift to -0.0384R, but at the cost of 83% fewer trading opportunities ($65\text{k}$ vs $386\text{k}$) and substantial holding duration.
+

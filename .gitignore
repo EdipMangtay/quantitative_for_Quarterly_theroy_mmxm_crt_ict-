@@ -4,6 +4,8 @@ data/hf_cache/
 data/results/trade_features.parquet
 data/results/target_candidates.parquet
 data/results/target_outcomes.parquet
+data/results/counterfactual_policy_trades.parquet
+data/results/multitf_cisd_policy_trades.parquet
 .venv/
 __pycache__/
 *.pyc
