@@ -1,0 +1,367 @@
+{
+  "scope": "P0_DIAGNOSTICS",
+  "status": "NOT_VERIFIED",
+  "historical_backtest_started": false,
+  "inputs_sha256": {
+    "DUKA_US100_M1.parquet": "4d4c36fd6c5987b611c3933ba1df288bec505e86cee6b289b70dba6b890ae6a2",
+    "DUKA_US100_30S.parquet": "0f26f60f034714a5424822816c21b7b7e0f4543197f64f09953844bef2ea8ab5",
+    "DUKA_US500_M1.parquet": "b0e6e68485dde988b8c1c71de5ed5c98f73057b95ab1cddb1dcf5cb4a31d9464",
+    "DUKA_US500_30S.parquet": "fe37af2770c1ffd031d85947ad6c62ff229aab96c08766a8ad25de15fc4e9cd1"
+  },
+  "windows": [
+    {
+      "start": "2021-11-07",
+      "end_exclusive": "2021-12-01",
+      "observed_common_m1": 21746,
+      "observed_common_30s": 40726,
+      "gap_counts": {
+        "INCOMPLETE": 534,
+        "UNKNOWN": 17
+      },
+      "coverage": {
+        "M5": {
+          "FULL": 3986,
+          "INCOMPLETE": 488,
+          "UNKNOWN": 2
+        },
+        "M15": {
+          "FULL": 1166,
+          "INCOMPLETE": 325,
+          "UNKNOWN": 1
+        },
+        "H1": {
+          "FULL": 220,
+          "INCOMPLETE": 151,
+          "UNKNOWN": 14
+        }
+      },
+      "models": {
+        "MODEL_1_H1_M5_M15_LIQ": {
+          "candidates": 788,
+          "fills": 0,
+          "completed_observed_paths": 0,
+          "checks": {
+            "M5_SWEEP_RECLAIM": 788,
+            "M5_CRT": 425,
+            "CISD_WITHIN_15M": 246,
+            "SESSION": 65,
+            "Q90_AND_H1_BIAS": 11
+          },
+          "states": {
+            "INVALIDATED_BEFORE_ENTRY": 611,
+            "CANCELLED": 161,
+            "WAITING_CONFIRMATION": 16
+          }
+        },
+        "MODEL_2_H1_REV_M5_OC": {
+          "candidates": 0,
+          "fills": 0,
+          "completed_observed_paths": 0,
+          "checks": {},
+          "states": {}
+        }
+      }
+    },
+    {
+      "start": "2022-03-07",
+      "end_exclusive": "2022-03-20",
+      "observed_common_m1": 13284,
+      "observed_common_30s": 26513,
+      "gap_counts": {
+        "UNKNOWN": 10,
+        "INCOMPLETE": 4
+      },
+      "coverage": {
+        "M5": {
+          "FULL": 2652,
+          "INCOMPLETE": 4,
+          "UNKNOWN": 2
+        },
+        "M15": {
+          "FULL": 881,
+          "INCOMPLETE": 3,
+          "UNKNOWN": 2
+        },
+        "H1": {
+          "FULL": 215,
+          "UNKNOWN": 10,
+          "INCOMPLETE": 3,
+          "OPEN": 1
+        }
+      },
+      "models": {
+        "MODEL_1_H1_M5_M15_LIQ": {
+          "candidates": 762,
+          "fills": 0,
+          "completed_observed_paths": 0,
+          "checks": {
+            "M5_CRT": 415,
+            "M5_SWEEP_RECLAIM": 762,
+            "CISD_WITHIN_15M": 237,
+            "SESSION": 45,
+            "Q90_AND_H1_BIAS": 12
+          },
+          "states": {
+            "INVALIDATED_BEFORE_ENTRY": 611,
+            "CANCELLED": 150,
+            "WAITING_CONFIRMATION": 1
+          }
+        },
+        "MODEL_2_H1_REV_M5_OC": {
+          "candidates": 0,
+          "fills": 0,
+          "completed_observed_paths": 0,
+          "checks": {},
+          "states": {}
+        }
+      }
+    },
+    {
+      "start": "2023-10-23",
+      "end_exclusive": "2023-11-06",
+      "observed_common_m1": 13126,
+      "observed_common_30s": 25371,
+      "gap_counts": {
+        "INCOMPLETE": 148,
+        "UNKNOWN": 10
+      },
+      "coverage": {
+        "M5": {
+          "FULL": 2523,
+          "INCOMPLETE": 135
+        },
+        "M15": {
+          "FULL": 798,
+          "INCOMPLETE": 88
+        },
+        "H1": {
+          "FULL": 176,
+          "INCOMPLETE": 43,
+          "UNKNOWN": 10
+        }
+      },
+      "models": {
+        "MODEL_1_H1_M5_M15_LIQ": {
+          "candidates": 668,
+          "fills": 0,
+          "completed_observed_paths": 0,
+          "checks": {
+            "CISD_WITHIN_15M": 184,
+            "M5_CRT": 358,
+            "M5_SWEEP_RECLAIM": 668,
+            "SESSION": 51,
+            "Q90_AND_H1_BIAS": 11
+          },
+          "states": {
+            "INVALIDATED_BEFORE_ENTRY": 536,
+            "WAITING_CONFIRMATION": 9,
+            "CANCELLED": 123
+          }
+        },
+        "MODEL_2_H1_REV_M5_OC": {
+          "candidates": 0,
+          "fills": 0,
+          "completed_observed_paths": 0,
+          "checks": {},
+          "states": {}
+        }
+      }
+    },
+    {
+      "start": "2024-03-01",
+      "end_exclusive": "2024-03-25",
+      "observed_common_m1": 20728,
+      "observed_common_30s": 38823,
+      "gap_counts": {
+        "INCOMPLETE": 509,
+        "UNKNOWN": 13
+      },
+      "coverage": {
+        "M5": {
+          "FULL": 3815,
+          "INCOMPLETE": 462
+        },
+        "M15": {
+          "FULL": 1118,
+          "INCOMPLETE": 309
+        },
+        "H1": {
+          "FULL": 224,
+          "INCOMPLETE": 129,
+          "UNKNOWN": 16
+        }
+      },
+      "models": {
+        "MODEL_1_H1_M5_M15_LIQ": {
+          "candidates": 798,
+          "fills": 0,
+          "completed_observed_paths": 0,
+          "checks": {
+            "CISD_WITHIN_15M": 261,
+            "M5_CRT": 453,
+            "M5_SWEEP_RECLAIM": 798,
+            "SESSION": 79,
+            "Q90_AND_H1_BIAS": 10
+          },
+          "states": {
+            "INVALIDATED_BEFORE_ENTRY": 629,
+            "CANCELLED": 159,
+            "WAITING_CONFIRMATION": 10
+          }
+        },
+        "MODEL_2_H1_REV_M5_OC": {
+          "candidates": 0,
+          "fills": 0,
+          "completed_observed_paths": 0,
+          "checks": {},
+          "states": {}
+        }
+      }
+    },
+    {
+      "start": "2025-10-20",
+      "end_exclusive": "2025-11-10",
+      "observed_common_m1": 19884,
+      "observed_common_30s": 39308,
+      "gap_counts": {
+        "INCOMPLETE": 31,
+        "UNKNOWN": 8
+      },
+      "coverage": {
+        "M5": {
+          "FULL": 3953,
+          "INCOMPLETE": 31,
+          "UNKNOWN": 1
+        },
+        "M15": {
+          "FULL": 1302,
+          "INCOMPLETE": 28,
+          "UNKNOWN": 1
+        },
+        "H1": {
+          "FULL": 305,
+          "INCOMPLETE": 23,
+          "UNKNOWN": 16
+        }
+      },
+      "models": {
+        "MODEL_1_H1_M5_M15_LIQ": {
+          "candidates": 1149,
+          "fills": 0,
+          "completed_observed_paths": 0,
+          "checks": {
+            "M5_CRT": 635,
+            "M5_SWEEP_RECLAIM": 1149,
+            "CISD_WITHIN_15M": 364,
+            "SESSION": 79,
+            "Q90_AND_H1_BIAS": 27,
+            "MMXM_04_06": 2
+          },
+          "states": {
+            "INVALIDATED_BEFORE_ENTRY": 911,
+            "CANCELLED": 228,
+            "WAITING_CONFIRMATION": 10
+          }
+        },
+        "MODEL_2_H1_REV_M5_OC": {
+          "candidates": 3,
+          "fills": 0,
+          "completed_observed_paths": 0,
+          "checks": {
+            "H1_REVERSAL": 3,
+            "M15_CISD": 3
+          },
+          "states": {
+            "INVALIDATED_BEFORE_ENTRY": 1,
+            "CANCELLED": 2
+          }
+        }
+      }
+    },
+    {
+      "start": "2026-03-01",
+      "end_exclusive": "2026-03-31",
+      "observed_common_m1": 28108,
+      "observed_common_30s": 56164,
+      "gap_counts": {
+        "UNKNOWN": 21,
+        "INCOMPLETE": 16
+      },
+      "coverage": {
+        "M5": {
+          "FULL": 5611,
+          "INCOMPLETE": 17
+        },
+        "M15": {
+          "FULL": 1862,
+          "INCOMPLETE": 15
+        },
+        "H1": {
+          "FULL": 452,
+          "UNKNOWN": 20,
+          "INCOMPLETE": 13
+        }
+      },
+      "models": {
+        "MODEL_1_H1_M5_M15_LIQ": {
+          "candidates": 1780,
+          "fills": 0,
+          "completed_observed_paths": 0,
+          "checks": {
+            "M5_CRT": 948,
+            "M5_SWEEP_RECLAIM": 1780,
+            "CISD_WITHIN_15M": 491,
+            "SESSION": 89,
+            "Q90_AND_H1_BIAS": 21
+          },
+          "states": {
+            "INVALIDATED_BEFORE_ENTRY": 1458,
+            "CANCELLED": 312,
+            "WAITING_CONFIRMATION": 10
+          }
+        },
+        "MODEL_2_H1_REV_M5_OC": {
+          "candidates": 0,
+          "fills": 0,
+          "completed_observed_paths": 0,
+          "checks": {},
+          "states": {}
+        }
+      }
+    }
+  ],
+  "source_commit": "897a0d68c8732529c6bebb4f92da2a7a07da7c6a",
+  "working_source_sha256": {
+    "astra6/coverage_v35.py": "62d343b36caacc9e358d6987fd448b902ff401bd12fd1dba36c342eee16b9dce",
+    "astra6/structure_v35.py": "139f805afac52a475f32a24512657396b5b59fd1b169d704540f5a1cb6ebdf46",
+    "astra6/playbooks_v35.py": "5f0a65b7055fc02c1088971faf47b9e0c9ae740e2ba79a4f84d38901eb5f1524",
+    "astra6/execution_v35.py": "ccae8ac9403eae5ad28e1e704fd86f0af4a4900b807dbe78e74810c19ddcfd22",
+    "astra6/smt.py": "61fe24278ba81ee6fe9b3da609fbc6c69dfe4b0c03e227198d02503ca2a8b896",
+    "astra6/cisd.py": "eb1353dd4693fcc5df32a68b5246f181309d384cb16e1ea2a2d6f05c28418219",
+    "astra6/fractal_v3.py": "801f7f82f1893f1d57075672d2c9ee0ef8472fe4b8eded6f265bfcd8dd7a28c0",
+    "astra6/signals.py": "e6f6321dda6159bf30cad02ffd00f6f08a9e0a49603a4883c040fd282375bbbe",
+    "astra6/bars.py": "ec5a89c97970f5debf72ca2269c16f5cc69d750ad9202f9adb7d43e6a1b96dad",
+    "astra6/research_v35.py": "0c9019252c3dc9c4869a7f28c66985c3cdad7c1734018111b6ea46a32366cb51",
+    "tests/test_v35_p0_resume.py": "339a873e4a99641f682d3c41cab583a198a117ae73f77ea63cb0fa7d0dbeef8b",
+    "tests/p0_v35_before.py": "ddb5dcee6352661a2c8e7f3984e86457c69e7906b337a94f9b95ad9cc04f3b6d"
+  },
+  "command": "PYTHONDONTWRITEBYTECODE=1 NUMBA_CACHE_DIR=/tmp/astra6-v35-numba .venv/bin/python -m astra6.playbooks_v35",
+  "counts": {
+    "common_m1": 116876,
+    "common_30s": 226905,
+    "gaps": {
+      "INCOMPLETE": 1242,
+      "UNKNOWN": 79
+    },
+    "MODEL_1_H1_M5_M15_LIQ": {
+      "candidates": 5945,
+      "fills": 0,
+      "completed_observed_paths": 0
+    },
+    "MODEL_2_H1_REV_M5_OC": {
+      "candidates": 3,
+      "fills": 0,
+      "completed_observed_paths": 0
+    }
+  }
+}

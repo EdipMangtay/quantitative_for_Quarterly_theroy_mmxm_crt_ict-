@@ -129,7 +129,7 @@ def build_context(
 
 def extract_crt_events(
     ctx: dict, tf: str = "M15", anchor: str = "cal", max_bars: int | None = None,
-    *, include_developing: bool = False,
+    *, include_developing: bool = False, require_full: bool = False,
 ) -> pd.DataFrame:
     """Scan one (tf, anchor) stream and return a flat table of sweep events
     (both directions) with all confirmation & early-entry indices attached."""
@@ -138,7 +138,10 @@ def extract_crt_events(
     comps = ctx["comps"]
     idx = panel.index
     bars = resample(panel, traded, tf, anchor)
-    if not include_developing:
+    if require_full:
+        selected = bars["is_complete"] | (include_developing & ~bars["is_closed"])
+        bars = bars[selected].reset_index(drop=True)
+    elif not include_developing:
         bars = bars[bars["is_closed"]].reset_index(drop=True)
     if max_bars is not None and len(bars) > max_bars:
         bars = bars.iloc[-max_bars:].reset_index(drop=True)
@@ -156,7 +159,7 @@ def extract_crt_events(
     max_gap = 4320 if tf in ("D1", "W1") else 5
     min_n = max(1, m // 4) if tf in ("D1", "W1") else max(1, m // 2)
     previous_closed = bars["is_closed"].shift(1, fill_value=False)
-    valid = (previous_closed & (gap_min <= max_gap)).to_numpy(copy=True)
+    valid = (previous_closed & (gap_min <= (0 if require_full else max_gap))).to_numpy(copy=True)
     if not include_developing:
         valid = valid & (bars["n"].to_numpy() >= min_n)
 

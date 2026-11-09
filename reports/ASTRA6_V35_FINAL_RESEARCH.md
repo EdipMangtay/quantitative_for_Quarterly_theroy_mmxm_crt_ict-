@@ -1,6 +1,6 @@
 # ASTRA 6 V3.5 onarım ve doğrulama raporu
 
-**Durum `NOT_VERIFIED`.** Davranışsal örnek tamamlandı. Tam tarihsel P0 kapısı açık.
+**Durum `NOT_VERIFIED`.** Son P0 tanısı çalıştırıldı. Tam tarihsel P0 kapısı açık.
 
 V3.4 denetimi stop ve hedef sızıntısını, geriye yazılan MMXM aşamalarını, emir zaman alanlarındaki tutarsızlığı ve sentetik replay yolunu kanıtladı. V3.5, ayrı kayıtlı olay ve fiyat kanıtı kullanan bir emir motoru ekliyor.
 
@@ -38,13 +38,29 @@ Beş politika aynı gerçek SHORT olayında bağımsız Ask fiyat yoluyla eşle�
 
 Model 1'in 200 ve Model 2'nin 18 geç hedefi V3.4 bulgularıdır. V3.5 karar anındaki teyitli, geçerli ve tüketilmemiş seviyeyi arar. İki gerçek karşı örnek ayrı yeniden yürütüldü. Tam model popülasyonları, üstün hedef tipi veya doğrulanmış MMXM × QT anlatısı henüz belirlenmedi.
 
+## Son P0 çalıştırması
+
+| Son P0 tanısı | Sayı |
+| --- | --- |
+| Ortak gerçek M1 | 116876 |
+| Ortak gerçek 30 saniye | 226905 |
+| Kaynak uyuşmazlıklı boşluk | 1242 |
+| Açıklanamayan sessizlik | 79 |
+
+| Sıkı P0 playbook | Aday | Dolum | Tam gözlenen çıkış |
+| --- | --- | --- | --- |
+| MODEL_1_H1_M5_M15_LIQ | 5945 | 0 | 0 |
+| MODEL_2_H1_REV_M5_OC | 3 | 0 | 0 |
+
+H1 dönüşü gerçek sweep, önceden teyitli swing kırılımı ve bağımsız H1 CISD ile sınandı. MMXM ile OC bağı olay kimliği, araç, zaman dilimi, yön ve bilgi zamanı üzerinden kuruldu. Altı tarih penceresinde Model 1 için 5.945 ve Model 2 için 3 sıkı aday izlendi. İki playbook'ta da bütün zorunlu olay zincirini geçip dolan emir bulunmadı. Bu sıfır dolum, tam tarihsel performans tahmini değildir. Uyumluluk koşusunda 2.729 test, yeni sıkı P0 yolunda 77 odaklı test geçti. Eski yollar altı negatif kontrolde beklenen nedenle başarısız oldu.
+
 | US100 | Tam | Sınıflandırılamayan kısmi | Açık |
 | --- | --- | --- | --- |
 | H4 | 3814 | 3881 | 1 |
 | D1 | 0 | 1290 | 1 |
 | W1 | 0 | 260 | 1 |
 
-Tarihli broker seans takvimi eksik. İki araçta gerçek 30 saniyelik kotasyonların ortak kapsamı en geç 2026-05-22 20:14:30 UTC'de biter. Bağımsız H1 dönüş ve bağlı MMXM/OC kuralları tam tarih için doğrulanmadı. Beş yıllık çalışma başlatılmadı. Sıralama ve yeni finansal sonuç yayımlanmadı.
+Tarihli broker seans takvimi eksik. Belirsiz boşluklar `UNKNOWN`, kaynak uyuşmazlığı görülenler `INCOMPLETE` olarak dışlandı. İki araçta gerçek 30 saniyelik kotasyonların ortak kapsamı en geç 2026-05-22 20:14:30 UTC'de biter. H1 dönüşü ve MMXM/OC olay bağları ayrı gerçek örneklerde geçti. İki playbook için bütünleşik dolum tanığı bulunmadı. 64 politika ve tüm yapısal hedef yolları aynı sıkı sözleşmeyle uçtan uca geçmedi. Beş yıllık çalışma başlatılmadı. Sıralama ve yeni finansal sonuç yayımlanmadı.
 
 ## Kayıtlı kotasyon
 
@@ -79,4 +95,4 @@ Bar içindeki kesin temas sırası M1 OHLC'den bilinemez. Grafik ve tablo, aynı
 
 Kapsam dışı seans ve TF'leri sabitle, H1 dönüş ve OC ilişkisini bağımsız olaylarla bağla, geniş P0 testini geçir. Düzeltilmiş tarihsel işlemler ve portföy sonuçları ayrı hesaplanmalı. İleri paper emirleri dondurulmuş politika kimliğiyle kaydedilmeli.
 
-[Onarım](ASTRA6_V35_CAUSAL_REPAIR_AUDIT.md) · [Önce/sonra](ASTRA6_V35_BEFORE_AFTER_RESULTS.md) · [MMXM × QT](ASTRA6_V35_MMXM_QT_VALIDATION.md) · [Emir QA](ASTRA6_V35_INDEPENDENT_EXECUTION_QA.md) · [İstatistik](ASTRA6_V35_STATISTICAL_VALIDATION.md) · [Testler](ASTRA6_V35_TEST_RESULTS.md)
+[Son P0](ASTRA6_V35_P0_REVALIDATION.md) · [Onarım](ASTRA6_V35_CAUSAL_REPAIR_AUDIT.md) · [Önce/sonra](ASTRA6_V35_BEFORE_AFTER_RESULTS.md) · [MMXM × QT](ASTRA6_V35_MMXM_QT_VALIDATION.md) · [Emir QA](ASTRA6_V35_INDEPENDENT_EXECUTION_QA.md) · [İstatistik](ASTRA6_V35_STATISTICAL_VALIDATION.md) · [Testler](ASTRA6_V35_TEST_RESULTS.md)

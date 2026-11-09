@@ -12,14 +12,15 @@ tr { break-inside:avoid; } tbody tr:nth-child(even) { background:#f1f5f9; }
 thead { display:table-header-group; } a { color:#0b6379; }
 img { max-width:100%; } figure { margin:0; break-inside:avoid; }
 @media print {
-  body { margin:0; padding:0; font-size:11px; }
+  body { margin:0; padding:0; font-size:10px; }
   h1 { font-size:24px; } h2 { font-size:16px; margin:14px 0 8px; }
-  table { font-size:9px; margin:8px 0 12px; } td,th { padding:4px 6px; }
+  table { font-size:8.2px; margin:7px 0 10px; } td,th { padding:3px 5px; }
+  img { max-height:270px; object-fit:contain; }
 }
 </style><body><h1 id="astra-6-v35-onarım-ve-doğrulama-raporu">ASTRA 6 V3.5 onarım ve
 doğrulama raporu</h1>
-<p><strong>Durum <code>NOT_VERIFIED</code>.</strong> Davranışsal örnek
-tamamlandı. Tam tarihsel P0 kapısı açık.</p>
+<p><strong>Durum <code>NOT_VERIFIED</code>.</strong> Son P0 tanısı
+çalıştırıldı. Tam tarihsel P0 kapısı açık.</p>
 <p>V3.4 denetimi stop ve hedef sızıntısını, geriye yazılan MMXM
 aşamalarını, emir zaman alanlarındaki tutarsızlığı ve sentetik replay
 yolunu kanıtladı. V3.5, ayrı kayıtlı olay ve fiyat kanıtı kullanan bir
@@ -184,6 +185,65 @@ karar anındaki teyitli, geçerli ve tüketilmemiş seviyeyi arar. İki
 gerçek karşı örnek ayrı yeniden yürütüldü. Tam model popülasyonları,
 üstün hedef tipi veya doğrulanmış MMXM × QT anlatısı henüz
 belirlenmedi.</p>
+<h2 id="son-p0-çalıştırması">Son P0 çalıştırması</h2>
+<table>
+<thead>
+<tr>
+<th>Son P0 tanısı</th>
+<th>Sayı</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ortak gerçek M1</td>
+<td>116876</td>
+</tr>
+<tr>
+<td>Ortak gerçek 30 saniye</td>
+<td>226905</td>
+</tr>
+<tr>
+<td>Kaynak uyuşmazlıklı boşluk</td>
+<td>1242</td>
+</tr>
+<tr>
+<td>Açıklanamayan sessizlik</td>
+<td>79</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Sıkı P0 playbook</th>
+<th>Aday</th>
+<th>Dolum</th>
+<th>Tam gözlenen çıkış</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MODEL_1_H1_M5_M15_LIQ</td>
+<td>5945</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr>
+<td>MODEL_2_H1_REV_M5_OC</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>H1 dönüşü gerçek sweep, önceden teyitli swing kırılımı ve bağımsız H1
+CISD ile sınandı. MMXM ile OC bağı olay kimliği, araç, zaman dilimi, yön
+ve bilgi zamanı üzerinden kuruldu. Altı tarih penceresinde Model 1 için
+5.945 ve Model 2 için 3 sıkı aday izlendi. İki playbook'ta da bütün
+zorunlu olay zincirini geçip dolan emir bulunmadı. Bu sıfır dolum, tam
+tarihsel performans tahmini değildir. Uyumluluk koşusunda 2.729 test,
+yeni sıkı P0 yolunda 77 odaklı test geçti. Eski yollar altı negatif
+kontrolde beklenen nedenle başarısız oldu.</p>
 <table>
 <thead>
 <tr>
@@ -214,11 +274,15 @@ belirlenmedi.</p>
 </tr>
 </tbody>
 </table>
-<p>Tarihli broker seans takvimi eksik. İki araçta gerçek 30 saniyelik
-kotasyonların ortak kapsamı en geç 2026-05-22 20:14:30 UTC'de biter.
-Bağımsız H1 dönüş ve bağlı MMXM/OC kuralları tam tarih için
-doğrulanmadı. Beş yıllık çalışma başlatılmadı. Sıralama ve yeni finansal
-sonuç yayımlanmadı.</p>
+<p>Tarihli broker seans takvimi eksik. Belirsiz boşluklar
+<code>UNKNOWN</code>, kaynak uyuşmazlığı görülenler
+<code>INCOMPLETE</code> olarak dışlandı. İki araçta gerçek 30 saniyelik
+kotasyonların ortak kapsamı en geç 2026-05-22 20:14:30 UTC'de biter. H1
+dönüşü ve MMXM/OC olay bağları ayrı gerçek örneklerde geçti. İki
+playbook için bütünleşik dolum tanığı bulunmadı. 64 politika ve tüm
+yapısal hedef yolları aynı sıkı sözleşmeyle uçtan uca geçmedi. Beş
+yıllık çalışma başlatılmadı. Sıralama ve yeni finansal sonuç
+yayımlanmadı.</p>
 <h2 id="kayıtlı-kotasyon">Kayıtlı kotasyon</h2>
 <p><img src="figures/v35_replays/replay_01.svg"
 alt="Gerçek Ask M1 · UEV_US100_M5_884_S" /></p>
@@ -382,7 +446,8 @@ tablo, aynı örnek emir defteri ve replay JSON'una bağlıdır.</p>
 bağımsız olaylarla bağla, geniş P0 testini geçir. Düzeltilmiş tarihsel
 işlemler ve portföy sonuçları ayrı hesaplanmalı. İleri paper emirleri
 dondurulmuş politika kimliğiyle kaydedilmeli.</p>
-<p><a href="ASTRA6_V35_CAUSAL_REPAIR_AUDIT.md">Onarım</a> · <a
+<p><a href="ASTRA6_V35_P0_REVALIDATION.md">Son P0</a> · <a
+href="ASTRA6_V35_CAUSAL_REPAIR_AUDIT.md">Onarım</a> · <a
 href="ASTRA6_V35_BEFORE_AFTER_RESULTS.md">Önce/sonra</a> · <a
 href="ASTRA6_V35_MMXM_QT_VALIDATION.md">MMXM × QT</a> · <a
 href="ASTRA6_V35_INDEPENDENT_EXECUTION_QA.md">Emir QA</a> · <a

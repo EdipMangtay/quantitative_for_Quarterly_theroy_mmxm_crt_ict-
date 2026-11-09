@@ -627,9 +627,21 @@
       "m1_observations": 1677731,
       "m1_last_open_utc": "2026-11-06 21:59:00",
       "m1_cal_counts": {
-        "H4": {"FULL": 3814, "PARTIAL_UNCLASSIFIED": 3881, "OPEN": 1},
-        "D1": {"FULL": 0, "PARTIAL_UNCLASSIFIED": 1290, "OPEN": 1},
-        "W1": {"FULL": 0, "PARTIAL_UNCLASSIFIED": 260, "OPEN": 1}
+        "H4": {
+          "FULL": 3814,
+          "PARTIAL_UNCLASSIFIED": 3881,
+          "OPEN": 1
+        },
+        "D1": {
+          "FULL": 0,
+          "PARTIAL_UNCLASSIFIED": 1290,
+          "OPEN": 1
+        },
+        "W1": {
+          "FULL": 0,
+          "PARTIAL_UNCLASSIFIED": 260,
+          "OPEN": 1
+        }
       },
       "exact_30s_last_quote_utc": {
         "US100": "2026-05-24 23:59:30",
@@ -637,8 +649,87 @@
       }
     },
     "outstanding": [
-      "Full P0 coverage acceptance. Complete causal Model 1 and Model 2 definitions and their historical opportunity sets. Historical TF and session exclusions and exact 30-second micro coverage."
+      "The six observed validation windows contain no full-chain executed witness for either Model 1 or Model 2.",
+      "Common original Bid/Ask and exact 30-second coverage stops no later than 2026-05-22 20:14:30 UTC. Later modeled Ask is excluded.",
+      "The 64 factorial, anchor and structural-target comparisons have not completed end-to-end acceptance under the strict observed-coverage contract."
     ],
-    "resume_command": "PYTHONDONTWRITEBYTECODE=1 NUMBA_CACHE_DIR=/tmp/astra6-v35-numba .venv/bin/python -m pytest -q -p no:cacheprovider tests/test_v35_orders.py -k 'target_selection or model1_and_model2'"
+    "resume_command": "PYTHONDONTWRITEBYTECODE=1 NUMBA_CACHE_DIR=/tmp/astra6-v35-numba .venv/bin/python -m astra6.playbooks_v35"
+  },
+  "p0_resume": {
+    "status": "NOT_VERIFIED",
+    "branch": "codex/astra6-v35",
+    "source_commit": "897a0d68c8732529c6bebb4f92da2a7a07da7c6a",
+    "scope": "STRICT_OBSERVED_QUOTE_DIAGNOSTICS_ONLY",
+    "completed_work": [
+      "Observed quote coverage classification and gap handling",
+      "H1 sweep, structural break and independent CISD",
+      "Verified MMXM to OC identity and candidate lifecycle",
+      "Causal Model 1/2 playbook implementations on observed segments",
+      "Six-year independent boundary and OC/MMXM prefix validation"
+    ],
+    "files": [
+      "astra6/coverage_v35.py",
+      "astra6/structure_v35.py",
+      "astra6/playbooks_v35.py",
+      "astra6/execution_v35.py",
+      "astra6/smt.py",
+      "astra6/cisd.py",
+      "astra6/fractal_v3.py",
+      "astra6/signals.py",
+      "astra6/bars.py",
+      "astra6/research_v35.py",
+      "tests/test_v35_p0_resume.py",
+      "tests/p0_v35_before.py"
+    ],
+    "previous_checkpoint_files_unchanged": 107,
+    "previous_checkpoint_differences_at_resume": [
+      "data/results/hardware_benchmark.json"
+    ],
+    "tests": {
+      "before_negative_control": {
+        "expected_failures": 6,
+        "observed_failures": 6,
+        "command": "PYTHONDONTWRITEBYTECODE=1 NUMBA_CACHE_DIR=/tmp/astra6-v35-numba .venv/bin/python -m pytest -q -p no:cacheprovider tests/p0_v35_before.py"
+      },
+      "after_focused": {
+        "passed": 77,
+        "failed": 0,
+        "command": "PYTHONDONTWRITEBYTECODE=1 NUMBA_CACHE_DIR=/tmp/astra6-v35-numba .venv/bin/python -m pytest -q -p no:cacheprovider tests/test_v35_p0_resume.py"
+      },
+      "compatibility": {
+        "passed": 2729,
+        "failed": 0,
+        "deselected": 11,
+        "warnings": 9,
+        "command": "PYTHONDONTWRITEBYTECODE=1 NUMBA_CACHE_DIR=/tmp/astra6-v35-numba .venv/bin/python -m pytest -q -p no:cacheprovider tests -k 'not test_cat01 and not test_cat03 and not test_cat04 and not test_cat05 and not test_cat07 and not test_cat08 and not test_cat09 and not test_v3_reference_vs_numba and not test_p0_1_mmxm_incremental and not test_p0_5_target_consistent and not test_true_factorial_same_event'"
+      }
+    },
+    "diagnostics": "data/results/v3_5/p0_resume_audit.json",
+    "diagnostics_sha256": "dbbb738f9b2d2c77bf6eae4ba057a812e8fc84289a56b32bad3e811741aac4e7",
+    "report": "reports/ASTRA6_V35_P0_REVALIDATION.md",
+    "counts": {
+      "common_m1": 116876,
+      "common_30s": 226905,
+      "gaps": {
+        "INCOMPLETE": 1242,
+        "UNKNOWN": 79
+      },
+      "MODEL_1_H1_M5_M15_LIQ": {
+        "candidates": 5945,
+        "fills": 0,
+        "completed_observed_paths": 0
+      },
+      "MODEL_2_H1_REV_M5_OC": {
+        "candidates": 3,
+        "fills": 0,
+        "completed_observed_paths": 0
+      }
+    },
+    "blockers": [
+      "The six observed validation windows contain no full-chain executed witness for either Model 1 or Model 2.",
+      "Common original Bid/Ask and exact 30-second coverage stops no later than 2026-05-22 20:14:30 UTC. Later modeled Ask is excluded.",
+      "The 64 factorial, anchor and structural-target comparisons have not completed end-to-end acceptance under the strict observed-coverage contract."
+    ],
+    "resume_command": "PYTHONDONTWRITEBYTECODE=1 NUMBA_CACHE_DIR=/tmp/astra6-v35-numba .venv/bin/python -m astra6.playbooks_v35"
   }
 }

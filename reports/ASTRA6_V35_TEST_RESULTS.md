@@ -1,6 +1,8 @@
 # V3.5 test sonuçları
 
-**2652 geçti · 11 seçilmedi · 9 uyarı.**
+**2729 geçti · 11 seçilmedi · 9 uyarı.**
+
+Yeni sıkı P0 yolunda **77 odaklı test geçti**. Eski yolları doğrudan çağıran negatif kontrolde beklenen **6 hata** yeniden üretildi.
 
 Yeni testler kayıtlı fiyatları, saat ve olay metadata örneklerini kullanır. Eski sentetik fiyat testleri ile bütün tarihsel context'i kullanan mock test seçilmedi. P0 tam tarihsel kapısı bu test sayısından bağımsızdır.
 

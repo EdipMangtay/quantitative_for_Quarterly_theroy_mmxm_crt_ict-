@@ -164,11 +164,13 @@ def extract_tf_cisd_events(
     traded: str = "US100",
     tf: str = "M1",
     variant: str = "v1",
+    *,
+    require_full: bool = False,
 ) -> pd.DataFrame:
     """Build true candle series for `tf` (`M1`, `M3`, `M5`, `M15`) and detect CISD events."""
     idx = panel.index
     bars = resample(panel, traded, tf, "cal")
-    bars = bars[bars["is_closed"]].reset_index(drop=True)
+    bars = bars[bars["is_complete" if require_full else "is_closed"]].reset_index(drop=True)
 
     o = bars["o"].to_numpy(float)
     h = bars["h"].to_numpy(float)

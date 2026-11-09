@@ -43,14 +43,29 @@ def candle_coverage(panel, instrument, tf, other_observations, anchor="cal"):
     return candles
 
 
-def observed_runs(panel, minimum=1):
+def quote_gaps(panel, other_observations):
+    """Describe even entirely empty buckets via missing-minute intervals."""
+    idx = panel.index
+    breaks = np.flatnonzero(idx[1:] - idx[:-1] > MINUTE)
+    start = idx[breaks] + MINUTE
+    end = idx[breaks + 1]
+    union = idx.union(other_observations)
+    unmatched = union.searchsorted(end) - union.searchsorted(start)
+    return pd.DataFrame({
+        "start": start, "end": end, "missing_minutes": (end - start) // MINUTE,
+        "unmatched_observed_minutes": unmatched,
+        "coverage": np.where(unmatched > 0, "INCOMPLETE", "UNKNOWN"),
+    })
+
+
+def observed_runs(panel, minimum=1, step=MINUTE):
     """Yield continuous observed segments. Scanners must reset at each break."""
     if not len(panel):
         return
     idx = panel.index
     if not idx.is_monotonic_increasing or not idx.is_unique or idx.tz is None:
         raise ValueError("Quote coverage requires ordered unique timezone-aware times")
-    breaks = np.flatnonzero(idx[1:] - idx[:-1] != MINUTE) + 1
+    breaks = np.flatnonzero(idx[1:] - idx[:-1] != step) + 1
     boundaries = np.r_[0, breaks, len(panel)]
     for start, end in zip(boundaries[:-1], boundaries[1:]):
         if end - start >= minimum:

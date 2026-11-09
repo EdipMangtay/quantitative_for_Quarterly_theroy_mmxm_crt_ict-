@@ -63,3 +63,12 @@ PYTHONDONTWRITEBYTECODE=1 NUMBA_CACHE_DIR=/tmp/astra6-v35-numba .venv/bin/python
 PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m astra6.trade_replay_v34
 .venv/bin/python build_v35_report.py
 ```
+
+## P0 devamı · Gözlenen Bid/Ask
+
+- `coverage_v35.py` ortak kaynak eksikliğini `INCOMPLETE`, açıklanamayan sessizliği `UNKNOWN` olarak ayırır. Her fiyat boşluğunda doğrulama bölümü sıfırlanır. Model tabanlı Ask uzantısı sıkı yürütme dışında.
+- `structure_v35.py` gerçek sweep, önceden teyitli H1 swing ve bağımsız H1 CISD ile dönüş üretir. MMXM kökeni OC kimliği, araç, timeframe, yön ve kullanılabilir zamanla doğrulanır.
+- `playbooks_v35.py` iki mevcut playbook’u ortak emir yürütücüsüne bağlar. Gerçek M5 OC bağlantısı, ATR stopu, dolum öncesi iptal, hedef mesafesi, zaman ve ters CISD çıkışı sınandı. Gözlenmeyen çıkışa R yazılmaz.
+- Altı eski yol kontrolü beklenen şekilde başarısız. 77 yeni odak testi ve toplam 2.729 uyumluluk testi geçti. Altı yerel örnekte iki tam zincir için dolum görülmedi. Tam tarihsel koşu ve sıralama kapalı.
+
+[P0 yeniden doğrulaması](../reports/ASTRA6_V35_P0_REVALIDATION.md) · [Pencere tanısı](../data/results/v3_5/p0_resume_audit.json)

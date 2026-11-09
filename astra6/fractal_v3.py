@@ -226,6 +226,7 @@ def extract_original_consolidations(
     dataset_hash: str = "",
     *,
     include_lifecycle: bool = False,
+    require_full: bool = False,
 ) -> pd.DataFrame:
     """Return confirmed OC summaries or immutable candidate/lifecycle events.
 
@@ -237,7 +238,7 @@ def extract_original_consolidations(
     frames = []
     for tf in timeframes:
         b = bars.resample(panel, traded, tf, "cal")
-        b = b[b["is_closed"]].reset_index(drop=True)
+        b = b[b["is_complete" if require_full else "is_closed"]].reset_index(drop=True)
         if len(b) < 5:
             continue
 

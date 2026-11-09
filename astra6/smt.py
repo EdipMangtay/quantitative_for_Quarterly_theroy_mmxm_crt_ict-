@@ -99,7 +99,8 @@ def _scan_pair(ha, la, hb, lb, s, e, e_inv, HA, LA, HB, LB):
     return res
 
 
-def ssmt_events(panel: pd.DataFrame, qlab: pd.DataFrame, traded: str, comp: str, level: str = "macro") -> pd.DataFrame:
+def ssmt_events(panel: pd.DataFrame, qlab: pd.DataFrame, traded: str, comp: str, level: str = "macro",
+                *, quote_width: pd.Timedelta | None = None) -> pd.DataFrame:
     """All SSMT events for one traded/comparator pair at one fractal level (`macro`, `micro`, or `submicro`).
 
     Preserves all simultaneous quarter-pair and lead-type events with full sequencing info.
@@ -113,7 +114,7 @@ def ssmt_events(panel: pd.DataFrame, qlab: pd.DataFrame, traded: str, comp: str,
     else:
         raise ValueError(f"Unknown SSMT level: {level}")
 
-    if f"{traded}_h" not in panel.columns or f"{comp}_h" not in panel.columns:
+    if panel.empty or f"{traded}_h" not in panel.columns or f"{comp}_h" not in panel.columns:
         return pd.DataFrame()
 
     ha = panel[f"{traded}_h"].to_numpy(float)
@@ -136,9 +137,24 @@ def ssmt_events(panel: pd.DataFrame, qlab: pd.DataFrame, traded: str, comp: str,
     pos = {int(b): i for i, b in enumerate(blk_ids)}
 
     idx = panel.index
+    if quote_width is not None:
+        if level not in ("macro", "micro"):
+            raise ValueError("Strict quote coverage is defined for macro and micro SSMT")
+        duration, elapsed = (5400, "sec_in_q90") if level == "macro" else (1350, "sec_in_q22")
+        duration = pd.Timedelta(seconds=duration)
+        started = qlab[elapsed].to_numpy()[starts] == 0
+        contiguous = idx[1:] - idx[:-1] == quote_width
+        gap_counts = np.r_[0, np.cumsum(~contiguous)]
+        full = (
+            started & ((ends - starts) * quote_width == duration)
+            & (gap_counts[ends - 1] == gap_counts[starts])
+        )
+        pos = {}
     rows = []
     pair_tag = f"{traded}_{comp}"
     for i in range(len(starts)):
+        if quote_width is not None and not started[i]:
+            continue
         qk = int(qs[i])
         for (qr, qt) in PAIRS:
             if qt != qk:
@@ -148,30 +164,46 @@ def ssmt_events(panel: pd.DataFrame, qlab: pd.DataFrame, traded: str, comp: str,
             else:
                 ref_blk = blk_ids[i] - (qt - qr)
             r = pos.get(int(ref_blk))
-            if r is None:
+            if r is None or r >= i:
+                continue
+            if quote_width is not None and (
+                not full[r] or gap_counts[starts[i]] != gap_counts[starts[r]]
+                or idx[starts[r]] + duration > idx[starts[i]]
+            ):
                 continue
             if (qr, qt) != (4, 1) and par[r] != par[i]:
                 continue
             e_inv = ends[i + 1] if i + 1 < len(starts) else ends[i]
-            res = _scan_pair(ha, la, hb, lb, starts[i], ends[i], e_inv, HA[r], LA[r], HB[r], LB[r])
+            e_form = ends[i]
+            if quote_width is not None:
+                broken = np.flatnonzero(~contiguous[starts[i]:e_inv - 1])
+                if len(broken):
+                    e_inv = starts[i] + broken[0] + 1
+                    e_form = min(e_form, e_inv)
+            res = _scan_pair(ha, la, hb, lb, starts[i], e_form, e_inv, HA[r], LA[r], HB[r], LB[r])
             for k, (dr, lead) in enumerate([(-1, "A"), (-1, "B"), (1, "A"), (1, "B")]):
                 jf = int(res[2 * k])
                 if jf >= 0:
                     ji = int(res[2 * k + 1])
                     s_i = int(starts[i])
-                    rows.append((
+                    evidence = (
                         level, traded, comp, pair_tag, qt_anc,
                         int(blk_ids[r]), int(blk_ids[i]), qr, qt, PAIR_LABELS[(qr, qt)],
                         dr, lead, jf, jf, ji, int(par[i]), s_i, int(ends[i]),
                         jf - s_i, int(q90_arr[jf]), int(q22_arr[jf]),
-                    ))
+                    )
+                    rows.append(evidence if quote_width is None else (*evidence, e_inv - 1))
 
+        if quote_width is not None:
+            pos[int(blk_ids[i])] = i
     cols = [
         "level", "traded", "comp", "inst_pair", "qt_anchor",
         "b_ref", "b_trig", "q_ref", "q_trig", "pair_label",
         "dir", "lead", "j_sweep", "j_form", "j_inv", "parent", "trig_start", "trig_end",
         "elapsed_bars", "macro_phase", "micro_phase",
     ]
+    if quote_width is not None:
+        cols.append("j_last_tracked")
     df = pd.DataFrame(rows, columns=cols)
     if len(df) == 0:
         return df

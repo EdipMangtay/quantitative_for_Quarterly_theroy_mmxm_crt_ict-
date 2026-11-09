@@ -61,12 +61,18 @@ class Policy:
     max_gap_minutes: int = 5
     slip: float = 0.25
     min_risk: float = 3.0
+    target_min_r: float = 0.0
+    target_max_r: float | None = None
+    require_observed_path: bool = False
+    exit_cisd_tf: str | None = None
 
     def __post_init__(self):
         if self.horizon_unit not in ("OBSERVED_BARS", "CLOCK_MINUTES"):
             raise ValueError("Unknown execution horizon unit")
         if min(self.wait_minutes, self.horizon, self.max_gap_minutes, self.slip) < 0 or self.min_risk <= 0:
             raise ValueError("Invalid order policy bounds")
+        if self.target_min_r < 0 or (self.target_max_r is not None and self.target_max_r < self.target_min_r):
+            raise ValueError("Invalid target distance bounds")
 
 
 def factorial_policies() -> list[Policy]:
@@ -207,7 +213,7 @@ class OrderEngine:
         crossed = np.flatnonzero(target.direction * (extreme - target.price) >= 0)
         return self.closes[j0 + crossed[0]] if len(crossed) else None
 
-    def execute(self, op, policy, book, targets=()):
+    def execute(self, op, policy, book, targets=(), *, exit_factors=()):
         idx = self.index
         direction = op.event_direction
         if op.source_instrument != self.instrument or direction not in (-1, 1):
@@ -338,6 +344,11 @@ class OrderEngine:
         take_profit = entry + direction * 2 * risk if policy.target_type == "FIXED_2R" else target.price
         if direction * (take_profit - entry) <= 0:
             return finish("CANCELLED", "TARGET_WRONG_SIDE_AT_FILL", fill_at)
+        target_r = direction * (take_profit - entry) / risk
+        if target_r < policy.target_min_r or (policy.target_max_r is not None and target_r > policy.target_max_r):
+            return finish("CANCELLED", "TARGET_DISTANCE_OUTSIDE_POLICY", fill_at)
+        if policy.require_observed_path and self._provenance(fill_at) != "OBSERVED_BID_ASK":
+            return finish("CANCELLED", "NO_OBSERVED_ENTRY_QUOTE", fill_at)
 
         record["lifecycle"].extend(("SUBMITTED", "FILLED"))
         record.update(
@@ -353,9 +364,38 @@ class OrderEngine:
             desired_end = j_fill + policy.horizon
             end = min(desired_end, len(idx) - 1)
             data_end = desired_end > end
+        exit_confirmation = None
+        if policy.exit_cisd_tf is not None:
+            exit_confirmation = min((
+                x for x in exit_factors
+                if x.kind == "CISD" and x.instrument == self.instrument
+                and x.timeframe == policy.exit_cisd_tf and x.direction == -direction
+                and fill_at < x.available_at <= self.closes[end]
+            ), key=lambda x: (x.available_at, x.event_id), default=None)
+        if exit_confirmation is not None:
+            end = min(end, idx.searchsorted(exit_confirmation.available_at) - 1)
+            data_end = False
+        coverage_gap = False
+        if policy.require_observed_path:
+            gaps = np.flatnonzero(idx[j_fill + 1:end + 1] - idx[j_fill:end] != MINUTE)
+            last_observed = idx.searchsorted(self.observed_through, side="right") - 1
+            coverage_end = min(last_observed, j_fill + gaps[0] if len(gaps) else end)
+            if coverage_end < end:
+                end = coverage_end
+                coverage_gap = data_end = True
         code, j_exit, exit_quote, at_open = _exit_path(
             *exit_quotes, j_fill, end, direction, op.stop_price, take_profit, data_end,
         )
+        if policy.require_observed_path and code == 5:
+            return finish("DATA_END", "UNOBSERVED_EXIT_PATH", self.closes[end])
+        status = ("TARGET_HIT", "STOP_HIT", "AMBIGUOUS", "TIMEOUT", "DATA_END")[code - 1]
+        if code == 4 and exit_confirmation is not None and not coverage_gap:
+            j_exit = idx.searchsorted(exit_confirmation.available_at)
+            if (j_exit >= len(idx) or idx[j_exit] != exit_confirmation.available_at
+                    or (policy.require_observed_path and self._provenance(idx[j_exit]) != "OBSERVED_BID_ASK")):
+                return finish("DATA_END", "UNOBSERVED_CISD_EXIT_QUOTE", exit_confirmation.available_at)
+            exit_quote, at_open, status = exit_quotes[0, j_exit], True, "OPPOSITE_CISD_EXIT"
+            record["exit_factor_event_id"] = exit_confirmation.event_id
         out = exit_quote - direction * policy.slip
         exit_at = idx[j_exit] if at_open else self.closes[j_exit]
         record.update(
@@ -364,7 +404,7 @@ class OrderEngine:
             realized_net_r=float(direction * (out - entry) / risk),
             exit_quote_provenance=self._provenance(idx[j_exit]),
         )
-        return finish(("TARGET_HIT", "STOP_HIT", "AMBIGUOUS", "TIMEOUT", "DATA_END")[code - 1], None, exit_at)
+        return finish(status, None, exit_at)
 
     def _provenance(self, when):
         if self.observed_through is not None and when <= self.observed_through:
