@@ -7,9 +7,9 @@
     "physical_cores": 12,
     "logical_cores": 12,
     "ram_total_gb": 36.0,
-    "ram_available_gb": 22.75,
+    "ram_available_gb": 20.68,
     "disk_total_gb": 460.43,
-    "disk_free_gb": 307.08,
+    "disk_free_gb": 309.98,
     "selected_workers": 8,
     "selected_duckdb_threads": 8,
     "selected_batch_size": 200000,
@@ -22,24 +22,24 @@
       "pyarrow": "26.0.1",
       "numba": "0.68.1"
     },
-    "detected_at_utc": "2026-11-09 09:39:41.783020+00:00"
+    "detected_at_utc": "2026-11-09 09:49:37.265039+00:00"
   },
   "kernel_verification": {
     "reference_vs_numba_exact_match": true,
     "adversarial_same_bar_sl_tp_verified": true,
     "timeout_mark_to_market_verified": true,
     "data_end_mark_to_market_verified": true,
-    "python_ref_seconds_2k": 0.049947,
-    "numba_opt_seconds_2k": 0.00047,
-    "speedup_factor": 106.35,
-    "throughput_evals_per_sec": 4258717.0
+    "python_ref_seconds_2k": 0.05085,
+    "numba_opt_seconds_2k": 0.000493,
+    "speedup_factor": 103.14,
+    "throughput_evals_per_sec": 4056795.1
   },
   "batch_size_benchmark_seconds": {
-    "16384": 0.00741,
-    "65536": 0.00183,
-    "131072": 0.00121,
-    "200000": 0.00079
+    "16384": 0.00713,
+    "65536": 0.00175,
+    "131072": 0.00118,
+    "200000": 0.00096
   },
   "selected_optimal_batch_size": 200000,
-  "peak_memory_rss_mb": 5024.97
+  "peak_memory_rss_mb": 4052.48
 }

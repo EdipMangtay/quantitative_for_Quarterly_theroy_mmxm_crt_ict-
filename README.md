@@ -4,12 +4,12 @@ Gerçek tarihsel **US100, US500 ve US30** CFD kotasyonları (`7 Kasım 2021 – 
 
 ---
 
-## 📄 Araştırma Raporları (V3 + V2)
+## 📄 Güncel Araştırma ve Doğrulama Raporları (V3.5 & V3.4)
 
-- 📕 **V3 Universal Fractal PDF Raporu:** [`reports/ASTRA6_V3_Universal_Fractal_Raporu.pdf`](reports/ASTRA6_V3_Universal_Fractal_Raporu.pdf)
-- 🌐 **V3 Universal Fractal HTML Raporu:** [`reports/ASTRA6_V3_Universal_Fractal_Raporu.html`](reports/ASTRA6_V3_Universal_Fractal_Raporu.html)
-- 📕 **V2 Doğrulama & Araştırma PDF Raporu:** [`reports/ASTRA6_Arastirma_Raporu.pdf`](reports/ASTRA6_Arastirma_Raporu.pdf)
-- 🌐 **V2 Doğrulama & Araştırma HTML Raporu:** [`reports/ASTRA6_Arastirma_Raporu.html`](reports/ASTRA6_Arastirma_Raporu.html)
+- 📕 **V3.5 Nihai Araştırma PDF Raporu:** [`reports/ASTRA6_V35_FINAL_RESEARCH.pdf`](reports/ASTRA6_V35_FINAL_RESEARCH.pdf)
+- 🌐 **V3.5 Nihai Araştırma HTML Raporu:** [`reports/ASTRA6_V35_FINAL_RESEARCH.html`](reports/ASTRA6_V35_FINAL_RESEARCH.html)
+- 📕 **V3.4 Strateji Doğrulama PDF Raporu:** [`reports/ASTRA6_V3_4_FINAL_VALIDATION.pdf`](reports/ASTRA6_V3_4_FINAL_VALIDATION.pdf)
+- 🌐 **V3.4 Strateji Doğrulama HTML Raporu:** [`reports/ASTRA6_V3_4_FINAL_VALIDATION.html`](reports/ASTRA6_V3_4_FINAL_VALIDATION.html)
 - 🗄️ **DuckDB & 28+ Zorunlu V3 Parquet Veri Küpü:** [`data/results/astra6_v3.duckdb`](data/results/astra6_v3.duckdb) ve [`data/results/`](data/results/)
 
 ---
